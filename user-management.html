@@ -23,10 +23,12 @@
             <div class="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-6">
                 <div>
                     <h2 class="text-2xl font-bold text-slate-800 tracking-tight">จัดการผู้ใช้งาน (User Management)</h2>
-                    <p class="text-sm text-slate-500">แก้ไขชื่อ-นามสกุล, ทีม, และเบอร์โทรศัพท์ของเจ้าหน้าที่</p>
+                    <p class="text-sm text-slate-500">แก้ไขข้อมูลพนักงาน ทีม และเบอร์โทรศัพท์จาก Database</p>
                 </div>
                 <button onclick="openUserModal()" class="bg-indigo-600 text-white px-6 py-3 rounded-2xl font-bold hover:bg-indigo-700 transition shadow-lg flex items-center gap-2">
-                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M10 3a1 1 0 011 1v5h5a1 1 0 110 2h-5v5a1 1 0 11-2 0v-5H4a1 1 0 110-2h5V4a1 1 0 011-1z" clip-rule="evenodd" /></svg>
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+                        <path fill-rule="evenodd" d="M10 3a1 1 0 011 1v5h5a1 1 0 110 2h-5v5a1 1 0 11-2 0v-5H4a1 1 0 110-2h5V4a1 1 0 011-1z" clip-rule="evenodd" />
+                    </svg>
                     เพิ่มผู้ใช้ใหม่
                 </button>
             </div>
@@ -55,14 +57,12 @@
         <div class="absolute inset-0 bg-slate-900/60 backdrop-blur-sm" onclick="closeUserModal()"></div>
         <div class="relative bg-white w-full max-w-lg rounded-[3rem] shadow-2xl overflow-hidden modal-animate">
             <div class="bg-indigo-600 p-8 text-white">
-                <h3 id="modal-title" class="text-xl font-bold">จัดการข้อมูลผู้ใช้</h3>
-                <p class="text-indigo-100 text-xs mt-1">อัปเดตข้อมูลพนักงาน ทีม และเบอร์ติดต่อ</p>
+                <h3 id="modal-title" class="text-xl font-bold">ข้อมูลพนักงาน</h3>
+                <p class="text-indigo-100 text-xs mt-1">บันทึกข้อมูลและ Stamp ลง Database ทันที</p>
             </div>
             
             <form id="userForm" class="p-8 space-y-4">
-                <input type="hidden" id="user-doc-id">
-                
-                <div class="space-y-4">
+                <input type="hidden" id="user-doc-id"> <div class="space-y-4">
                     <div>
                         <label class="block text-[10px] font-black text-slate-400 uppercase mb-1 ml-2">ชื่อ-นามสกุล</label>
                         <input type="text" id="user-name" class="w-full p-4 bg-slate-50 border-2 border-slate-100 rounded-2xl focus:border-indigo-500 outline-none transition" required>
@@ -90,7 +90,7 @@
 
                 <div class="pt-6 flex gap-3">
                     <button type="button" onclick="closeUserModal()" class="flex-1 py-4 text-slate-500 font-bold hover:bg-slate-100 rounded-2xl transition">ยกเลิก</button>
-                    <button type="submit" class="flex-[2] py-4 bg-indigo-600 text-white rounded-2xl font-bold hover:bg-indigo-700 shadow-lg transition transform active:scale-95">บันทึกข้อมูล</button>
+                    <button type="submit" id="submit-btn" class="flex-[2] py-4 bg-indigo-600 text-white rounded-2xl font-bold hover:bg-indigo-700 shadow-lg transition transform active:scale-95">บันทึกข้อมูล</button>
                 </div>
             </form>
         </div>
@@ -98,7 +98,7 @@
 
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
-        import { getFirestore, collection, onSnapshot, doc, setDoc, updateDoc, deleteDoc, query, orderBy, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+        import { getFirestore, collection, onSnapshot, doc, setDoc, updateDoc, deleteDoc, query, orderBy, serverTimestamp, getDoc } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
 
         const firebaseConfig = {
             apiKey: "AIzaSyAa2uSD_tjNqYE2eXnZcn75h_jAVscDG-c",
@@ -112,20 +112,18 @@
         const app = initializeApp(firebaseConfig);
         const db = getFirestore(app);
 
-        // ดึง Sidebar/Topbar
+        // UI Components
         fetch('./components/sidebar.html').then(r => r.text()).then(h => document.getElementById('sidebar-placeholder').innerHTML = h).catch(()=>{});
         fetch('./components/topbar.html').then(r => r.text()).then(h => document.getElementById('topbar-placeholder').innerHTML = h).catch(()=>{});
 
-        // ดึงข้อมูลจาก Collection "admin" (อ้างอิงตามภาพ image_07dddb.png)
+        // 1. ดึงข้อมูล Real-time จาก admin collection
         const q = query(collection(db, "admin"), orderBy("name", "asc"));
-        
         onSnapshot(q, (snapshot) => {
             const list = document.getElementById('user-list');
-            const loader = document.getElementById('loading-status');
-            loader.classList.add('hidden');
+            document.getElementById('loading-status').classList.add('hidden');
 
             if (snapshot.empty) {
-                list.innerHTML = `<tr><td colspan="4" class="p-20 text-center text-slate-400 italic">ไม่พบข้อมูลใน Collection "admin"</td></tr>`;
+                list.innerHTML = `<tr><td colspan="4" class="p-20 text-center text-slate-400 italic">ไม่พบข้อมูลใน Database</td></tr>`;
                 return;
             }
 
@@ -151,65 +149,86 @@
                             </span>
                         </td>
                         <td class="p-6 text-right">
-                            <button onclick='openEditUser("${docSnap.id}", ${JSON.stringify(u)})' class="text-indigo-600 font-bold hover:underline mr-4">แก้ไข</button>
+                            <button onclick="editUserAction('${docSnap.id}')" class="text-indigo-600 font-bold hover:underline mr-4">แก้ไข</button>
                             <button onclick="deleteUser('${docSnap.id}')" class="text-red-300 hover:text-red-600 transition">ลบ</button>
                         </td>
                     </tr>
                 `;
             }).join('');
-        }, (error) => {
-            console.error("Firebase Error:", error);
-            document.getElementById('loading-status').innerText = "เกิดข้อผิดพลาดในการดึงข้อมูล";
         });
 
-        // Modal Functions
+        // 2. ดึงข้อมูลล่าสุดจาก DB เมื่อกดแก้ไข
+        window.editUserAction = async (id) => {
+            const docRef = doc(db, "admin", id);
+            try {
+                const docSnap = await getDoc(docRef);
+                if (docSnap.exists()) {
+                    const data = docSnap.data();
+                    document.getElementById('user-doc-id').value = id;
+                    document.getElementById('user-name').value = data.name || '';
+                    document.getElementById('user-team').value = data.team || '';
+                    document.getElementById('user-phone').value = data.phone || '';
+                    document.getElementById('user-role').value = data.role || 'user';
+                    
+                    document.getElementById('modal-title').innerText = 'แก้ไขข้อมูลพนักงาน';
+                    document.getElementById('userModal').classList.remove('hidden');
+                }
+            } catch (err) {
+                alert("ไม่สามารถดึงข้อมูลได้: " + err.message);
+            }
+        };
+
+        // 3. บันทึกและ Stamp ข้อมูลกลับลง Database
+        document.getElementById('userForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const id = document.getElementById('user-doc-id').value;
+            const btn = document.getElementById('submit-btn');
+            
+            const userData = {
+                name: document.getElementById('user-name').value.trim(),
+                team: document.getElementById('user-team').value.trim(),
+                phone: document.getElementById('user-phone').value.trim(),
+                role: document.getElementById('user-role').value,
+                updatedAt: serverTimestamp() // Stamp เวลาแก้ไข
+            };
+
+            try {
+                btn.disabled = true;
+                btn.innerText = "กำลังบันทึก...";
+
+                if (id) {
+                    // กรณีแก้ไข
+                    await updateDoc(doc(db, "admin", id), userData);
+                } else {
+                    // กรณีสร้างใหม่ (ใช้ชื่อเป็น ID เพื่อความง่ายในการไล่เช็ค)
+                    const newId = userData.name.toLowerCase().replace(/\s+/g, '_');
+                    await setDoc(doc(db, "admin", newId), {
+                        ...userData,
+                        createdAt: serverTimestamp(),
+                        username: newId,
+                        password: "123456" // Default Password
+                    });
+                }
+                closeUserModal();
+            } catch (err) {
+                alert("บันทึกไม่สำเร็จ: " + err.message);
+            } finally {
+                btn.disabled = false;
+                btn.innerText = "บันทึกข้อมูล";
+            }
+        });
+
         window.openUserModal = () => {
             document.getElementById('userForm').reset();
             document.getElementById('user-doc-id').value = '';
-            document.getElementById('modal-title').innerText = 'เพิ่มผู้ใช้งานใหม่';
-            document.getElementById('userModal').classList.remove('hidden');
-        };
-
-        window.openEditUser = (id, data) => {
-            document.getElementById('user-doc-id').value = id;
-            document.getElementById('user-name').value = data.name || '';
-            document.getElementById('user-team').value = data.team || '';
-            document.getElementById('user-phone').value = data.phone || '';
-            document.getElementById('user-role').value = data.role || 'user';
-            document.getElementById('modal-title').innerText = 'แก้ไขข้อมูลผู้ใช้';
+            document.getElementById('modal-title').innerText = 'เพิ่มผู้ใช้ใหม่';
             document.getElementById('userModal').classList.remove('hidden');
         };
 
         window.closeUserModal = () => document.getElementById('userModal').classList.add('hidden');
 
-        // Submit Form
-        document.getElementById('userForm').addEventListener('submit', async (e) => {
-            e.preventDefault();
-            const id = document.getElementById('user-doc-id').value;
-            const userData = {
-                name: document.getElementById('user-name').value,
-                team: document.getElementById('user-team').value,
-                phone: document.getElementById('user-phone').value,
-                role: document.getElementById('user-role').value,
-                updatedAt: serverTimestamp()
-            };
-
-            try {
-                if (id) {
-                    await updateDoc(doc(db, "admin", id), userData);
-                } else {
-                    // สร้าง ID ใหม่จากชื่อ ( lowercase )
-                    const newId = userData.name.trim().toLowerCase().replace(/\s+/g, '_');
-                    await setDoc(doc(db, "admin", newId), { ...userData, createdAt: serverTimestamp() });
-                }
-                closeUserModal();
-            } catch (err) {
-                alert("เกิดข้อผิดพลาด: " + err.message);
-            }
-        });
-
         window.deleteUser = async (id) => {
-            if (confirm("ต้องการลบผู้ใช้รายนี้หรือไม่?")) {
+            if (confirm("ยืนยันการลบผู้ใช้?")) {
                 await deleteDoc(doc(db, "admin", id));
             }
         };

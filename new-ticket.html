@@ -8,8 +8,10 @@
     <link href="https://fonts.googleapis.com/css2?family=Kanit:wght@300;400;600&display=swap" rel="stylesheet">
     <style>
         body { font-family: 'Kanit', sans-serif; background-color: #f8fafc; }
-        .glass-card { background: white; border-radius: 2.5rem; border: 1px solid #f1f5f9; box-shadow: 0 10px 40px rgba(0,0,0,0.03); }
-        textarea::selection { background: #e0e7ff; color: #4338ca; }
+        .glass-card { background: white; border-radius: 2rem; border: 1px solid #f1f5f9; box-shadow: 0 10px 40px rgba(0,0,0,0.03); }
+        /* ซ่อน Scrollbar สำหรับ Chrome, Safari และ Opera */
+        textarea::-webkit-scrollbar { display: none; }
+        textarea { -ms-overflow-style: none; scrollbar-width: none; }
     </style>
 </head>
 <body class="flex min-h-screen">
@@ -21,53 +23,52 @@
 
         <main class="p-6 md:p-10 flex justify-center w-full">
             <div class="w-full max-w-3xl glass-card overflow-hidden">
-                <div class="bg-indigo-600 p-10 text-white relative overflow-hidden">
+                <div class="bg-[#5c67f2] p-8 text-white relative">
                     <div class="relative z-10">
-                        <h2 class="text-3xl font-bold tracking-tight">สร้างใบงานใหม่</h2>
-                        <p class="text-indigo-100 mt-2 opacity-90 flex items-center gap-2">
-                            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" /></svg>
-                            บันทึกในชื่อ: <span id="user-display" class="font-bold underline">กำลังโหลด...</span>
-                        </p>
+                        <h2 class="text-2xl font-bold tracking-tight">สร้าง Ticket ใหม่</h2>
+                        <p class="text-indigo-100 mt-1 opacity-90 text-sm">ระบุรายละเอียดปัญหาเพื่อแจ้งเจ้าหน้าที่</p>
                     </div>
-                    <div class="absolute top-0 right-0 -mr-16 -mt-16 w-64 h-64 bg-indigo-500 rounded-full opacity-20"></div>
                 </div>
 
-                <form id="ticketForm" class="p-8 md:p-12 space-y-8">
-                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <form id="ticketForm" class="p-8 space-y-6">
+                    <div class="flex items-center gap-3 p-4 bg-indigo-50 rounded-2xl border border-indigo-100 mb-4">
+                        <div class="w-10 h-10 bg-[#5c67f2] rounded-full flex items-center justify-center text-white font-bold">
+                            <span id="user-initial">-</span>
+                        </div>
+                        <div>
+                            <p class="text-[10px] text-indigo-400 font-black uppercase tracking-widest">ผู้แจ้งซ่อม</p>
+                            <p id="user-display" class="font-bold text-slate-700">กำลังโหลด...</p>
+                        </div>
+                    </div>
+
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                         <div class="space-y-2">
-                            <label class="text-[11px] font-black text-slate-400 uppercase tracking-[0.2em]">หัวข้อปัญหา</label>
-                            <select id="topic" required class="w-full px-6 py-4 bg-slate-50 border border-slate-100 rounded-[1.5rem] focus:bg-white focus:border-indigo-500 outline-none transition-all cursor-pointer font-semibold text-slate-700">
-                                <option value="Internet Connection">ปัญหาอินเทอร์เน็ตใช้งานไม่ได้</option>
-                                <option value="Equipment/Router">อุปกรณ์ Router มีปัญหา</option>
-                                <option value="Billing/Payment">สอบถามค่าบริการ</option>
+                            <label class="text-[11px] font-black text-slate-400 uppercase tracking-widest">หัวข้อปัญหา</label>
+                            <select id="topic" required class="w-full px-5 py-3.5 bg-slate-50 border border-slate-100 rounded-xl focus:border-[#5c67f2] outline-none transition-all font-semibold text-slate-600">
+                                <option value="Internet Connection">ปัญหาอินเทอร์เน็ต</option>
+                                <option value="Equipment">อุปกรณ์ชำรุด</option>
                                 <option value="Other">อื่นๆ</option>
                             </select>
                         </div>
                         <div class="space-y-2">
-                            <label class="text-[11px] font-black text-slate-400 uppercase tracking-[0.2em]">Internet No. (88XXXXXXXX)</label>
-                            <input type="text" id="id_number" required placeholder="ระบุหมายเลขบริการ" 
-                                class="w-full px-6 py-4 bg-slate-50 border border-slate-100 rounded-[1.5rem] focus:bg-white focus:border-indigo-500 outline-none transition-all font-semibold text-slate-700">
+                            <label class="text-[11px] font-black text-slate-400 uppercase tracking-widest">Internet No.</label>
+                            <input type="text" id="id_number" required placeholder="88XXXXXXXX" 
+                                class="w-full px-5 py-3.5 bg-slate-50 border border-slate-100 rounded-xl focus:border-[#5c67f2] outline-none transition-all font-semibold">
                         </div>
                     </div>
 
                     <div class="space-y-3">
                         <div class="flex justify-between items-center">
-                            <label class="text-[11px] font-black text-slate-400 uppercase tracking-[0.2em]">รายละเอียดปัญหา (กรุณาเติมข้อมูลหลังเครื่องหมาย : )</label>
+                            <label class="text-[11px] font-black text-slate-400 uppercase tracking-widest">รายละเอียดปัญหา</label>
                             <span class="text-[10px] bg-amber-100 text-amber-600 px-3 py-1 rounded-full font-bold">ห้ามลบหัวข้อ</span>
                         </div>
                         <textarea id="detail" rows="10" 
-                            class="w-full px-6 py-5 bg-slate-50 border border-slate-100 rounded-[2rem] focus:bg-white focus:border-indigo-500 outline-none transition-all font-mono text-sm leading-[2] text-slate-600 shadow-inner"></textarea>
+                            class="w-full px-6 py-5 bg-slate-50 border border-slate-100 rounded-[1.5rem] focus:bg-white focus:border-[#5c67f2] outline-none transition-all font-mono text-sm leading-loose text-slate-600 shadow-inner"></textarea>
                     </div>
 
-                    <div class="flex flex-col md:flex-row gap-4 pt-4">
-                        <button type="button" onclick="window.history.back()" class="flex-1 py-5 bg-slate-100 text-slate-500 rounded-2xl font-bold hover:bg-slate-200 transition-all">
-                            ย้อนกลับ
-                        </button>
-                        <button type="submit" id="submitBtn" class="flex-[2] py-5 bg-indigo-600 text-white rounded-2xl font-bold hover:bg-indigo-700 transition-all shadow-lg shadow-indigo-100 flex justify-center items-center gap-2">
-                            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
-                            บันทึกและสร้างใบงาน
-                        </button>
-                    </div>
+                    <button type="submit" id="submitBtn" class="w-full py-4 bg-[#5c67f2] text-white rounded-2xl font-bold hover:bg-[#4a54d4] transition-all shadow-lg shadow-indigo-100 flex justify-center items-center gap-2">
+                        สร้างใบงาน
+                    </button>
                 </form>
             </div>
         </main>
@@ -81,7 +82,7 @@
         const firebaseConfig = {
             apiKey: "AIzaSyAa2uSD_tjNqYE2eXnZcn75h_jAVscDG-c",
             authDomain: "salesupportsystemapp.firebaseapp.com",
-            projectId: "salesupportsystemapp", //
+            projectId: "salesupportsystemapp",
             storageBucket: "salesupportsystemapp.firebasestorage.app",
             messagingSenderId: "840890441207",
             appId: "1:840890441207:web:f3a5076d46e963a90de2f2"
@@ -91,35 +92,49 @@
         const db = getFirestore(app);
         const auth = getAuth(app);
 
-        // --- ตั้งค่า Checklist ลบไม่ได้ ---
+        // --- ระบบ Checklist (ป้องกันการเบิ้ลและลบไม่ได้) ---
         const detailArea = document.getElementById('detail');
-        const checklistHeader = "อุปกรณ์ที่ใช้งาน : \nอาการที่พบ : \nจำนวนอุปกรณ์ : \n";
-        detailArea.value = checklistHeader;
+        const template = "อุปกรณ์ที่ใช้งาน : \nอาการที่พบ : \nจำนวนอุปกรณ์ : \n";
+        
+        detailArea.value = template;
 
         detailArea.addEventListener('keydown', function(e) {
-            const cursorStart = detailArea.selectionStart;
-            // ป้องกันการกด Backspace หรือ Delete ในพื้นที่หัวข้อ
-            if ((e.key === 'Backspace' && cursorStart <= checklistHeader.length) || 
-                (e.key === 'Delete' && cursorStart < checklistHeader.length)) {
-                e.preventDefault();
+            const cursor = detailArea.selectionStart;
+            // หาบรรทัดปัจจุบันที่เคอร์เซอร์อยู่
+            const lines = detailArea.value.substring(0, cursor).split('\n');
+            const currentLineText = lines[lines.length - 1];
+            
+            // ป้องกันการลบชื่อหัวข้อ (ก่อนเครื่องหมาย :)
+            const headers = ["อุปกรณ์ที่ใช้งาน :", "อาการที่พบ :", "จำนวนอุปกรณ์ :"];
+            const isHeaderArea = headers.some(h => currentLineText.trim() === h.trim());
+
+            if (e.key === 'Backspace' || e.key === 'Delete') {
+                if (isHeaderArea) {
+                    // ตรวจสอบว่าเคอร์เซอร์อยู่หลัง : หรือไม่
+                    if (!currentLineText.includes(': ') || cursor <= detailArea.value.indexOf(':') + 1) {
+                         e.preventDefault();
+                    }
+                }
             }
         });
 
-        detailArea.addEventListener('input', function() {
-            if (!detailArea.value.startsWith(checklistHeader)) {
-                detailArea.value = checklistHeader + detailArea.value.replace(checklistHeader, "");
+        // แก้ไข Logic ป้องกันการเบิ้ล (เปลี่ยนจากการ Replace มาเป็นการตรวจสอบ Prefix แทน)
+        detailArea.addEventListener('input', function(e) {
+            if (!detailArea.value.includes("อุปกรณ์ที่ใช้งาน :") || 
+                !detailArea.value.includes("อาการที่พบ :") || 
+                !detailArea.value.includes("จำนวนอุปกรณ์ :")) {
+                detailArea.value = template; // รีเซ็ตกลับเมื่อมีการพยายามลบหัวข้อใหญ่
             }
         });
 
-        // --- จัดการ User Data & Stamp ---
-        let currentStatus = { name: "", email: "" };
-
+        // --- ดึงข้อมูล User จริง ---
+        let userProfile = { name: "", email: "" };
         onAuthStateChanged(auth, (user) => {
             if (user) {
-                // Stamp ชื่อจริงของผู้สร้าง
-                currentStatus.name = user.displayName || user.email.split('@')[0];
-                currentStatus.email = user.email;
-                document.getElementById('user-display').innerText = currentStatus.name;
+                userProfile.name = user.displayName || user.email.split('@')[0];
+                userProfile.email = user.email;
+                document.getElementById('user-display').innerText = userProfile.name;
+                document.getElementById('user-initial').innerText = userProfile.name.charAt(0).toUpperCase();
             } else {
                 window.location.href = 'login.html';
             }
@@ -130,29 +145,28 @@
             e.preventDefault();
             const btn = document.getElementById('submitBtn');
             btn.disabled = true;
-            btn.innerHTML = "กำลังบันทึก...";
+            btn.innerHTML = "กำลังส่งข้อมูล...";
 
             try {
                 await addDoc(collection(db, "tickets"), {
                     topic: document.getElementById('topic').value,
                     id_number: document.getElementById('id_number').value,
                     detail: detailArea.value,
-                    status: "Pending", // สถานะเริ่มต้น
-                    ownerName: currentStatus.name, // ชื่อผู้สร้างจริง
-                    ownerEmail: currentStatus.email, // สำหรับ Query หน้า My Ticket
+                    status: "Pending",
+                    ownerName: userProfile.name, // Stamp ชื่อจริง
+                    ownerEmail: userProfile.email,
                     createdAt: serverTimestamp()
                 });
-
-                alert('สร้างใบงานสำเร็จ!');
+                alert('สร้างใบงานสำเร็จ');
                 window.location.href = 'my-ticket.html';
             } catch (err) {
-                alert('เกิดข้อผิดพลาด: ' + err.message);
+                alert('Error: ' + err.message);
                 btn.disabled = false;
-                btn.innerHTML = "บันทึกและสร้างใบงาน";
+                btn.innerHTML = "สร้างใบงาน";
             }
         });
 
-        // Load Header/Sidebar (ตรวจสอบ Path ให้ถูกต้อง)
+        // Load Components
         fetch('./components/sidebar.html').then(r => r.text()).then(h => document.getElementById('sidebar-placeholder').innerHTML = h).catch(()=>{});
         fetch('./components/topbar.html').then(r => r.text()).then(h => document.getElementById('topbar-placeholder').innerHTML = h).catch(()=>{});
     </script>

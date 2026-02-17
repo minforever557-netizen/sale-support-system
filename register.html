@@ -6,9 +6,12 @@
     <title>ลงทะเบียนพนักงาน - Sale Support System</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://fonts.googleapis.com/css2?family=Kanit:wght@300;400;600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
     <style>
         body { font-family: 'Kanit', sans-serif; background-color: #f8fafc; }
         .glass-card { background: rgba(255, 255, 255, 0.95); backdrop-filter: blur(10px); }
+        .animate-fadeIn { animation: fadeIn 0.3s ease-in-out; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
     </style>
 </head>
 <body class="min-h-screen flex items-center justify-center p-4">
@@ -23,52 +26,43 @@
             
             <div>
                 <label class="block text-[11px] font-black text-slate-400 uppercase tracking-wider mb-2 ml-1">ชื่อ-นามสกุล</label>
-                <input type="text" id="reg-name" class="w-full p-4 bg-slate-50 border-2 border-slate-100 rounded-2xl focus:border-[#5c56f1] focus:bg-white outline-none transition-all" placeholder="ภาษาไทย หรือ ภาษาอังกฤษ" required>
-            </div>
-
-            <div>
-                <label class="block text-[11px] font-black text-slate-400 uppercase tracking-wider mb-2 ml-1">ชื่อผู้ใช้งาน (Username)</label>
-                <input type="text" id="reg-username" class="w-full p-4 bg-slate-50 border-2 border-slate-100 rounded-2xl focus:border-[#5c56f1] focus:bg-white outline-none transition-all" placeholder="เช่น somchai_fbb" required>
+                <input type="text" id="reg-name" class="w-full p-4 bg-slate-50 border-2 border-slate-100 rounded-2xl focus:border-[#5c56f1] outline-none transition-all" placeholder="ชื่อ - นามสกุล" required>
             </div>
 
             <div class="grid grid-cols-2 gap-4">
                 <div>
-                    <label class="block text-[11px] font-black text-slate-400 uppercase tracking-wider mb-2 ml-1">อีเมล (Email)</label>
-                    <input type="email" id="reg-email" class="w-full p-4 bg-slate-50 border-2 border-slate-100 rounded-2xl focus:border-[#5c56f1] focus:bg-white outline-none transition-all" placeholder="example@mail.com" required>
+                    <label class="block text-[11px] font-black text-slate-400 uppercase tracking-wider mb-2 ml-1">ชื่อผู้ใช้งาน</label>
+                    <input type="text" id="reg-username" class="w-full p-4 bg-slate-50 border-2 border-slate-100 rounded-2xl focus:border-[#5c56f1] outline-none" placeholder="Username" required>
                 </div>
                 <div>
-                    <label class="block text-[11px] font-black text-slate-400 uppercase tracking-wider mb-2 ml-1">เบอร์โทรศัพท์ (Phone No.)</label>
-                    <input type="text" id="reg-phone" class="w-full p-4 bg-slate-50 border-2 border-slate-100 rounded-2xl focus:border-[#5c56f1] focus:bg-white outline-none transition-all" placeholder="08x-xxxxxxx" required>
+                    <label class="block text-[11px] font-black text-slate-400 uppercase tracking-wider mb-2 ml-1">เบอร์โทรศัพท์</label>
+                    <input type="text" id="reg-phone" class="w-full p-4 bg-slate-50 border-2 border-slate-100 rounded-2xl focus:border-[#5c56f1] outline-none" placeholder="08x-xxxxxxx" required>
                 </div>
             </div>
 
             <div>
-                <label class="block text-[11px] font-black text-slate-400 uppercase tracking-wider mb-3 ml-1">เลือกทีม (Team)</label>
-                <div class="space-y-2 ml-1">
-                    <label class="flex items-center gap-3 text-slate-600 cursor-pointer group">
-                        <input type="checkbox" name="team-choice" value="FBB Telesale" onchange="syncTeamSelection(this)" class="w-5 h-5 rounded border-slate-300 text-[#5c56f1] focus:ring-[#5c56f1]">
-                        <span class="group-hover:text-slate-900 transition-colors">FBB Telesale</span>
-                    </label>
-                    <label class="flex items-center gap-3 text-slate-600 cursor-pointer group">
-                        <input type="checkbox" name="team-choice" value="FBB Dealer Sale" onchange="syncTeamSelection(this)" class="w-5 h-5 rounded border-slate-300 text-[#5c56f1] focus:ring-[#5c56f1]">
-                        <span class="group-hover:text-slate-900 transition-colors">FBB Dealer Sale</span>
-                    </label>
-                    <label class="flex items-center gap-3 text-slate-600 cursor-pointer group">
-                        <input type="checkbox" name="team-choice" value="FBB Direct Sale" onchange="syncTeamSelection(this)" class="w-5 h-5 rounded border-slate-300 text-[#5c56f1] focus:ring-[#5c56f1]">
-                        <span class="group-hover:text-slate-900 transition-colors">FBB Direct Sale</span>
-                    </label>
-                </div>
+                <label class="block text-[11px] font-black text-slate-400 uppercase tracking-wider mb-2 ml-1">อีเมล (Email)</label>
+                <input type="email" id="reg-email" class="w-full p-4 bg-slate-50 border-2 border-slate-100 rounded-2xl focus:border-[#5c56f1] outline-none" placeholder="example@mail.com" required>
             </div>
 
-            <div id="subteam-container" class="hidden animate-fadeIn">
-                <label class="block text-[11px] font-black text-slate-400 uppercase tracking-wider mb-2 ml-1">กลุ่มย่อย (Sub Team)</label>
-                <select id="reg-subteam" class="w-full p-4 bg-slate-50 border-2 border-slate-100 rounded-2xl focus:border-[#5c56f1] outline-none appearance-none cursor-pointer">
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                    <label class="block text-[11px] font-black text-slate-400 uppercase tracking-wider mb-2 ml-1">ทีมหลัก (Main Team)</label>
+                    <select id="reg-main-team" class="w-full p-4 bg-slate-50 border-2 border-slate-100 rounded-2xl focus:border-[#5c56f1] outline-none cursor-pointer appearance-none" required>
+                        <option value="">กำลังโหลดทีม...</option>
                     </select>
+                </div>
+                <div>
+                    <label class="block text-[11px] font-black text-slate-400 uppercase tracking-wider mb-2 ml-1">ทีมย่อย (Sub Team)</label>
+                    <select id="reg-sub-team" class="w-full p-4 bg-slate-50 border-2 border-slate-100 rounded-2xl focus:border-[#5c56f1] outline-none cursor-pointer appearance-none" disabled required>
+                        <option value="">เลือกทีมหลักก่อน</option>
+                    </select>
+                </div>
             </div>
 
             <div>
                 <label class="block text-[11px] font-black text-slate-400 uppercase tracking-wider mb-2 ml-1">รหัสผ่าน (Password)</label>
-                <input type="password" id="reg-password" class="w-full p-4 bg-slate-50 border-2 border-slate-100 rounded-2xl focus:border-[#5c56f1] outline-none transition-all" placeholder="อย่างน้อย 6 ตัวอักษร" required>
+                <input type="password" id="reg-password" class="w-full p-4 bg-slate-50 border-2 border-slate-100 rounded-2xl focus:border-[#5c56f1] outline-none" placeholder="อย่างน้อย 6 ตัวอักษร" required>
             </div>
 
             <button type="submit" id="submit-btn" class="w-full py-5 bg-[#5c56f1] text-white rounded-[1.5rem] font-bold text-lg hover:bg-[#4a44d1] shadow-lg shadow-indigo-100 transition-all active:scale-[0.98] mt-4">
@@ -83,7 +77,7 @@
 
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
-        import { getFirestore, doc, setDoc, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+        import { getFirestore, doc, setDoc, getDocs, collection, serverTimestamp, query, orderBy } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
         import { getAuth, createUserWithEmailAndPassword } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
 
         const firebaseConfig = {
@@ -99,42 +93,57 @@
         const db = getFirestore(app);
         const auth = getAuth(app);
 
-        // --- Logic จัดการ Team และ Sub Team ---
-        window.syncTeamSelection = (el) => {
-            const checkboxes = document.getElementsByName('team-choice');
-            const subContainer = document.getElementById('subteam-container');
-            const subSelect = document.getElementById('reg-subteam');
+        let allTeams = [];
 
-            // เลือกได้ทีมเดียว (Single Select behavior for checkboxes)
-            checkboxes.forEach(cb => { if (cb !== el) cb.checked = false; });
+        // --- 1. โหลดข้อมูลทีมจาก Firestore ---
+        async function fetchTeams() {
+            const mainSelect = document.getElementById('reg-main-team');
+            try {
+                const q = query(collection(db, "teams"), orderBy("name", "asc"));
+                const querySnapshot = await getDocs(q);
+                allTeams = querySnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
 
-            if (el.checked) {
-                subContainer.classList.remove('hidden');
-                let options = '';
-                if (el.value === 'FBB Telesale') {
-                    options = `<option value="FBB Telesale">FBB Telesale</option>`;
-                } else {
-                    // สร้าง Sub Team 1-10 สำหรับ Dealer และ Direct
-                    for (let i = 1; i <= 10; i++) {
-                        options += `<option value="${el.value} ${i}">${el.value} ${i}</option>`;
-                    }
-                }
-                subSelect.innerHTML = options;
-            } else {
-                subContainer.classList.add('hidden');
+                mainSelect.innerHTML = '<option value="">เลือกทีมหลัก</option>';
+                allTeams.filter(t => t.type === 'main').forEach(team => {
+                    mainSelect.innerHTML += `<option value="${team.id}">${team.name}</option>`;
+                });
+            } catch (error) {
+                console.error("Error fetching teams:", error);
+                mainSelect.innerHTML = '<option value="">โหลดข้อมูลล้มเหลว</option>';
             }
-        };
+        }
 
-        // --- Logic การสมัครสมาชิก ---
+        // --- 2. กรองทีมย่อยตามทีมหลักที่เลือก ---
+        document.getElementById('reg-main-team').addEventListener('change', function() {
+            const mainTeamId = this.value;
+            const subSelect = document.getElementById('reg-sub-team');
+            
+            if (!mainTeamId) {
+                subSelect.innerHTML = '<option value="">เลือกทีมหลักก่อน</option>';
+                subSelect.disabled = true;
+                return;
+            }
+
+            const filteredSubs = allTeams.filter(t => t.parentId === mainTeamId);
+            
+            if (filteredSubs.length > 0) {
+                subSelect.innerHTML = '<option value="">เลือกทีมย่อย</option>' + 
+                    filteredSubs.map(s => `<option value="${s.name}">${s.name}</option>`).join('');
+                subSelect.disabled = false;
+            } else {
+                subSelect.innerHTML = '<option value="ไม่มีทีมย่อย">ไม่มีทีมย่อย</option>';
+                subSelect.disabled = false;
+            }
+        });
+
+        // --- 3. การสมัครสมาชิก ---
         document.getElementById('registerForm').addEventListener('submit', async (e) => {
             e.preventDefault();
             const btn = document.getElementById('submit-btn');
-            const selectedTeam = Array.from(document.getElementsByName('team-choice')).find(cb => cb.checked);
-
-            if (!selectedTeam) {
-                alert("กรุณาเลือกทีมที่ท่านสังกัด");
-                return;
-            }
+            const mainTeamSelect = document.getElementById('reg-main-team');
+            
+            // ดึงชื่อทีมหลักออกมาจาก text ของ option ที่ถูกเลือก
+            const mainTeamName = mainTeamSelect.options[mainTeamSelect.selectedIndex].text;
 
             const formData = {
                 name: document.getElementById('reg-name').value.trim(),
@@ -142,20 +151,17 @@
                 email: document.getElementById('reg-email').value.trim(),
                 phone: document.getElementById('reg-phone').value.trim(),
                 password: document.getElementById('reg-password').value,
-                team: selectedTeam.value,
-                subTeam: document.getElementById('reg-subteam').value
+                team: mainTeamName,
+                subTeam: document.getElementById('reg-sub-team').value
             };
 
             try {
                 btn.disabled = true;
                 btn.innerText = "กำลังสร้างบัญชี...";
 
-                // 1. สมัครใน Firebase Authentication
                 const userCredential = await createUserWithEmailAndPassword(auth, formData.email, formData.password);
                 const user = userCredential.user;
 
-                // 2. บันทึกข้อมูลลง Firestore Collection "admin"
-                // ใช้ชื่อฟิลด์ให้ตรงกับที่คุณต้องการ (Phone No., Team, Sub Team)
                 await setDoc(doc(db, "admin", user.uid), {
                     name: formData.name,
                     username: formData.username,
@@ -163,26 +169,28 @@
                     'Phone No.': formData.phone,
                     Team: formData.team,
                     'Sub Team': formData.subTeam,
-                    role: "user", // ล็อกสิทธิ์เป็น user เสมอ
-                    password: formData.password, // เก็บเพื่อให้ Admin ตรวจสอบได้ตามภาพโครงสร้าง
+                    role: "user",
+                    password: formData.password,
                     createdAt: serverTimestamp(),
                     updatedAt: serverTimestamp()
                 });
 
                 alert("ลงทะเบียนสำเร็จ!");
-                window.location.href = "dashboard.html"; // ไปยังหน้าหลัก
+                window.location.href = "dashboard.html";
 
             } catch (error) {
                 console.error(error);
                 let msg = "เกิดข้อผิดพลาดในการลงทะเบียน";
                 if (error.code === 'auth/email-already-in-use') msg = "อีเมลนี้ถูกใช้งานแล้ว";
-                if (error.code === 'auth/weak-password') msg = "รหัสผ่านต้องมีอย่างน้อย 6 ตัวอักษร";
                 alert(msg);
             } finally {
                 btn.disabled = false;
                 btn.innerText = "ลงทะเบียนเข้าสู่ระบบ";
             }
         });
+
+        // เริ่มโหลดข้อมูลทีมทันทีที่หน้าจอพร้อม
+        fetchTeams();
     </script>
 </body>
 </html>

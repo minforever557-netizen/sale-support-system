@@ -1,0 +1,258 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Audit Logs - Sale Support System</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Kanit:wght@300;400;600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <style>
+        body { font-family: 'Kanit', sans-serif; background-color: #f8fafc; }
+        .filter-input { @apply bg-white border border-slate-200 rounded-xl px-4 py-2 text-sm outline-none focus:border-indigo-500 transition-all; }
+        .error-row { background-color: #fff1f2 !important; }
+        .modal-active { overflow: hidden; }
+        .modal-backdrop-blur { backdrop-filter: blur(10px); background-color: rgba(15, 23, 42, 0.5); }
+        .modal-animate { transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1); }
+    </style>
+</head>
+<body class="flex min-h-screen">
+
+    <aside id="sidebar-placeholder" class="hidden lg:block w-64 sticky top-0 h-screen bg-white border-r border-slate-200"></aside>
+
+    <div class="flex-1 flex flex-col min-w-0">
+        <div id="topbar-placeholder"></div>
+
+        <main class="p-4 md:p-8">
+            <div class="mb-8">
+                <h2 class="text-2xl font-bold text-slate-800 tracking-tight">System Audit Trail</h2>
+                <p class="text-sm text-slate-500">ติดตามกิจกรรมผู้ใช้และ Error ทั้งหมด (ย้อนหลัง 90 วัน)</p>
+            </div>
+
+            <div class="bg-white p-6 rounded-[2.5rem] shadow-sm border border-slate-100 mb-6">
+                <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
+                    <div>
+                        <label class="block text-[10px] font-black text-slate-400 uppercase mb-2 ml-1">ค้นหาผู้ใช้งาน</label>
+                        <input type="text" id="filter-user" placeholder="ชื่อหรืออีเมล..." class="filter-input w-full">
+                    </div>
+                    <div>
+                        <label class="block text-[10px] font-black text-slate-400 uppercase mb-2 ml-1">วันที่</label>
+                        <input type="date" id="filter-date" class="filter-input w-full">
+                    </div>
+                    <div>
+                        <label class="block text-[10px] font-black text-slate-400 uppercase mb-2 ml-1">ประเภทกิจกรรม</label>
+                        <select id="filter-type" class="filter-input w-full">
+                            <option value="ALL">ทั้งหมด</option>
+                            <option value="ERROR">ดูเฉพาะ Error</option>
+                            <option value="CLICK_EVENT">การคลิกเมนู</option>
+                            <option value="PAGE_VIEW">การเข้าหน้าเว็บ</option>
+                        </select>
+                    </div>
+                    <div class="flex items-end">
+                        <button onclick="applyFilters()" class="w-full py-2.5 bg-[#5c56f1] text-white rounded-xl font-bold hover:bg-indigo-700 transition shadow-lg shadow-indigo-100">
+                            กรองข้อมูล
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <div class="bg-white rounded-[2.5rem] shadow-xl border border-slate-100 overflow-hidden">
+                <div class="overflow-x-auto">
+                    <table class="w-full text-left border-collapse">
+                        <thead>
+                            <tr class="bg-slate-50/50 border-b border-slate-100">
+                                <th class="p-6 text-[10px] font-black text-slate-400 uppercase tracking-widest">วัน/เวลา</th>
+                                <th class="p-6 text-[10px] font-black text-slate-400 uppercase tracking-widest">ผู้ใช้งาน / หน้า</th>
+                                <th class="p-6 text-[10px] font-black text-slate-400 uppercase tracking-widest">รายละเอียดกิจกรรม / สิ่งที่พิมพ์</th>
+                                <th class="p-6 text-[10px] font-black text-slate-400 uppercase tracking-widest text-center">ประเภท</th>
+                            </tr>
+                        </thead>
+                        <tbody id="log-list" class="divide-y divide-slate-50">
+                            <tr><td colspan="4" class="p-20 text-center text-slate-400 italic">กำลังโหลดข้อมูล Log...</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <div id="logout-modal" class="fixed inset-0 z-[100] hidden flex items-center justify-center p-4">
+        <div class="absolute inset-0 modal-backdrop-blur opacity-0 transition-opacity duration-300" id="logout-backdrop"></div>
+        <div class="relative bg-white w-full max-w-sm rounded-[3rem] p-10 shadow-2xl scale-90 opacity-0 modal-animate" id="logout-content">
+            <div class="text-center">
+                <div class="w-20 h-20 bg-red-50 rounded-full flex items-center justify-center mx-auto mb-6">
+                    <span class="text-3xl">🚪</span>
+                </div>
+                <h3 class="text-2xl font-bold text-slate-800 mb-2">Logout?</h3>
+                <p class="text-slate-500 mb-8 text-sm">ต้องการออกจากระบบใช่หรือไม่?</p>
+                <div class="flex gap-3">
+                    <button id="confirm-logout" class="flex-1 py-4 bg-red-500 text-white rounded-2xl font-bold hover:bg-red-600 transition shadow-lg">ยืนยัน</button>
+                    <button id="close-logout" class="flex-1 py-4 bg-slate-100 text-slate-600 rounded-2xl font-bold hover:bg-slate-200">ยกเลิก</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script type="module">
+        import { initializeApp, getApps } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
+        import { getFirestore, collection, query, where, orderBy, onSnapshot, doc, getDoc, limit } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+        import { getAuth, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
+
+        const firebaseConfig = {
+            apiKey: "AIzaSyAa2uSD_tjNqYE2eXnZcn75h_jAVscDG-c",
+            authDomain: "salesupportsystemapp.firebaseapp.com",
+            projectId: "salesupportsystemapp",
+            storageBucket: "salesupportsystemapp.firebasestorage.app",
+            messagingSenderId: "840890441207",
+            appId: "1:840890441207:web:f3a5076d46e963a90de2f2"
+        };
+
+        const app = getApps().length === 0 ? initializeApp(firebaseConfig) : getApps()[0];
+        const db = getFirestore(app);
+        const auth = getAuth(app);
+
+        let currentUser = null;
+        let allLogs = [];
+
+        // --- 1. Load Layout (Sidebar & Topbar) ---
+        async function loadLayout(userData, email) {
+            const comps = [
+                { id: 'sidebar-placeholder', url: './components/sidebar.html' },
+                { id: 'topbar-placeholder', url: './components/topbar.html' }
+            ];
+
+            for (const comp of comps) {
+                const res = await fetch(comp.url);
+                if (res.ok) {
+                    const el = document.getElementById(comp.id);
+                    el.innerHTML = await res.text();
+                    el.classList.remove('hidden');
+                    
+                    // เรียกใช้ Script ใน Component ที่โหลดมา
+                    el.querySelectorAll("script").forEach(oldScript => {
+                        const newScript = document.createElement("script");
+                        newScript.type = "module";
+                        newScript.textContent = oldScript.textContent;
+                        document.head.appendChild(newScript);
+                    });
+                }
+            }
+
+            // ตั้งข้อมูลใน Topbar หลังโหลดเสร็จ
+            setTimeout(() => {
+                const nameEl = document.querySelector('#topbar-user-name');
+                const emailEl = document.querySelector('#topbar-user-email');
+                const avatarEl = document.querySelector('#topbar-avatar-text');
+                if (nameEl) nameEl.innerText = userData.name || "Admin";
+                if (emailEl) emailEl.innerText = email;
+                if (avatarEl) avatarEl.innerText = (userData.name || "A")[0].toUpperCase();
+            }, 500);
+        }
+
+        // --- 2. Auth Check ---
+        onAuthStateChanged(auth, async (user) => {
+            if (user) {
+                const adminDoc = await getDoc(doc(db, "admin", user.uid));
+                if (adminDoc.exists() && adminDoc.data().role === 'admin') {
+                    currentUser = adminDoc.data();
+                    loadLayout(currentUser, user.email);
+                    initLogsListener();
+                } else { window.location.replace("dashboard.html"); }
+            } else { window.location.replace("login.html"); }
+        });
+
+        // --- 3. Logs Data Management ---
+        function initLogsListener() {
+            const ninetyDaysAgo = new Date();
+            ninetyDaysAgo.setDate(ninetyDaysAgo.getDate() - 90);
+
+            const q = query(
+                collection(db, "logs"),
+                where("timestamp", ">=", ninetyDaysAgo),
+                orderBy("timestamp", "desc"),
+                limit(1000)
+            );
+
+            onSnapshot(q, (snapshot) => {
+                allLogs = snapshot.docs.map(d => ({ id: d.id, ...d.data() }));
+                renderLogs(allLogs);
+            });
+        }
+
+        function renderLogs(logs) {
+            const list = document.getElementById('log-list');
+            if (logs.length === 0) {
+                list.innerHTML = `<tr><td colspan="4" class="p-20 text-center text-slate-400 italic">ไม่พบข้อมูลประวัติในช่วงนี้</td></tr>`;
+                return;
+            }
+
+            list.innerHTML = logs.map(log => {
+                const date = log.timestamp?.toDate().toLocaleString('th-TH') || '-';
+                const isError = log.isError === true || log.actionType === 'SYSTEM_ERROR';
+                
+                return `
+                    <tr class="${isError ? 'error-row' : 'hover:bg-slate-50'} transition-all group">
+                        <td class="p-6 text-xs text-slate-400 font-mono">${date}</td>
+                        <td class="p-6">
+                            <p class="font-bold text-slate-800 text-sm">${log.userName || 'Unknown'}</p>
+                            <p class="text-[10px] text-slate-400 uppercase font-black tracking-tighter">${log.path || '/'}</p>
+                        </td>
+                        <td class="p-6">
+                            <p class="text-slate-700 text-sm leading-relaxed">${log.details || '-'}</p>
+                        </td>
+                        <td class="p-6 text-center">
+                            <span class="px-3 py-1 rounded-full text-[9px] font-black uppercase tracking-widest ${isError ? 'bg-red-100 text-red-600' : 'bg-indigo-100 text-indigo-600'}">
+                                ${log.actionType}
+                            </span>
+                        </td>
+                    </tr>
+                `;
+            }).join('');
+        }
+
+        window.applyFilters = () => {
+            const userFilter = document.getElementById('filter-user').value.toLowerCase();
+            const dateFilter = document.getElementById('filter-date').value;
+            const typeFilter = document.getElementById('filter-type').value;
+
+            const filtered = allLogs.filter(log => {
+                const logDate = log.timestamp?.toDate().toISOString().split('T')[0];
+                const matchesUser = (log.userName?.toLowerCase().includes(userFilter)) || (log.userEmail?.toLowerCase().includes(userFilter));
+                const matchesDate = !dateFilter || logDate === dateFilter;
+                const matchesType = typeFilter === 'ALL' || (typeFilter === 'ERROR' ? (log.isError || log.actionType === 'SYSTEM_ERROR') : log.actionType === typeFilter);
+
+                return matchesUser && matchesDate && matchesType;
+            });
+
+            renderLogs(filtered);
+        };
+
+        // --- 4. Logout Modal Support ---
+        window.openLogoutModal = () => {
+            const modal = document.getElementById('logout-modal');
+            modal.classList.remove('hidden');
+            document.body.classList.add('modal-active');
+            setTimeout(() => {
+                document.getElementById('logout-backdrop').classList.add('opacity-100');
+                document.getElementById('logout-content').classList.remove('scale-90', 'opacity-0');
+            }, 10);
+        };
+
+        const closeLogoutModal = () => {
+            document.getElementById('logout-backdrop').classList.remove('opacity-100');
+            document.getElementById('logout-content').classList.add('scale-90', 'opacity-0');
+            setTimeout(() => {
+                document.getElementById('logout-modal').classList.add('hidden');
+                document.body.classList.remove('modal-active');
+            }, 300);
+        };
+
+        document.getElementById('close-logout').onclick = closeLogoutModal;
+        document.getElementById('confirm-logout').onclick = async () => {
+            await signOut(auth);
+            window.location.replace("login.html");
+        };
+
+    </script>
+</body>
+</html>

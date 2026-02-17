@@ -1,23 +1,27 @@
-<header class="bg-white/80 backdrop-blur-md sticky top-0 z-40 border-b border-slate-100 px-8 py-4">
+<header class="bg-white/80 backdrop-blur-md sticky top-0 z-40 border-b border-slate-100 px-8 py-4 shadow-sm">
     <div class="flex flex-col md:flex-row md:items-center justify-between gap-4">
         
         <div class="flex items-center gap-4">
-            <div id="tp-avatar-circle" class="w-12 h-12 bg-[#5c56f1] rounded-2xl flex items-center justify-center text-white font-bold text-xl shadow-lg shadow-indigo-100">
+            <div id="tp-avatar-circle" class="w-12 h-12 bg-gradient-to-br from-[#5c56f1] to-[#7c77f5] rounded-2xl flex items-center justify-center text-white font-bold text-xl shadow-lg shadow-indigo-100 ring-2 ring-white">
                 ?
             </div>
+            
             <div class="flex flex-col">
                 <div class="flex items-center gap-2">
-                    <span id="tp-fullname" class="text-slate-800 font-bold leading-tight">กำลังโหลด...</span>
-                    <span class="text-slate-300">|</span>
-                    <span id="tp-username" class="text-[#5c56f1] text-xs font-black uppercase tracking-wider">@username</span>
+                    <span id="tp-fullname" class="text-slate-800 font-bold leading-tight text-lg">กำลังโหลด...</span>
+                    <span class="text-slate-300 text-xs">|</span>
+                    <span id="tp-username" class="text-[#5c56f1] text-xs font-black uppercase tracking-widest bg-indigo-50 px-2 py-0.5 rounded-md">@username</span>
                 </div>
-                <span id="tp-email" class="text-slate-400 text-xs">email@example.com</span>
+                <span id="tp-email" class="text-slate-400 text-xs font-medium mt-0.5">email@loading.com</span>
             </div>
         </div>
 
-        <div class="flex flex-col md:items-end bg-slate-50 px-6 py-2.5 rounded-[1.25rem] border border-slate-100">
-            <div id="tp-clock" class="text-xl font-bold text-slate-700 tracking-tight leading-none">00:00:00</div>
-            <div id="tp-date" class="text-[10px] font-black text-slate-400 uppercase tracking-widest mt-1">วันที่กำลังโหลด...</div>
+        <div class="flex flex-row md:flex-col items-center md:items-end bg-slate-50 px-6 py-2.5 rounded-[1.5rem] border border-slate-100 gap-3 md:gap-1">
+            <div class="flex items-center gap-2">
+                <span class="w-2 h-2 bg-emerald-500 rounded-full animate-pulse"></span>
+                <div id="tp-clock" class="text-2xl font-black text-slate-700 tracking-tighter leading-none min-w-[100px] text-right">00:00:00</div>
+            </div>
+            <div id="tp-date" class="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] mt-0.5">กำลังโหลดวันเวลา...</div>
         </div>
     </div>
 </header>
@@ -27,7 +31,7 @@
     import { getFirestore, doc, getDoc } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
     import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
 
-    // ป้องกันการ Initialize Firebase ซ้ำซ้อน
+    // จัดการ Firebase App Instance
     let app;
     try { 
         app = getApp(); 
@@ -46,14 +50,17 @@
     const db = getFirestore(app);
     const auth = getAuth(app);
 
-    // --- 1. ฟังก์ชันนาฬิกา Real-time ---
-    function startTopbarClock() {
-        const clockEl = document.getElementById('tp-clock');
-        const dateEl = document.getElementById('tp-date');
-        
+    // --- ฟังก์ชันนาฬิกา Real-time ---
+    function initTopbarClock() {
         const update = () => {
             const now = new Date();
-            if(clockEl) clockEl.innerText = now.toLocaleTimeString('th-TH', { hour12: false });
+            const clockEl = document.getElementById('tp-clock');
+            const dateEl = document.getElementById('tp-date');
+            
+            if(clockEl) clockEl.innerText = now.toLocaleTimeString('th-TH', { 
+                hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: false 
+            });
+            
             if(dateEl) dateEl.innerText = now.toLocaleDateString('th-TH', { 
                 weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' 
             });
@@ -62,30 +69,35 @@
         update();
     }
 
-    // --- 2. ดึงข้อมูลผู้ใช้จาก Firestore (Collection: admin) ---
+    // --- ดึงข้อมูล Profile จาก Firestore ---
     onAuthStateChanged(auth, async (user) => {
         if (user) {
             try {
-                // ดึงข้อมูลจาก Table admin ตาม UID ของคนที่ Login
+                // ค้นหาข้อมูลใน Collection 'admin' ตาม UID
                 const userDoc = await getDoc(doc(db, "admin", user.uid));
                 const data = userDoc.exists() ? userDoc.data() : {};
                 
-                // นำข้อมูลมาแสดงผลใน ID ต่างๆ
-                const fullName = data.name || user.displayName || 'Anonymous';
+                // รวมข้อมูลแสดงผล
+                const fullName = data.name || user.displayName || 'Sale Support User';
                 const userName = data.username || user.email.split('@')[0];
+                const email = data.email || user.email;
 
-                if(document.getElementById('tp-fullname')) document.getElementById('tp-fullname').innerText = fullName;
-                if(document.getElementById('tp-username')) document.getElementById('tp-username').innerText = `@${userName}`;
-                if(document.getElementById('tp-email')) document.getElementById('tp-email').innerText = data.email || user.email;
-                if(document.getElementById('tp-avatar-circle')) {
-                    document.getElementById('tp-avatar-circle').innerText = fullName.charAt(0).toUpperCase();
-                }
-            } catch (error) {
-                console.error("Error fetching user data:", error);
+                // อัปเดต UI
+                const nameEl = document.getElementById('tp-fullname');
+                const userEl = document.getElementById('tp-username');
+                const mailEl = document.getElementById('tp-email');
+                const iconEl = document.getElementById('tp-avatar-circle');
+
+                if(nameEl) nameEl.innerText = fullName;
+                if(userEl) userEl.innerText = `@${userName}`;
+                if(mailEl) mailEl.innerText = email;
+                if(iconEl) iconEl.innerText = fullName.charAt(0).toUpperCase();
+                
+            } catch (err) {
+                console.error("Topbar Error:", err);
             }
         }
     });
 
-    // เริ่มทำงานทันทีที่โหลดไฟล์สำเร็จ
-    startTopbarClock();
+    initTopbarClock();
 </script>

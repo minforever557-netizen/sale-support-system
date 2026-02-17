@@ -17,17 +17,31 @@
     <aside id="sidebar-placeholder" class="hidden lg:block w-64 bg-white border-r border-green-100"></aside>
 
     <div class="flex-1 flex flex-col min-w-0">
-        <header id="topbar-placeholder" class="bg-white shadow-sm border-b border-green-100 sticky top-0 z-40 h-16 flex items-center px-6">
-            <h1 class="text-lg font-bold text-gray-700">รายการใบงาน (Ticket List)</h1>
-        </header>
+        <header id="topbar-placeholder" class="bg-white shadow-sm border-b border-green-100 sticky top-0 z-40 h-16 flex items-center px-6"></header>
 
         <main class="p-4 md:p-8">
-            <div class="flex justify-between items-center mb-6">
-                <h2 class="text-2xl font-bold text-gray-800">รายการของฉัน</h2>
+            <div class="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-6">
+                <h2 class="text-2xl font-bold text-gray-800">รายการใบงานของฉัน</h2>
                 <button onclick="window.location.href='new-ticket.html'" class="bg-green-600 text-white px-6 py-2.5 rounded-xl font-bold hover:bg-green-700 transition shadow-md flex items-center gap-2">
                     <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" /></svg>
                     เปิดใบงานใหม่
                 </button>
+            </div>
+
+            <div class="bg-white p-4 rounded-2xl shadow-sm border border-green-100 mb-6 flex flex-col md:flex-row gap-4">
+                <div class="relative flex-1">
+                    <span class="absolute inset-y-0 left-0 pl-3 flex items-center text-gray-400">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" /></svg>
+                    </span>
+                    <input type="text" id="searchInput" placeholder="ค้นหาหมายเลข Internet หรือเลขบัตรประชาชน..." 
+                        class="w-full pl-10 pr-4 py-2.5 bg-gray-50 border border-gray-200 rounded-xl focus:ring-2 focus:ring-green-500 focus:outline-none transition">
+                </div>
+                <div class="flex gap-2">
+                    <select id="sortOrder" class="bg-gray-50 border border-gray-200 text-gray-600 px-4 py-2.5 rounded-xl focus:outline-none focus:ring-2 focus:ring-green-500 font-medium">
+                        <option value="desc">จัดเรียง: ใหม่ไปเก่า</option>
+                        <option value="asc">จัดเรียง: เก่าไปใหม่</option>
+                    </select>
+                </div>
             </div>
 
             <div class="bg-white rounded-3xl shadow-xl overflow-hidden border border-green-100">
@@ -36,15 +50,14 @@
                         <thead>
                             <tr class="bg-gray-50 border-b border-gray-100">
                                 <th class="p-5 text-sm font-bold text-gray-600">วันที่สร้าง</th>
-                                <th class="p-5 text-sm font-bold text-gray-600">หัวข้อปัญหา</th>
+                                <th class="p-5 text-sm font-bold text-gray-600">หัวข้อ</th>
                                 <th class="p-5 text-sm font-bold text-gray-600">Internet No.</th>
                                 <th class="p-5 text-sm font-bold text-gray-600 text-center">สถานะ</th>
                                 <th class="p-5 text-sm font-bold text-gray-600 text-center">จัดการ</th>
                             </tr>
                         </thead>
                         <tbody id="ticket-list" class="divide-y divide-gray-50">
-                            <tr><td colspan="5" class="p-10 text-center text-gray-400">กำลังโหลดข้อมูล...</td></tr>
-                        </tbody>
+                            </tbody>
                     </table>
                 </div>
             </div>
@@ -56,30 +69,10 @@
         <div class="relative bg-white w-full max-w-2xl rounded-3xl shadow-2xl overflow-hidden modal-animate">
             <div class="bg-green-600 p-6 text-white flex justify-between items-center">
                 <h3 class="text-xl font-bold">รายละเอียดใบงาน</h3>
-                <button onclick="closeModal()" class="hover:bg-green-700 p-1 rounded-full transition">
-                    <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" /></svg>
-                </button>
+                <button onclick="closeModal()" class="text-white hover:opacity-70 transition">ปิด</button>
             </div>
-            <div class="p-8 space-y-6">
-                <div class="grid grid-cols-2 gap-6">
-                    <div>
-                        <p class="text-xs text-gray-400 uppercase font-black tracking-widest">หัวข้อปัญหา</p>
-                        <p id="m-topic" class="text-lg font-bold text-gray-800"></p>
-                    </div>
-                    <div>
-                        <p class="text-xs text-gray-400 uppercase font-black tracking-widest">Internet No.</p>
-                        <p id="m-id" class="text-lg font-bold text-gray-800"></p>
-                    </div>
+            <div id="modalContent" class="p-8">
                 </div>
-                <hr class="border-gray-100">
-                <div>
-                    <p class="text-xs text-gray-400 uppercase font-black tracking-widest mb-3">รายละเอียดทั้งหมด</p>
-                    <div id="m-detail" class="bg-gray-50 p-5 rounded-2xl text-gray-700 whitespace-pre-wrap leading-relaxed border border-gray-100 max-h-80 overflow-y-auto"></div>
-                </div>
-            </div>
-            <div class="p-6 bg-gray-50 text-right">
-                <button onclick="closeModal()" class="px-8 py-2.5 bg-white border border-gray-200 text-gray-600 rounded-xl font-bold hover:bg-gray-100 transition shadow-sm">ปิดหน้าต่าง</button>
-            </div>
         </div>
     </div>
 
@@ -98,69 +91,90 @@
         const app = initializeApp(firebaseConfig);
         const db = getFirestore(app);
 
-        // โหลด Sidebar/Topbar
-        fetch('./components/sidebar.html').then(r => r.text()).then(h => document.getElementById('sidebar-placeholder').innerHTML = h).catch(() => {});
+        let allTickets = []; // เก็บข้อมูลทั้งหมดไว้ทำ Client-side Search
 
-        // ฟังก์ชันเปิด Modal และดึงข้อมูล
-        window.viewDetail = async (id) => {
-            const modal = document.getElementById('detailModal');
-            document.getElementById('m-detail').innerText = "กำลังโหลดข้อมูล...";
-            modal.classList.remove('hidden');
+        // ฟังก์ชันโหลดและแสดงผล
+        const renderTickets = (data) => {
+            const list = document.getElementById('ticket-list');
+            if (data.length === 0) {
+                list.innerHTML = `<tr><td colspan="5" class="p-10 text-center text-gray-400">ไม่พบข้อมูลที่ค้นหา</td></tr>`;
+                return;
+            }
 
+            list.innerHTML = data.map(t => {
+                const date = t.createdAt ? t.createdAt.toDate().toLocaleDateString('th-TH') : '-';
+                const statusColor = t.status === 'Success' ? 'bg-green-100 text-green-700' : 'bg-orange-100 text-orange-700';
+                return `
+                    <tr class="hover:bg-green-50 transition-colors">
+                        <td class="p-5 text-sm text-gray-600">${date}</td>
+                        <td class="p-5 text-sm font-bold text-gray-800">${t.topic}</td>
+                        <td class="p-5 text-sm text-gray-600">${t.id_number}</td>
+                        <td class="p-5 text-center">
+                            <span class="px-3 py-1 rounded-full text-xs font-bold ${statusColor}">${t.status || 'On Progress'}</span>
+                        </td>
+                        <td class="p-5 text-center">
+                            <button onclick="viewDetail('${t.docId}')" class="text-green-600 font-bold hover:underline">ดูรายละเอียด</button>
+                        </td>
+                    </tr>
+                `;
+            }).join('');
+        };
+
+        // ดึงข้อมูลจาก Firebase
+        const fetchTickets = async (order = "desc") => {
+            const list = document.getElementById('ticket-list');
+            list.innerHTML = `<tr><td colspan="5" class="p-10 text-center">กำลังโหลดข้อมูล...</td></tr>`;
+            
             try {
-                const docSnap = await getDoc(doc(db, "tickets", id));
-                if (docSnap.exists()) {
-                    const data = docSnap.data();
-                    document.getElementById('m-topic').innerText = data.topic;
-                    document.getElementById('m-id').innerText = data.id_number;
-                    document.getElementById('m-detail').innerText = data.detail;
-                }
+                const q = query(collection(db, "tickets"), orderBy("createdAt", order));
+                const snap = await getDocs(q);
+                allTickets = snap.docs.map(doc => ({ ...doc.data(), docId: doc.id }));
+                renderTickets(allTickets);
             } catch (err) {
-                document.getElementById('m-detail').innerText = "โหลดข้อมูลล้มเหลว";
+                console.error(err);
+                list.innerHTML = `<tr><td colspan="5" class="p-10 text-center text-red-500">เกิดข้อผิดพลาดในการโหลดข้อมูล</td></tr>`;
+            }
+        };
+
+        // ระบบค้นหา (Search)
+        document.getElementById('searchInput').addEventListener('input', (e) => {
+            const term = e.target.value.toLowerCase();
+            const filtered = allTickets.filter(t => 
+                (t.id_number && t.id_number.toLowerCase().includes(term)) || 
+                (t.id_card && t.id_card.toLowerCase().includes(term))
+            );
+            renderTickets(filtered);
+        });
+
+        // ระบบจัดเรียง (Sort)
+        document.getElementById('sortOrder').addEventListener('change', (e) => {
+            fetchTickets(e.target.value);
+        });
+
+        // Modal Logic
+        window.viewDetail = async (id) => {
+            document.getElementById('detailModal').classList.remove('hidden');
+            document.getElementById('modalContent').innerHTML = "กำลังโหลด...";
+            const snap = await getDoc(doc(db, "tickets", id));
+            if (snap.exists()) {
+                const d = snap.data();
+                document.getElementById('modalContent').innerHTML = `
+                    <div class="space-y-4">
+                        <div class="grid grid-cols-2 gap-4">
+                            <p class="text-sm text-gray-500 uppercase">Internet No: <br><b class="text-gray-800">${d.id_number}</b></p>
+                            <p class="text-sm text-gray-500 uppercase">เลขบัตรประชาชน: <br><b class="text-gray-800">${d.id_card || '-'}</b></p>
+                        </div>
+                        <hr>
+                        <p class="text-sm text-gray-500 uppercase font-bold">หัวข้อ: <span class="text-gray-800">${d.topic}</span></p>
+                        <div class="bg-gray-50 p-4 rounded-xl border border-gray-100 min-h-[100px] whitespace-pre-wrap">${d.detail}</div>
+                    </div>
+                `;
             }
         };
 
         window.closeModal = () => document.getElementById('detailModal').classList.add('hidden');
 
-        // โหลดข้อมูล Ticket
-        const fetchTickets = async () => {
-            const list = document.getElementById('ticket-list');
-            try {
-                const q = query(collection(db, "tickets"), orderBy("createdAt", "desc"));
-                const snap = await getDocs(q);
-                
-                if (snap.empty) {
-                    list.innerHTML = `<tr><td colspan="5" class="p-10 text-center text-gray-400">ไม่พบรายการใบงาน</td></tr>`;
-                    return;
-                }
-
-                list.innerHTML = "";
-                snap.forEach((doc) => {
-                    const d = doc.data();
-                    const date = d.createdAt ? d.createdAt.toDate().toLocaleDateString('th-TH') : '-';
-                    const statusColor = d.status === 'Success' ? 'bg-green-100 text-green-700' : 'bg-orange-100 text-orange-700';
-
-                    list.innerHTML += `
-                        <tr class="hover:bg-green-50/50 transition-colors border-b border-gray-50">
-                            <td class="p-5 text-sm text-gray-600">${date}</td>
-                            <td class="p-5 text-sm font-bold text-gray-800">${d.topic}</td>
-                            <td class="p-5 text-sm text-gray-600">${d.id_number}</td>
-                            <td class="p-5 text-center">
-                                <span class="px-3 py-1 rounded-full text-xs font-bold ${statusColor}">${d.status || 'On Progress'}</span>
-                            </td>
-                            <td class="p-5 text-center">
-                                <button onclick="viewDetail('${doc.id}')" class="text-green-600 hover:text-green-800 font-bold text-sm underline decoration-2 underline-offset-4">
-                                    ดูรายละเอียด
-                                </button>
-                            </td>
-                        </tr>
-                    `;
-                });
-            } catch (err) {
-                list.innerHTML = `<tr><td colspan="5" class="p-10 text-center text-red-500">Error: ${err.message}</td></tr>`;
-            }
-        };
-
+        // เริ่มต้นโหลดข้อมูล
         fetchTickets();
     </script>
 </body>

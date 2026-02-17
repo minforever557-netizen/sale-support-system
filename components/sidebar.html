@@ -1,25 +1,19 @@
-<div class="w-64 h-screen bg-white shadow-md flex flex-col justify-between">
-
-    <div>
-        <div class="p-5 text-green-600 font-bold text-xl">
-            Sale Support
-        </div>
-
-        <nav class="px-4 space-y-2">
-            <a href="dashboard.html" class="block py-2">Dashboard</a>
-
-            <p class="text-xs text-gray-400 mt-4">TICKET</p>
-
-            <a href="#" class="block py-2">New Ticket</a>
-            <a href="#" class="block py-2">My Ticket</a>
-        </nav>
+<div class="h-screen w-64 bg-white border-r border-green-100 flex flex-col fixed left-0 top-0">
+    <div class="p-6 text-2xl font-bold text-green-700 border-b border-green-50">
+        Menu
     </div>
-
-    <div class="p-4">
-        <button id="logoutBtn"
-            class="w-full bg-red-500 text-white py-3 rounded-lg">
-            Logout
-        </button>
+    <nav class="flex-1 p-4 space-y-2">
+        <a href="dashboard.html" class="block p-3 rounded-lg bg-green-50 text-green-700 font-bold">Dashboard</a>
+        
+        <div class="pt-4 pb-2 text-xs font-bold text-gray-400 uppercase">Ticket System</div>
+        <a href="new-ticket.html" class="block p-3 rounded-lg hover:bg-orange-50 text-gray-700">เปิดใบงานใหม่ (New)</a>
+        <a href="my-ticket.html" class="block p-3 rounded-lg hover:bg-orange-50 text-gray-700">ใบงานของฉัน (My)</a>
+        
+        <div class="pt-4 pb-2 text-xs font-bold text-gray-400 uppercase">Admin Section</div>
+        <a href="user-management.html" class="block p-3 rounded-lg hover:bg-green-50 text-gray-700">จัดการผู้ใช้งาน</a>
+        <a href="topic-management.html" class="block p-3 rounded-lg hover:bg-green-50 text-gray-700">ตั้งค่าหัวข้อปัญหา</a>
+    </nav>
+    <div class="p-4 border-t border-green-50">
+        <button class="w-full p-2 text-red-500 font-bold hover:bg-red-50 rounded-lg">ออกจากระบบ</button>
     </div>
-
 </div>

@@ -1,4 +1,4 @@
-.menu{
-  @apply block p-3 rounded-lg cursor-pointer
-  hover:bg-primary text-gray-700;
-}
+<a class="block p-3 rounded-lg cursor-pointer 
+hover:bg-primary text-gray-700">
+  Dashboard
+</a>

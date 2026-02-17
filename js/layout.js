@@ -23,3 +23,4 @@ function startClock() {
 }
 
 loadLayout();
+loadUserProfile();

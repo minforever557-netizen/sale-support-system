@@ -1,42 +1,57 @@
 <!DOCTYPE html>
 <html lang="th">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Register | Sale Support</title>
-  <script src="https://cdn.tailwindcss.com"></script>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Register - Sale Support System</title>
+    <script src="https://cdn.tailwindcss.com"></script>
 </head>
-<body class="min-h-screen bg-[#EFFAF0] p-4 md:p-8">
-  <div class="max-w-2xl mx-auto bg-white rounded-2xl shadow-xl p-6 md:p-8">
-    <h1 class="text-2xl font-bold text-green-700">Register ผู้ใช้งาน</h1>
-    <form id="registerForm" class="grid grid-cols-1 md:grid-cols-2 gap-4 mt-6">
-      <input id="username" placeholder="Username" class="border rounded-lg p-3" required />
-      <input id="password" type="password" minlength="4" placeholder="Password (ขั้นต่ำ 4 ตัว)" class="border rounded-lg p-3" required />
-      <input id="firstName" placeholder="ชื่อ" class="border rounded-lg p-3" required />
-      <input id="lastName" placeholder="สกุล" class="border rounded-lg p-3" required />
-      <input id="email" type="email" placeholder="Email" class="border rounded-lg p-3" required />
-      <input id="phone" placeholder="เบอร์โทรศัพท์" class="border rounded-lg p-3" required />
-      <div class="md:col-span-2">
-        <p class="font-medium mb-2">หน่วยงาน (เลือกได้ 1 รายการ)</p>
-        <div class="grid md:grid-cols-3 gap-2 text-sm">
-          <label class="border rounded p-2"><input type="radio" name="department" value="FBB Dealer Sale" required /> FBB Dealer Sale</label>
-          <label class="border rounded p-2"><input type="radio" name="department" value="FBB Direct Sale" /> FBB Direct Sale</label>
-          <label class="border rounded p-2"><input type="radio" name="department" value="FBB Telesale" /> FBB Telesale</label>
-        </div>
-      </div>
-      <div class="md:col-span-2">
-        <label class="font-medium">ทีม</label>
-        <select id="team" class="w-full border rounded-lg p-3 mt-1" required>
-          <option value="">เลือกหน่วยงานก่อน</option>
-        </select>
-      </div>
-      <div class="md:col-span-2 flex gap-3">
-        <button class="bg-green-500 hover:bg-green-600 text-white px-6 py-3 rounded-lg">สมัครสมาชิก</button>
-        <a href="login.html" class="bg-orange-400 text-white px-6 py-3 rounded-lg">กลับหน้า Login</a>
-      </div>
-    </form>
-    <p id="message" class="text-sm mt-4"></p>
-  </div>
-  <script type="module" src="js/register.js"></script>
+<body class="bg-green-50 flex items-center justify-center min-h-screen p-4">
+    <div class="bg-white p-8 rounded-2xl shadow-xl w-full max-w-md border-t-8 border-orange-500">
+        <h2 class="text-3xl font-bold text-green-700 text-center mb-6">สมัครสมาชิก</h2>
+        <form id="registerForm" class="space-y-4">
+            <input type="text" id="username" placeholder="Username (สำหรับ Login)" class="w-full p-3 border rounded-lg focus:ring-2 focus:ring-green-400 outline-none" required>
+            <input type="password" id="password" placeholder="Password (ขั้นต่ำ 4 ตัว)" minlength="4" class="w-full p-3 border rounded-lg focus:ring-2 focus:ring-green-400 outline-none" required>
+            <input type="text" id="fullname" placeholder="ชื่อ - นามสกุล" class="w-full p-3 border rounded-lg focus:ring-2 focus:ring-green-400 outline-none" required>
+            <input type="email" id="email" placeholder="Email" class="w-full p-3 border rounded-lg focus:ring-2 focus:ring-green-400 outline-none" required>
+            <input type="tel" id="phone" placeholder="เบอร์โทรศัพท์" class="w-full p-3 border rounded-lg focus:ring-2 focus:ring-green-400 outline-none" required>
+
+            <div class="bg-green-100 p-4 rounded-lg">
+                <p class="font-bold text-green-800 mb-2 text-sm">หน่วยงาน</p>
+                <div class="grid grid-cols-1 gap-2 text-sm">
+                    <label class="flex items-center"><input type="radio" name="dept" value="Fbb Dealer Sale" class="mr-2 accent-orange-500" required> Fbb Dealer Sale</label>
+                    <label class="flex items-center"><input type="radio" name="dept" value="Fbb Direct Sale" class="mr-2 accent-orange-500"> Fbb Direct Sale</label>
+                    <label class="flex items-center"><input type="radio" name="dept" value="FBB Telesale" class="mr-2 accent-orange-500"> FBB Telesale</label>
+                </div>
+            </div>
+
+            <select id="team" class="w-full p-3 border rounded-lg focus:ring-2 focus:ring-green-400 outline-none" required>
+                <option value="">-- กรุณาเลือกทีม --</option>
+            </select>
+
+            <button type="submit" class="w-full bg-green-600 text-white py-3 rounded-xl font-bold hover:bg-green-700 transition duration-300">ลงทะเบียน</button>
+        </form>
+        <p class="text-center mt-4 text-gray-600 text-sm">มีบัญชีแล้ว? <a href="login.html" class="text-orange-500 font-bold">เข้าสู่ระบบ</a></p>
+    </div>
+
+    <script type="module">
+        const teams = {
+            "Fbb Dealer Sale": ["FBB Dealer Sale 1-1"],
+            "Fbb Direct Sale": Array.from({length: 10}, (_, i) => `FBB Direct Sale 1-${i+1}`),
+            "FBB Telesale": ["FBB Telesale"]
+        };
+
+        document.querySelectorAll('input[name="dept"]').forEach(radio => {
+            radio.addEventListener('change', (e) => {
+                const teamSelect = document.getElementById('team');
+                teamSelect.innerHTML = '<option value="">-- กรุณาเลือกทีม --</option>';
+                teams[e.target.value].forEach(t => {
+                    const opt = document.createElement('option');
+                    opt.value = t; opt.textContent = t;
+                    teamSelect.appendChild(opt);
+                });
+            });
+        });
+    </script>
 </body>
 </html>

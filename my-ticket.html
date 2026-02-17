@@ -7,14 +7,17 @@
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://fonts.googleapis.com/css2?family=Kanit:wght@300;400;600&display=swap" rel="stylesheet">
     <style>
-        body { font-family: 'Kanit', sans-serif; }
+        body { font-family: 'Kanit', sans-serif; background-color: #f8fafc; }
         .modal-animate { animation: fadeIn 0.2s ease-out; }
         @keyframes fadeIn { from { opacity: 0; transform: scale(0.95); } to { opacity: 1; transform: scale(1); } }
     </style>
 </head>
-<body class="bg-[#f8fafc] flex min-h-screen">
+<body class="flex min-h-screen">
+    
+    <aside id="sidebar-placeholder" class="hidden lg:block w-72 bg-white border-r border-slate-100 min-h-screen sticky top-0"></aside>
+
     <div class="flex-1 flex flex-col min-w-0">
-        <header id="topbar-placeholder" class="bg-white/80 backdrop-blur-md sticky top-0 z-40 h-20 flex items-center px-8 border-b border-slate-100"></header>
+        <header id="topbar-placeholder" class="sticky top-0 z-40"></header>
 
         <main class="p-6 md:p-10 max-w-7xl mx-auto w-full">
             <div class="flex flex-col md:flex-row justify-between items-start md:items-center gap-6 mb-10">
@@ -22,23 +25,17 @@
                     <h2 class="text-3xl font-bold text-slate-800 tracking-tight">ใบงานของฉัน</h2>
                     <p class="text-slate-500 mt-1">ติดตามและจัดการรายการ Ticket ทั้งหมดที่คุณเป็นผู้สร้าง</p>
                 </div>
-                <a href="new-ticket.html" class="bg-indigo-600 hover:bg-indigo-700 text-white px-8 py-3.5 rounded-2xl font-semibold transition-all shadow-lg shadow-indigo-100 flex items-center gap-2 group">
-                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 group-hover:rotate-90 transition-transform" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
-                    </svg>
+                <a href="new-ticket.html" class="bg-[#5c67f2] hover:bg-[#4a54d4] text-white px-8 py-3.5 rounded-2xl font-semibold transition-all shadow-lg shadow-indigo-100 flex items-center gap-2">
                     สร้าง Ticket
                 </a>
             </div>
 
-            <div class="bg-white p-5 rounded-[2rem] shadow-sm border border-slate-100 mb-8 flex flex-col md:flex-row gap-4">
+            <div class="bg-white p-4 rounded-[2rem] shadow-sm border border-slate-100 mb-8 flex flex-col md:flex-row gap-4">
                 <div class="relative flex-1">
-                    <span class="absolute inset-y-0 left-0 pl-5 flex items-center text-slate-400">
-                        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" /></svg>
-                    </span>
-                    <input type="text" id="searchInput" placeholder="ค้นหาหัวข้อ หรือ Internet No..." 
-                        class="w-full pl-12 pr-6 py-4 bg-slate-50 border border-transparent focus:bg-white focus:border-indigo-500 rounded-2xl outline-none transition-all">
+                    <input type="text" id="searchInput" placeholder="ค้นหา Internet No..." 
+                        class="w-full pl-6 pr-6 py-4 bg-slate-50 border border-transparent focus:bg-white focus:border-indigo-500 rounded-2xl outline-none transition-all">
                 </div>
-                <select id="sortOrder" class="bg-slate-50 border border-transparent text-slate-600 px-8 py-4 rounded-2xl focus:bg-white focus:border-indigo-500 outline-none font-semibold cursor-pointer transition-all">
+                <select id="sortOrder" class="bg-slate-50 border border-transparent text-slate-600 px-8 py-4 rounded-2xl focus:bg-white focus:border-indigo-500 outline-none font-bold cursor-pointer">
                     <option value="desc">ใหม่ล่าสุด</option>
                     <option value="asc">เก่าที่สุด</option>
                 </select>
@@ -49,11 +46,11 @@
                     <table class="w-full text-left">
                         <thead>
                             <tr class="bg-slate-50/50 border-b border-slate-100">
-                                <th class="p-6 text-xs font-bold text-slate-400 uppercase tracking-widest">ID / Internet No.</th>
-                                <th class="p-6 text-xs font-bold text-slate-400 uppercase tracking-widest">หัวข้อปัญหา</th>
-                                <th class="p-6 text-xs font-bold text-slate-400 uppercase tracking-widest text-center">สถานะ</th>
-                                <th class="p-6 text-xs font-bold text-slate-400 uppercase tracking-widest">วันที่สร้าง</th>
-                                <th class="p-6 text-xs font-bold text-slate-400 uppercase tracking-widest text-right">จัดการ</th>
+                                <th class="p-6 text-xs font-black text-slate-400 uppercase tracking-widest">ID / Internet No.</th>
+                                <th class="p-6 text-xs font-black text-slate-400 uppercase tracking-widest">หัวข้อปัญหา</th>
+                                <th class="p-6 text-xs font-black text-slate-400 uppercase tracking-widest text-center">สถานะ</th>
+                                <th class="p-6 text-xs font-black text-slate-400 uppercase tracking-widest">วันที่สร้าง</th>
+                                <th class="p-6 text-xs font-black text-slate-400 uppercase tracking-widest text-right">จัดการ</th>
                             </tr>
                         </thead>
                         <tbody id="ticket-list" class="divide-y divide-slate-50">
@@ -74,7 +71,7 @@
             </div>
             <div id="modalBody" class="p-8 space-y-6 max-h-[60vh] overflow-y-auto"></div>
             <div class="p-8 bg-slate-50 text-right">
-                <button onclick="closeModal()" class="px-8 py-3 bg-white border border-slate-200 text-slate-600 rounded-2xl font-bold hover:bg-slate-100 transition">ปิด</button>
+                <button onclick="closeModal()" class="px-8 py-3 bg-white border border-slate-200 text-slate-600 rounded-2xl font-bold">ปิด</button>
             </div>
         </div>
     </div>
@@ -98,15 +95,20 @@
         const auth = getAuth(app);
 
         let allTickets = [];
-        let userEmail = "";
 
-        // Load Components
-        fetch('./components/sidebar.html').then(r => r.text()).then(h => document.getElementById('sidebar-placeholder').innerHTML = h).catch(()=>{});
-        fetch('./components/topbar.html').then(r => r.text()).then(h => document.getElementById('topbar-placeholder').innerHTML = h).catch(()=>{});
+        // 1. โหลด Components
+        async function initLayout() {
+            const sidebar = await fetch('./components/sidebar.html').then(r => r.text());
+            document.getElementById('sidebar-placeholder').innerHTML = sidebar;
 
+            const topbar = await fetch('./components/topbar.html').then(r => r.text());
+            document.getElementById('topbar-placeholder').innerHTML = topbar;
+        }
+        initLayout();
+
+        // 2. จัดการข้อมูล
         onAuthStateChanged(auth, (user) => {
             if (user) {
-                userEmail = user.email;
                 loadMyTickets();
             } else {
                 window.location.href = 'login.html';
@@ -115,19 +117,22 @@
 
         async function loadMyTickets(order = "desc") {
             const list = document.getElementById('ticket-list');
+            const user = auth.currentUser;
+            if(!user) return;
+
             try {
-                // Query กรองตาม ownerEmail และเรียงลำดับ
                 const q = query(
                     collection(db, "tickets"), 
-                    where("ownerEmail", "==", userEmail),
+                    where("ownerEmail", "==", user.email),
                     orderBy("createdAt", order)
                 );
                 const snap = await getDocs(q);
                 allTickets = snap.docs.map(d => ({ id: d.id, ...d.data() }));
                 renderTable(allTickets);
             } catch (err) {
+                // หากขึ้น Error Index ให้คลิกลิงก์ใน Console
                 console.error(err);
-                list.innerHTML = `<tr><td colspan="5" class="p-10 text-center text-red-500 font-semibold">เกิดข้อผิดพลาดในการโหลดข้อมูล (ตรวจสอบ Index ใน Firebase)</td></tr>`;
+                list.innerHTML = `<tr><td colspan="5" class="p-10 text-center text-red-500 font-bold">เกิดข้อผิดพลาด (ตรวจสอบ Firebase Index)</td></tr>`;
             }
         }
 
@@ -143,14 +148,14 @@
                 const statusColor = t.status === 'Success' ? 'bg-emerald-100 text-emerald-600' : 'bg-amber-100 text-amber-600';
                 return `
                     <tr class="hover:bg-slate-50/80 transition-colors">
-                        <td class="p-6 font-medium text-slate-700">${t.id_number}</td>
-                        <td class="p-6 text-slate-600">${t.topic || t.subject}</td>
+                        <td class="p-6 font-bold text-slate-700">${t.id_number}</td>
+                        <td class="p-6 text-slate-600 font-medium">${t.topic}</td>
                         <td class="p-6 text-center">
-                            <span class="px-4 py-1.5 rounded-full text-[10px] font-bold uppercase tracking-wider ${statusColor}">${t.status || 'Pending'}</span>
+                            <span class="px-4 py-1.5 rounded-full text-[10px] font-black uppercase tracking-wider ${statusColor}">${t.status || 'Pending'}</span>
                         </td>
-                        <td class="p-6 text-slate-500 text-sm">${date}</td>
+                        <td class="p-6 text-slate-500 text-sm font-medium">${date}</td>
                         <td class="p-6 text-right">
-                            <button onclick="viewTicket('${t.id}')" class="text-indigo-600 font-bold hover:text-indigo-800 transition">จัดการ</button>
+                            <button onclick="viewTicket('${t.id}')" class="text-[#5c67f2] font-black hover:text-indigo-800 transition">จัดการ</button>
                         </td>
                     </tr>
                 `;
@@ -170,24 +175,15 @@
                     <div class="space-y-4">
                         <div class="grid grid-cols-2 gap-4">
                             <div class="bg-slate-50 p-4 rounded-2xl">
-                                <p class="text-[10px] font-bold text-slate-400 uppercase tracking-widest">สถานะปัจจุบัน</p>
-                                <p class="text-indigo-600 font-bold">${d.status || 'On Progress'}</p>
+                                <p class="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1">สถานะ</p>
+                                <p class="text-[#5c67f2] font-black text-lg">${d.status || 'On Progress'}</p>
                             </div>
                             <div class="bg-slate-50 p-4 rounded-2xl">
-                                <p class="text-[10px] font-bold text-slate-400 uppercase tracking-widest">หมายเลข Internet</p>
-                                <p class="text-slate-700 font-bold">${d.id_number}</p>
+                                <p class="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1">Internet No.</p>
+                                <p class="text-slate-700 font-bold text-lg">${d.id_number}</p>
                             </div>
                         </div>
-                        <div>
-                            <p class="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-2">รายละเอียดปัญหา</p>
-                            <div class="p-5 bg-white border border-slate-100 rounded-2xl text-slate-600 text-sm leading-relaxed shadow-sm">${d.detail}</div>
-                        </div>
-                        ${d.adminNote ? `
-                        <div class="bg-indigo-50 p-6 rounded-[2rem] border border-indigo-100">
-                            <p class="text-[10px] font-bold text-indigo-400 uppercase tracking-widest mb-2">การตอบกลับจากเจ้าหน้าที่</p>
-                            <p class="text-slate-700 text-sm italic">${d.adminNote}</p>
-                            <p class="text-xs text-indigo-400 mt-4">ผู้ดูแล: ${d.adminName || 'Admin'}</p>
-                        </div>` : ''}
+                        <div class="p-5 bg-white border border-slate-100 rounded-2xl text-slate-600 text-sm whitespace-pre-line">${d.detail}</div>
                     </div>
                 `;
             }
@@ -197,7 +193,7 @@
         document.getElementById('sortOrder').addEventListener('change', (e) => loadMyTickets(e.target.value));
         document.getElementById('searchInput').addEventListener('input', (e) => {
             const term = e.target.value.toLowerCase();
-            const filtered = allTickets.filter(t => t.id_number.includes(term) || (t.topic || t.subject).toLowerCase().includes(term));
+            const filtered = allTickets.filter(t => t.id_number.includes(term) || t.topic.toLowerCase().includes(term));
             renderTable(filtered);
         });
     </script>

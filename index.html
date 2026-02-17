@@ -1,68 +1,99 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="th">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-<title>Sale Support - Login</title>
+<title>Sale Support Login</title>
 
-<!-- Tailwind -->
 <script src="https://cdn.tailwindcss.com"></script>
 
 </head>
 
-<body class="bg-gray-100">
+<body class="bg-gray-100 flex items-center justify-center h-screen">
 
-<!-- ===== LOGIN CONTAINER ===== -->
-<div class="min-h-screen flex items-center justify-center">
+<!-- LOGIN CARD -->
+<div class="bg-white shadow-xl rounded-2xl p-8 w-full max-w-md">
 
-  <div class="bg-white shadow-xl rounded-xl p-8 w-full max-w-md">
+    <h1 class="text-2xl font-bold text-green-600 text-center">
+        Sale Support System
+    </h1>
 
-      <!-- Logo / Title -->
-      <h1 class="text-2xl font-bold text-center mb-6">
-          Sale Support System
-      </h1>
+    <p class="text-center text-gray-400 mb-6">
+        Helpdesk Login
+    </p>
 
-      <!-- Username -->
-      <div class="mb-4">
-          <label class="block text-sm mb-1">Username</label>
-          <input
-              id="username"
-              type="text"
-              placeholder="Enter username"
-              class="w-full border rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
-          >
-      </div>
+    <!-- Username -->
+    <label class="block mb-2">Username</label>
+    <input
+        id="username"
+        type="text"
+        placeholder="Enter username"
+        class="w-full p-3 border rounded-lg mb-4 focus:ring-2 focus:ring-green-400"
+    />
 
-      <!-- Password -->
-      <div class="mb-6">
-          <label class="block text-sm mb-1">Password</label>
-          <input
-              id="password"
-              type="password"
-              placeholder="Enter password"
-              class="w-full border rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
-          >
-      </div>
+    <!-- Password -->
+    <label class="block mb-2">Password</label>
+    <input
+        id="password"
+        type="password"
+        placeholder="Enter password"
+        class="w-full p-3 border rounded-lg mb-6 focus:ring-2 focus:ring-green-400"
+    />
 
-      <!-- Login Button -->
-      <button
-          onclick="login()"
-          class="w-full bg-blue-600 hover:bg-blue-700 text-white py-2 rounded-lg font-semibold transition"
-      >
-          Login
-      </button>
+    <!-- LOGIN BUTTON -->
+    <button
+        id="loginBtn"
+        class="w-full bg-green-500 hover:bg-green-600 text-white p-3 rounded-lg transition"
+    >
+        Login
+    </button>
 
-      <!-- Status -->
-      <p id="loginStatus" class="text-center text-red-500 mt-4 text-sm"></p>
+    <div class="flex justify-between mt-4 text-sm">
+        <a href="#" class="text-gray-600 hover:text-green-600">
+            Register
+        </a>
 
-  </div>
+        <a href="#" class="text-gray-600 hover:text-green-600">
+            Forgot Password
+        </a>
+    </div>
 
 </div>
 
+<!-- Notify Box -->
+<div id="notify"
+class="fixed top-5 right-5 hidden px-6 py-3 rounded-xl shadow-lg text-white
+transform translate-x-40 opacity-0 transition-all duration-500">
+</div>
 
-<!-- ✅ IMPORTANT: ต้องเป็น module -->
-<script type="module" src="./js/login.js"></script>
+<!-- LOGIN SCRIPT -->
+<script type="module" src="js/login.js"></script>
+
+<!-- Notify Animation -->
+<script>
+function notify(message,type="success"){
+    const box=document.getElementById("notify");
+
+    box.innerText=message;
+
+    box.className=
+    "fixed top-5 right-5 px-6 py-3 rounded-xl shadow-lg text-white transition-all duration-500";
+
+    if(type==="success"){
+        box.classList.add("bg-green-500");
+    }else{
+        box.classList.add("bg-red-500");
+    }
+
+    box.classList.remove("hidden","translate-x-40","opacity-0");
+
+    setTimeout(()=>{
+        box.classList.add("translate-x-40","opacity-0");
+        setTimeout(()=>box.classList.add("hidden"),500);
+    },2000);
+}
+</script>
 
 </body>
 </html>

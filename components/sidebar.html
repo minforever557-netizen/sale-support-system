@@ -9,7 +9,7 @@
     <nav class="flex-1 px-4 space-y-1">
         <p class="px-4 text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2 mt-4">Main Menu</p>
         
-        <a href="dashboard.html" class="flex items-center gap-3 p-3.5 text-slate-600 hover:bg-indigo-50 hover:text-[#5c56f1] rounded-2xl transition group">
+        <a href="dashboard.html" class="flex items-center gap-3 p-3.5 text-slate-600 hover:bg-indigo-50 hover:text-[#5c56f1] rounded-2xl transition">
             <span class="text-lg">🏠</span> <span class="font-medium">Dashboard</span>
         </a>
 
@@ -55,12 +55,10 @@
     import { getAuth, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
     import { getFirestore, doc, getDoc } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
 
-    // Initialize Firebase Services (จะใช้จากหน้าหลักที่โหลดไฟล์นี้ไป)
     const auth = getAuth();
     const db = getFirestore();
 
-    // --- แก้ปัญหา Logout Is Not Defined ---
-    // ผูกฟังก์ชันเข้ากับ window object เพื่อให้ HTML มองเห็น
+    // --- FIX: ทำให้ปุ่ม Logout กดได้โดยประกาศผ่าน window ---
     window.logout = async () => {
         if (confirm("คุณต้องการออกจากระบบใช่หรือไม่?")) {
             try {
@@ -73,22 +71,21 @@
         }
     };
 
-    // --- ตรวจสอบสิทธิ์ (Role Check) ---
+    // --- Role Verification ---
     onAuthStateChanged(auth, async (user) => {
         if (user) {
             try {
-                // ดึงข้อมูล Role จากคอลเลกชัน admin
+                // ดึงข้อมูล role จาก Firestore
                 const userDoc = await getDoc(doc(db, "admin", user.uid));
                 if (userDoc.exists()) {
                     const userData = userDoc.data();
-                    // แสดงเมนู Admin เฉพาะคนที่มี role เป็น 'admin'
+                    // แสดงเมนู Admin เฉพาะเมื่อ role เป็น 'admin'
                     if (userData.role === 'admin') {
-                        const adminSection = document.getElementById('admin-menu-section');
-                        if (adminSection) adminSection.classList.remove('hidden');
+                        document.getElementById('admin-menu-section').classList.remove('hidden');
                     }
                 }
             } catch (err) {
-                console.error("Role Check Error:", err);
+                console.error("Error checking role:", err);
             }
         }
     });

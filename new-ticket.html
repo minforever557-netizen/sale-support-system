@@ -111,18 +111,49 @@
         // ฟังก์ชันป้องกันการลบ Template (พื้นฐาน)
         let currentTemplate = "";
 
-        topicSelect.addEventListener('change', (e) => {
-            const val = e.target.value;
-            if (val && templates[val]) {
-                currentTemplate = templates[val].text;
-                detailArea.value = currentTemplate;
-                slaBox.classList.remove('hidden');
-                slaVal.innerText = templates[val].sla;
-            } else {
-                detailArea.value = "";
-                slaBox.classList.add('hidden');
-            }
-        });
+topicSelect.addEventListener('change', (e) => {
+    const val = e.target.value;
+    if (val && templates[val]) {
+        protectedText = templates[val].text; // เก็บค่าต้นฉบับที่เป็นหัวข้อไว้
+        detailArea.value = protectedText;
+        // ... (SLA display logic) ...
+    }
+});
+
+// 1. ป้องกันการกดลบ (Backspace/Delete) หรือแก้ไขในส่วนที่ป้องกันไว้
+detailArea.addEventListener('keydown', (e) => {
+    // ตรวจสอบว่าตำแหน่ง Cursor อยู่ในโซนที่ห้ามลบหรือไม่
+    const cursorPosition = detailArea.selectionStart;
+
+    // ถ้ากด Backspace หรือ Delete ในขณะที่ Cursor อยู่ภายในหรือเท่ากับความยาวของหัวข้อ
+    if (cursorPosition <= protectedText.length) {
+        if (e.key === 'Backspace' || e.key === 'Delete') {
+            e.preventDefault(); // สั่งห้ามลบ
+        }
+    }
+});
+
+// 2. ป้องกันการลากคลุมแล้วพิมพ์ทับ หรือการวางข้อความ (Paste) ทับหัวข้อ
+detailArea.addEventListener('input', (e) => {
+    if (!detailArea.value.startsWith(protectedText)) {
+        // ถ้าข้อความเริ่มต้นไม่เหมือนเดิม (ถูกลบหรือแก้) ให้คืนค่ากลับเป็นของเดิมทันที
+        detailArea.value = protectedText + detailArea.value.substring(Math.max(0, detailArea.value.length - (detailArea.value.length - protectedText.length)));
+    }
+});
+
+// 3. เมื่อ User คลิกใน Textarea ให้เลื่อน Cursor ไปต่อท้ายหัวข้อเสมอ ถ้าคลิกโดนหัวข้อ
+detailArea.addEventListener('click', () => {
+    if (detailArea.selectionStart < protectedText.length) {
+        detailArea.setSelectionRange(protectedText.length, protectedText.length);
+    }
+});
+
+// 4. ป้องกันการลากคลุม (Select) ข้อความในส่วนหัวข้อ
+detailArea.addEventListener('select', () => {
+    if (detailArea.selectionStart < protectedText.length) {
+        detailArea.setSelectionRange(protectedText.length, Math.max(protectedText.length, detailArea.selectionEnd));
+    }
+});
 
         // ดักจับการแก้ไข หากลบจนสั้นกว่า Template ให้คืนค่า Template เดิม
         detailArea.addEventListener('input', () => {

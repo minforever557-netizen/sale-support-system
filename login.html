@@ -1,35 +1,32 @@
 <!DOCTYPE html>
 <html lang="th">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Login | Sale Support</title>
-  <script src="https://cdn.tailwindcss.com"></script>
-  <script>
-    tailwind.config = { theme: { extend: { colors: { brand: { green:'#7BC47F', light:'#EFFAF0', orange:'#FFA94D' } }}}};
-  </script>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Login - Sale Support</title>
+    <script src="https://cdn.tailwindcss.com"></script>
 </head>
-<body class="min-h-screen bg-brand-light flex items-center justify-center p-4">
-  <div class="w-full max-w-md bg-white rounded-2xl shadow-xl p-8">
-    <h1 class="text-2xl font-bold text-center text-green-700">Sale Support System</h1>
-    <p class="text-center text-gray-500 mt-1 mb-6">Login ด้วย Username</p>
-    <form id="loginForm" class="space-y-4">
-      <div>
-        <label class="text-sm font-medium">Username</label>
-        <input id="username" class="w-full border rounded-lg p-3 focus:outline-none focus:ring-2 focus:ring-green-300" required />
-      </div>
-      <div>
-        <label class="text-sm font-medium">Password</label>
-        <input id="password" type="password" minlength="4" class="w-full border rounded-lg p-3 focus:outline-none focus:ring-2 focus:ring-green-300" required />
-      </div>
-      <button class="w-full bg-green-500 hover:bg-green-600 text-white rounded-lg p-3 font-semibold">Login</button>
-    </form>
-    <div class="flex justify-between text-sm mt-4">
-      <a href="register.html" class="text-orange-500 hover:underline">Register</a>
-      <a href="forgot-password.html" class="text-orange-500 hover:underline">Forgot Password</a>
+<body class="bg-green-50 flex items-center justify-center min-h-screen">
+    <div class="bg-white p-10 rounded-3xl shadow-2xl w-full max-w-sm border-b-8 border-green-600">
+        <div class="text-center mb-8">
+            <h1 class="text-4xl font-black text-green-600">SALE</h1>
+            <p class="text-orange-500 font-bold tracking-widest uppercase">Support System</p>
+        </div>
+        <form class="space-y-5">
+            <div>
+                <label class="text-gray-500 text-xs font-bold ml-1 uppercase">Username</label>
+                <input type="text" placeholder="กรอกชื่อผู้ใช้งาน" class="w-full p-3 bg-gray-50 border-2 border-gray-100 rounded-xl focus:border-orange-400 outline-none transition">
+            </div>
+            <div>
+                <label class="text-gray-500 text-xs font-bold ml-1 uppercase">Password</label>
+                <input type="password" placeholder="••••" class="w-full p-3 bg-gray-50 border-2 border-gray-100 rounded-xl focus:border-orange-400 outline-none transition">
+            </div>
+            <button class="w-full bg-orange-500 text-white py-4 rounded-xl font-bold shadow-lg hover:bg-orange-600 transform hover:-translate-y-1 transition">LOG IN</button>
+            <div class="flex justify-between text-sm pt-2">
+                <a href="forgot-password.html" class="text-gray-400 hover:text-orange-500">ลืมรหัสผ่าน?</a>
+                <a href="register.html" class="text-green-600 font-bold">สร้างบัญชีใหม่</a>
+            </div>
+        </form>
     </div>
-    <p id="message" class="text-sm mt-4"></p>
-  </div>
-  <script type="module" src="js/login.js"></script>
 </body>
 </html>

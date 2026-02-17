@@ -13,16 +13,19 @@
     </style>
 </head>
 <body class="flex min-h-screen">
+
     <aside id="sidebar-placeholder" class="hidden lg:block w-64 sticky top-0 h-screen bg-white border-r border-slate-200"></aside>
 
     <div class="flex-1 flex flex-col min-w-0">
         <main class="p-8 space-y-8">
-            <div class="flex items-center justify-between">
+            <div class="flex flex-col md:flex-row md:items-center justify-between gap-4">
                 <div>
                     <h2 class="text-3xl font-bold text-slate-800">ใบงานของฉัน</h2>
-                    <p class="text-slate-400 text-sm mt-1">รายการที่คุณสร้างไว้ทั้งหมด</p>
+                    <p class="text-slate-400 text-sm mt-1">รายการ Ticket ที่คุณเป็นเจ้าของทั้งหมด</p>
                 </div>
-                <a href="create-ticket.html" class="bg-[#5c56f1] text-white px-8 py-4 rounded-2xl font-bold shadow-xl shadow-indigo-100 hover:bg-[#4a44d1] transition">+ สร้าง Ticket</a>
+                <a href="new-ticket.html" class="bg-[#5c56f1] text-white px-8 py-4 rounded-2xl font-bold hover:bg-[#4a44d1] transition shadow-xl shadow-indigo-100 flex items-center gap-2 w-fit">
+                    <span>➕</span> สร้าง Ticket
+                </a>
             </div>
 
             <div class="glass-card overflow-hidden">
@@ -31,13 +34,14 @@
                         <thead class="bg-slate-50 border-b border-slate-100">
                             <tr>
                                 <th class="p-6 text-[10px] font-black text-slate-400 uppercase tracking-widest">ID</th>
-                                <th class="p-6 text-[10px] font-black text-slate-400 uppercase tracking-widest">หัวข้อ</th>
+                                <th class="p-6 text-[10px] font-black text-slate-400 uppercase tracking-widest">หัวข้อปัญหา</th>
                                 <th class="p-6 text-[10px] font-black text-slate-400 uppercase tracking-widest text-center">สถานะ</th>
+                                <th class="p-6 text-[10px] font-black text-slate-400 uppercase tracking-widest">วันที่สร้าง</th>
                                 <th class="p-6 text-[10px] font-black text-slate-400 uppercase tracking-widest text-center">จัดการ</th>
                             </tr>
                         </thead>
                         <tbody id="ticket-list-body" class="divide-y divide-slate-50">
-                            <tr><td colspan="4" class="p-12 text-center text-slate-400 italic">กำลังดึงข้อมูล...</td></tr>
+                            <tr><td colspan="5" class="p-12 text-center text-slate-400 italic">กำลังดึงข้อมูลใบงานของคุณ...</td></tr>
                         </tbody>
                     </table>
                 </div>
@@ -50,10 +54,11 @@
         import { getFirestore, collection, query, where, getDocs, orderBy } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
         import { getAuth, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
 
+        // Firebase Config ฉบับแก้ไข (ต้องมี projectId)
         const firebaseConfig = {
             apiKey: "AIzaSyAa2uSD_tjNqYE2eXnZcn75h_jAVscDG-c",
             authDomain: "salesupportsystemapp.firebaseapp.com",
-            projectId: "salesupportsystemapp", // แก้ไข: เพิ่มกลับเข้ามาตามภาพ 12e182
+            projectId: "salesupportsystemapp", 
             storageBucket: "salesupportsystemapp.firebasestorage.app",
             messagingSenderId: "840890441207",
             appId: "1:840890441207:web:f3a5076d46e963a90de2f2"
@@ -63,36 +68,67 @@
         const db = getFirestore(app);
         const auth = getAuth(app);
 
-        // แก้ปัญหา Logout
+        // แก้ปัญหา Logout is not defined
         window.logout = () => signOut(auth).then(() => location.href = 'login.html');
 
         // โหลด Sidebar
-        fetch('sidebar.html').then(r => r.text()).then(h => document.getElementById('sidebar-placeholder').innerHTML = h);
-
-        onAuthStateChanged(auth, (user) => {
-            if (user) { loadTickets(user.email); } else { location.href = "login.html"; }
+        fetch('sidebar.html').then(r => r.text()).then(h => {
+            document.getElementById('sidebar-placeholder').innerHTML = h;
         });
 
-        async function loadTickets(email) {
+        onAuthStateChanged(auth, (user) => {
+            if (user) { loadMyTickets(user.email); } 
+            else { window.location.href = "login.html"; }
+        });
+
+        async function loadMyTickets(email) {
             const tbody = document.getElementById('ticket-list-body');
             try {
-                const q = query(collection(db, "tickets"), where("ownerEmail", "==", email), orderBy("createdAt", "desc"));
-                const snap = await getDocs(q);
-                tbody.innerHTML = snap.empty ? '<tr><td colspan="4" class="p-16 text-center text-slate-400">ไม่พบข้อมูล</td></tr>' : '';
+                // คิวรีนี้ต้องการ Index ใน Firebase
+                const q = query(
+                    collection(db, "tickets"), 
+                    where("ownerEmail", "==", email), 
+                    orderBy("createdAt", "desc")
+                );
                 
+                const snap = await getDocs(q);
+                tbody.innerHTML = '';
+
+                if (snap.empty) {
+                    tbody.innerHTML = '<tr><td colspan="5" class="p-16 text-center text-slate-400 font-light">คุณยังไม่ได้สร้างใบงานใดๆ</td></tr>';
+                    return;
+                }
+
                 snap.forEach(doc => {
-                    const d = doc.data();
+                    const data = doc.data();
+                    const date = data.createdAt?.toDate ? data.createdAt.toDate().toLocaleDateString('th-TH') : '---';
                     tbody.innerHTML += `
-                        <tr class="hover:bg-slate-50 transition">
-                            <td class="p-6 text-[10px] font-bold text-slate-400">#${doc.id.substring(0,6)}</td>
-                            <td class="p-6 font-semibold text-slate-700">${d.subject || 'N/A'}</td>
-                            <td class="p-6 text-center"><span class="status-badge ${d.status === 'Pending' ? 'bg-orange-100 text-orange-600' : 'bg-blue-100 text-blue-600'}">${d.status || 'Pending'}</span></td>
-                            <td class="p-6 text-center"><button onclick="location.href='ticket-detail.html?id=${doc.id}'" class="text-[#5c56f1] font-bold hover:underline">เปิดดู</button></td>
+                        <tr class="hover:bg-slate-50/50 transition cursor-default">
+                            <td class="p-6 text-[10px] font-bold text-slate-300">#${doc.id.substring(0,6)}</td>
+                            <td class="p-6 font-semibold text-slate-700">${data.subject || 'ไม่มีหัวข้อ'}</td>
+                            <td class="p-6 text-center">
+                                <span class="status-badge ${getStatusStyle(data.status)}">${data.status || 'Pending'}</span>
+                            </td>
+                            <td class="p-6 text-sm text-slate-500">${date}</td>
+                            <td class="p-6 text-center">
+                                <button onclick="location.href='ticket-detail.html?id=${doc.id}'" class="text-[#5c56f1] font-bold text-sm hover:underline">เปิดดู</button>
+                            </td>
                         </tr>`;
                 });
             } catch (err) {
-                tbody.innerHTML = '<tr><td colspan="4" class="p-12 text-center text-red-400 italic">กรุณากด "Create Index" ใน Console (ดูขั้นตอนที่ 1)</td></tr>';
+                console.error(err);
+                // แสดงลิงก์ให้กดสร้าง Index หากเกิด Error
+                tbody.innerHTML = `<tr><td colspan="5" class="p-12 text-center text-red-400">
+                    <p class="font-bold">กรุณากด 'Create Index' ใน Firebase Console</p>
+                    <p class="text-xs mt-2 opacity-70">เพื่อให้ระบบสามารถเรียงลำดับข้อมูลของคุณได้</p>
+                </td></tr>`;
             }
+        }
+
+        function getStatusStyle(s) {
+            if (s === 'Pending') return 'bg-orange-100 text-orange-600';
+            if (s === 'In Progress') return 'bg-emerald-100 text-emerald-600';
+            return 'bg-blue-100 text-blue-600';
         }
     </script>
 </body>

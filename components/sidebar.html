@@ -9,64 +9,95 @@
     <nav class="flex-1 px-4 space-y-1">
         <p class="px-4 text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2 mt-4">Main Menu</p>
         
-        <a href="dashboard.html" class="flex items-center gap-3 p-3.5 text-slate-600 hover:bg-indigo-50 hover:text-[#5c56f1] rounded-2xl transition">
+        <a href="dashboard.html" class="flex items-center gap-3 p-3.5 text-slate-600 hover:bg-indigo-50 hover:text-[#5c56f1] rounded-2xl transition group">
             <span class="text-lg">🏠</span> <span class="font-medium">Dashboard</span>
         </a>
+
         <a href="new-ticket.html" class="flex items-center gap-3 p-3.5 text-slate-600 hover:bg-indigo-50 hover:text-[#5c56f1] rounded-2xl transition">
             <span class="text-lg">➕</span> <span class="font-medium">สร้าง Ticket</span>
         </a>
+
         <a href="my-ticket.html" class="flex items-center gap-3 p-3.5 text-slate-600 hover:bg-indigo-50 hover:text-[#5c56f1] rounded-2xl transition">
             <span class="text-lg">📋</span> <span class="font-medium">ใบงานของฉัน</span>
         </a>
-        <a href="all-ticket.html" class="flex items-center gap-3 p-3.5 text-slate-600 hover:bg-indigo-50 hover:text-[#5c56f1] rounded-2xl transition border-b border-slate-50 pb-4">
+
+        <a href="all-ticket.html" class="flex items-center gap-3 p-3.5 text-slate-600 hover:bg-indigo-50 hover:text-[#5c56f1] rounded-2xl transition">
             <span class="text-lg">🎫</span> <span class="font-medium">ใบงานทั้งหมด</span>
         </a>
-        <a href="profile.html" class="flex items-center gap-3 p-3.5 text-slate-600 hover:bg-indigo-50 hover:text-[#5c56f1] rounded-2xl transition mt-2">
+
+        <a href="profile.html" class="flex items-center gap-3 p-3.5 text-slate-600 hover:bg-indigo-50 hover:text-[#5c56f1] rounded-2xl transition">
             <span class="text-lg">👤</span> <span class="font-medium">ข้อมูลส่วนตัว</span>
         </a>
 
-        <div id="admin-section" class="hidden pt-6 border-t border-slate-100 mt-4">
+        <div id="admin-menu-section" class="hidden pt-6 border-t border-slate-100 mt-4">
             <p class="px-4 text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2">Admin Control</p>
+            
             <a href="manage-tickets.html" class="flex items-center gap-3 p-3.5 text-slate-600 hover:bg-indigo-50 hover:text-[#5c56f1] rounded-2xl transition">
-                <span class="text-lg">🛠️</span> <span class="font-medium">จัดการ Ticket</span>
+                <span class="text-lg">🛠️</span> <span class="font-medium">จัดการ Ticket (System)</span>
             </a>
             <a href="user-management.html" class="flex items-center gap-3 p-3.5 text-slate-600 hover:bg-indigo-50 hover:text-[#5c56f1] rounded-2xl transition">
                 <span class="text-lg">👥</span> <span class="font-medium">จัดการผู้ใช้งาน</span>
             </a>
             <a href="settings.html" class="flex items-center gap-3 p-3.5 text-slate-600 hover:bg-indigo-50 hover:text-[#5c56f1] rounded-2xl transition">
-                <span class="text-lg">⚙️</span> <span class="font-medium">ตั้งค่าระบบ</span>
+                <span class="text-lg">⚙️</span> <span class="font-medium">ตั้งค่าหัวข้อปัญหา</span>
             </a>
         </div>
     </nav>
 
     <div class="p-4 border-t border-slate-100">
-        <button id="logout-btn" class="w-full flex items-center gap-3 p-4 text-red-500 hover:bg-red-50 rounded-2xl transition font-bold">
+        <button id="main-logout-btn" class="w-full flex items-center gap-3 p-4 text-red-500 hover:bg-red-50 rounded-2xl transition font-bold">
             <span class="text-lg">🚪</span> ออกจากระบบ
         </button>
     </div>
 </div>
 
 <script type="module">
+    // นำเข้าโมดูลที่จำเป็นจาก Firebase
     import { getAuth, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
     import { getFirestore, doc, getDoc } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
 
     const auth = getAuth();
     const db = getFirestore();
 
-    // ระบบ Logout (ใช้ Event Listener เพื่อเลี่ยงปัญหา ReferenceError)
-    document.getElementById('logout-btn').addEventListener('click', async () => {
-        if (confirm("ต้องการออกจากระบบใช่หรือไม่?")) {
-            await signOut(auth);
-            window.location.href = "login.html";
-        }
-    });
+    // --- ส่วนแก้ไขปัญหา LOGOUT ---
+    // ใช้ addEventListener เพื่อให้ปุ่มทำงานได้แน่นอน 100% โดยไม่ต้องพึ่ง onclick ใน HTML
+    const btnLogout = document.getElementById('main-logout-btn');
+    if (btnLogout) {
+        btnLogout.addEventListener('click', async () => {
+            if (confirm("คุณต้องการออกจากระบบใช่หรือไม่?")) {
+                try {
+                    await signOut(auth);
+                    // เมื่อ Logout สำเร็จ ให้กลับไปหน้า login.html ทันที
+                    window.location.replace("login.html"); 
+                } catch (error) {
+                    console.error("Logout Error:", error);
+                    alert("เกิดข้อผิดพลาดในการออกจากระบบ");
+                }
+            }
+        });
+    }
 
-    // ตรวจสอบสิทธิ์ Admin
+    // --- ส่วนตรวจสอบสิทธิ์ (Role Check) ---
     onAuthStateChanged(auth, async (user) => {
         if (user) {
-            const snap = await getDoc(doc(db, "admin", user.uid));
-            if (snap.exists() && snap.data().role === 'admin') {
-                document.getElementById('admin-section').classList.remove('hidden');
+            try {
+                // ดึงข้อมูล Role จากคอลเลกชัน admin
+                const userDoc = await getDoc(doc(db, "admin", user.uid));
+                if (userDoc.exists()) {
+                    const userData = userDoc.data();
+                    // แสดงเมนู Admin เฉพาะคนที่มี role เป็น 'admin'
+                    if (userData.role === 'admin') {
+                        const adminSection = document.getElementById('admin-menu-section');
+                        if (adminSection) adminSection.classList.remove('hidden');
+                    }
+                }
+            } catch (err) {
+                console.error("Role Check Error:", err);
+            }
+        } else {
+            // หากไม่ได้ Login อยู่ ให้เด้งไปหน้า Login อัตโนมัติ (Security Check)
+            if (!window.location.href.includes("login.html")) {
+                window.location.replace("login.html");
             }
         }
     });

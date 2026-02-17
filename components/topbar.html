@@ -1,45 +1,79 @@
-<div class="flex justify-between items-center w-full bg-white/80 backdrop-blur-md px-8 py-4 border-b border-slate-100">
-    <div class="flex items-center gap-4">
-        <div class="w-12 h-12 bg-[#5c67f2] rounded-2xl flex items-center justify-center text-white text-xl font-bold shadow-lg shadow-indigo-100">
-            <span id="tp-initial">?</span>
+<header class="bg-white/80 backdrop-blur-md sticky top-0 z-40 border-b border-slate-100 px-8 py-4">
+    <div class="flex flex-col md:flex-row md:items-center justify-between gap-4">
+        
+        <div class="flex items-center gap-4">
+            <div id="tp-avatar-circle" class="w-12 h-12 bg-[#5c56f1] rounded-2xl flex items-center justify-center text-white font-bold text-xl shadow-lg shadow-indigo-100">
+                ?
+            </div>
+            <div class="flex flex-col">
+                <div class="flex items-center gap-2">
+                    <span id="tp-fullname" class="text-slate-800 font-bold leading-tight">กำลังโหลด...</span>
+                    <span class="text-slate-300">|</span>
+                    <span id="tp-username" class="text-[#5c56f1] text-xs font-black uppercase tracking-wider">@username</span>
+                </div>
+                <span id="tp-email" class="text-slate-400 text-xs">email@example.com</span>
+            </div>
         </div>
-        <div>
-            <h1 class="text-slate-800 font-bold leading-tight flex items-center gap-2">
-                <span id="tp-name">กำลังโหลด...</span>
-            </h1>
-            <p class="text-slate-400 text-[11px] font-medium" id="tp-email">email@loading.com</p>
-        </div>
-    </div>
 
-    <div class="bg-slate-50 px-6 py-2 rounded-2xl border border-slate-100 flex flex-col items-end min-w-[160px]">
-        <span class="text-slate-700 font-black text-lg tracking-tight" id="tp-clock">00:00:00</span>
-        <span class="text-[9px] text-indigo-400 font-black uppercase tracking-widest" id="tp-date">กำลังโหลดวันเวลา...</span>
+        <div class="flex flex-col md:items-end bg-slate-50 px-6 py-2.5 rounded-[1.25rem] border border-slate-100">
+            <div id="tp-clock" class="text-xl font-bold text-slate-700 tracking-tight leading-none">00:00:00</div>
+            <div id="tp-date" class="text-[10px] font-black text-slate-400 uppercase tracking-widest mt-1">วันที่กำลังโหลด...</div>
+        </div>
     </div>
-</div>
+</header>
 
 <script type="module">
+    import { initializeApp, getApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
+    import { getFirestore, doc, getDoc } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
     import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
 
-    // ฟังก์ชันนาฬิกา
-    function updateClock() {
-        const now = new Date();
-        const clockEl = document.getElementById('tp-clock');
-        const dateEl = document.getElementById('tp-date');
-        if(clockEl) clockEl.textContent = now.toLocaleTimeString('th-TH', { hour12: false });
-        if(dateEl) dateEl.textContent = now.toLocaleDateString('th-TH', { 
-            weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' 
-        });
+    // ใช้ App ที่ initialize ไว้แล้ว หรือ init ใหม่ถ้ายังไม่มี
+    let app;
+    try { app = getApp(); } catch (e) {
+        const firebaseConfig = {
+            apiKey: "AIzaSyAa2uSD_tjNqYE2eXnZcn75h_jAVscDG-c",
+            authDomain: "salesupportsystemapp.firebaseapp.com",
+            projectId: "salesupportsystemapp",
+            storageBucket: "salesupportsystemapp.firebasestorage.app",
+            messagingSenderId: "840890441207",
+            appId: "1:840890441207:web:f3a5076d46e963a90de2f2"
+        };
+        app = initializeApp(firebaseConfig);
     }
-    setInterval(updateClock, 1000);
-    updateClock();
+    
+    const db = getFirestore(app);
+    const auth = getAuth(app);
 
-    // ดึงข้อมูล User มาแสดง
-    onAuthStateChanged(getAuth(), (user) => {
+    // --- Logic นาฬิกา ---
+    function startTopbarClock() {
+        const update = () => {
+            const now = new Date();
+            const clockEl = document.getElementById('tp-clock');
+            const dateEl = document.getElementById('tp-date');
+            if(clockEl) clockEl.innerText = now.toLocaleTimeString('th-TH', { hour12: false });
+            if(dateEl) dateEl.innerText = now.toLocaleDateString('th-TH', { 
+                weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' 
+            });
+        };
+        setInterval(update, 1000);
+        update();
+    }
+
+    // --- Logic ดึงข้อมูล User ---
+    onAuthStateChanged(auth, async (user) => {
         if (user) {
-            const name = user.displayName || user.email.split('@')[0];
-            document.getElementById('tp-name').textContent = name;
-            document.getElementById('tp-email').textContent = user.email;
-            document.getElementById('tp-initial').textContent = name.charAt(0).toUpperCase();
+            const userDoc = await getDoc(doc(db, "admin", user.uid));
+            const data = userDoc.exists() ? userDoc.data() : {};
+            
+            const name = data.name || user.displayName || 'User';
+            const username = data.username || user.email.split('@')[0];
+
+            if(document.getElementById('tp-fullname')) document.getElementById('tp-fullname').innerText = name;
+            if(document.getElementById('tp-username')) document.getElementById('tp-username').innerText = `@${username}`;
+            if(document.getElementById('tp-email')) document.getElementById('tp-email').innerText = user.email;
+            if(document.getElementById('tp-avatar-circle')) document.getElementById('tp-avatar-circle').innerText = name[0].toUpperCase();
         }
     });
+
+    startTopbarClock();
 </script>

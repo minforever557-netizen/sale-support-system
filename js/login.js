@@ -1,57 +1,38 @@
 import {
-    getFirestore,
-    collection,
-    getDocs
-} from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+  auth,
+  db,
+  collection,
+  getDocs,
+  query,
+  where,
+  signInWithEmailAndPassword
+} from "./firebase.js";
 
-import { app } from "./firebase.js";
+const form = document.getElementById("loginForm");
+const message = document.getElementById("message");
 
-const db = getFirestore(app);
+form?.addEventListener("submit", async (e) => {
+  e.preventDefault();
+  const username = document.getElementById("username").value.trim();
+  const password = document.getElementById("password").value;
 
-// ================= LOGIN =================
-document.getElementById("loginBtn")
-.addEventListener("click", async () => {
+  if (password.length < 4) {
+    message.textContent = "Password ต้องมีอย่างน้อย 4 ตัว";
+    message.className = "text-red-600 text-sm mt-4";
+    return;
+  }
 
-    const username = document.getElementById("username").value;
-    const password = document.getElementById("password").value;
+  try {
+    const userQ = query(collection(db, "users"), where("username", "==", username));
+    const snap = await getDocs(userQ);
+    if (snap.empty) throw new Error("ไม่พบ username");
 
-    if(!username || !password){
-        notify("กรอกข้อมูลให้ครบ","error");
-        return;
-    }
-
-    try{
-
-        const querySnapshot = await getDocs(collection(db,"admin"));
-
-        let loginSuccess = false;
-
-        querySnapshot.forEach((doc)=>{
-            const data = doc.data();
-
-            if(
-                data.username === username &&
-                data.password === password
-            ){
-                loginSuccess = true;
-
-                // SAVE SESSION
-                localStorage.setItem("user",JSON.stringify(data));
-
-                notify("Login สำเร็จ");
-
-                setTimeout(()=>{
-                    window.location.href="dashboard.html";
-                },1000);
-            }
-        });
-
-        if(!loginSuccess){
-            notify("Username หรือ Password ไม่ถูก","error");
-        }
-
-    }catch(err){
-        console.error(err);
-        notify("ระบบ error","error");
-    }
+    const userData = snap.docs[0].data();
+    await signInWithEmailAndPassword(auth, userData.email, password);
+    localStorage.setItem("profile", JSON.stringify({ id: snap.docs[0].id, ...userData }));
+    window.location.href = "app.html";
+  } catch (error) {
+    message.textContent = "เข้าสู่ระบบไม่สำเร็จ: " + error.message;
+    message.className = "text-red-600 text-sm mt-4";
+  }
 });

@@ -1,86 +1,61 @@
-<div class="w-full bg-white/80 backdrop-blur-md border-b border-slate-100 px-8 py-4">
-    <div class="flex flex-col md:flex-row md:items-center justify-between gap-4">
-        
-        <div class="flex items-center gap-4">
-            <div id="top-avatar-circle" class="w-12 h-12 bg-[#5c56f1] rounded-2xl flex items-center justify-center text-white font-bold text-xl shadow-lg shadow-indigo-100 transition-transform hover:scale-105">
-                ?
-            </div>
-            <div class="flex flex-col">
-                <div class="flex items-center gap-2">
-                    <span id="top-fullname" class="text-slate-800 font-bold leading-tight">กำลังโหลด...</span>
-                    <span class="text-slate-300">|</span>
-                    <span id="top-username" class="text-[#5c56f1] text-xs font-black uppercase tracking-wider">@username</span>
-                </div>
-                <span id="top-email" class="text-slate-400 text-xs">email@example.com</span>
-            </div>
+<div class="flex justify-between items-center w-full bg-white/80 backdrop-blur-md px-8 py-4 border-b border-slate-100">
+    <div class="flex items-center gap-4">
+        <div id="tp-bg-icon" class="w-12 h-12 bg-[#5c67f2] rounded-2xl flex items-center justify-center text-white text-xl font-bold shadow-lg shadow-indigo-100 transition-all">
+            <span id="tp-initial">?</span>
         </div>
-
-        <div class="flex flex-col md:items-end bg-slate-50 px-6 py-2.5 rounded-[1.25rem] border border-slate-100 shadow-sm">
-            <div id="top-clock" class="text-xl font-bold text-slate-700 tracking-tight leading-none">00:00:00</div>
-            <div id="top-date" class="text-[10px] font-black text-slate-400 uppercase tracking-widest mt-1">
-                วันที่กำลังโหลด...
-            </div>
+        <div>
+            <h1 class="text-slate-800 font-bold leading-tight flex items-center gap-2">
+                <span id="tp-name">กำลังโหลด...</span>
+            </h1>
+            <p class="text-slate-400 text-[11px] font-medium" id="tp-email">email@loading.com</p>
         </div>
+    </div>
 
+    <div class="bg-slate-50 px-6 py-2 rounded-2xl border border-slate-100 flex flex-col items-end min-w-[150px]">
+        <span class="text-slate-700 font-black text-lg tracking-tight" id="tp-clock">00:00:00</span>
+        <span class="text-[9px] text-indigo-400 font-black uppercase tracking-widest" id="tp-date">กำลังโหลดวันเวลา...</span>
     </div>
 </div>
 
 <script type="module">
+    // นำเข้า Firebase ภายใน Topbar เลยเพื่อให้มันจัดการตัวเองได้
     import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
-    import { getFirestore, doc, getDoc } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
 
-    const auth = getAuth();
-    const db = getFirestore();
-
-    // --- 1. ฟังก์ชันอัปเดตเวลา Realtime ---
-    function startRealtimeClock() {
-        const clockEl = document.getElementById('top-clock');
-        const dateEl = document.getElementById('top-date');
-        
+    // 1. ฟังก์ชันนาฬิกา
+    function startClock() {
         const update = () => {
             const now = new Date();
-            // รูปแบบเวลา: 16:30:05
-            clockEl.innerText = now.toLocaleTimeString('th-TH', { hour12: false });
-            // รูปแบบวันที่: วันอังคารที่ 17 กุมภาพันธ์ 2569
-            dateEl.innerText = now.toLocaleDateString('th-TH', { 
-                weekday: 'long', 
-                day: 'numeric', 
-                month: 'long', 
-                year: 'numeric' 
+            const clockEl = document.getElementById('tp-clock');
+            const dateEl = document.getElementById('tp-date');
+            
+            if(clockEl) clockEl.textContent = now.toLocaleTimeString('th-TH', { hour12: false });
+            if(dateEl) dateEl.textContent = now.toLocaleDateString('th-TH', { 
+                weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' 
             });
         };
-        
         setInterval(update, 1000);
         update();
     }
 
-    // --- 2. ดึงข้อมูล User มาแสดงผล ---
-    onAuthStateChanged(auth, async (user) => {
-        if (user) {
-            try {
-                // อ้างอิงเอกสารในคอลเลกชัน admin ตาม UID ของผู้ใช้
-                const userRef = doc(db, "admin", user.uid);
-                const snap = await getDoc(userRef);
-
-                if (snap.exists()) {
-                    const data = snap.data();
-                    
-                    // อัปเดต UI ด้วยข้อมูลจริงจาก Firestore
-                    document.getElementById('top-fullname').innerText = data.name || 'ไม่ระบุชื่อ';
-                    document.getElementById('top-username').innerText = `@${data.username || 'user'}`;
-                    document.getElementById('top-email').innerText = data.email || user.email;
-                    
-                    // ทำอักษรย่อสำหรับ Avatar (เช่น Somchai -> S)
-                    if (data.name) {
-                        document.getElementById('top-avatar-circle').innerText = data.name.charAt(0).toUpperCase();
-                    }
+    // 2. ฟังก์ชันดึง User (เรียกใช้ Auth)
+    function initUser() {
+        const auth = getAuth();
+        onAuthStateChanged(auth, (user) => {
+            if (user) {
+                const name = user.displayName || user.email.split('@')[0];
+                document.getElementById('tp-name').textContent = name;
+                document.getElementById('tp-email').textContent = user.email;
+                document.getElementById('tp-initial').textContent = name.charAt(0).toUpperCase();
+            } else {
+                // ถ้าไม่มี User ให้เด้งไป Login
+                if(!window.location.href.includes('login.html')) {
+                    window.location.href = 'login.html';
                 }
-            } catch (error) {
-                console.error("Error loading topbar data:", error);
             }
-        }
-    });
+        });
+    }
 
-    // เริ่มทำงานนาฬิกา
-    startRealtimeClock();
+    // เริ่มทำงาน
+    startClock();
+    initUser();
 </script>

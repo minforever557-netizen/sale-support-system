@@ -8,7 +8,9 @@
     <link href="https://fonts.googleapis.com/css2?family=Kanit:wght@300;400;600&display=swap" rel="stylesheet">
     <style>
         body { font-family: 'Kanit', sans-serif; background-color: #f8fafc; }
-        .glass-card { background: white; border-radius: 2rem; box-shadow: 0 4px 25px rgba(0,0,0,0.04); border: 1px solid #f1f5f9; }
+        /* ใช้ Theme เดียวกับ All Ticket */
+        .glass-card { background: white; border-radius: 2rem; box-shadow: 0 4px 20px rgba(0,0,0,0.03); border: 1px solid #f1f5f9; }
+        .status-badge { padding: 0.4rem 1rem; border-radius: 9999px; font-size: 0.7rem; font-weight: 700; text-transform: uppercase; }
     </style>
 </head>
 <body class="flex min-h-screen">
@@ -20,19 +22,19 @@
             <div class="flex flex-col md:flex-row md:items-center justify-between gap-4">
                 <div>
                     <h2 class="text-3xl font-bold text-slate-800">ใบงานของฉัน</h2>
-                    <p class="text-slate-400 text-sm mt-1">รายการที่คุณสร้างไว้ทั้งหมด</p>
+                    <p class="text-slate-400 text-sm mt-1">รายการ Ticket ที่คุณสร้างไว้ทั้งหมด</p>
                 </div>
                 <a href="create-ticket.html" class="bg-[#5c56f1] text-white px-8 py-4 rounded-2xl font-bold hover:bg-[#4a44d1] transition shadow-xl shadow-indigo-100 flex items-center gap-2 w-fit">
-                    <span>➕</span> สร้าง Ticket
+                    <span>➕</span> สร้าง Ticket ใหม่
                 </a>
             </div>
 
             <div class="glass-card overflow-hidden">
                 <div class="overflow-x-auto">
                     <table class="w-full text-left">
-                        <thead class="bg-slate-50/50 border-b border-slate-100">
+                        <thead class="bg-slate-50 border-b border-slate-100">
                             <tr>
-                                <th class="p-6 text-[10px] font-black text-slate-400 uppercase tracking-widest">ID</th>
+                                <th class="p-6 text-[10px] font-black text-slate-400 uppercase tracking-widest">หมายเลขงาน</th>
                                 <th class="p-6 text-[10px] font-black text-slate-400 uppercase tracking-widest">หัวข้อปัญหา</th>
                                 <th class="p-6 text-[10px] font-black text-slate-400 uppercase tracking-widest text-center">สถานะ</th>
                                 <th class="p-6 text-[10px] font-black text-slate-400 uppercase tracking-widest">วันที่สร้าง</th>
@@ -40,7 +42,7 @@
                             </tr>
                         </thead>
                         <tbody id="ticket-list-body" class="divide-y divide-slate-50">
-                            <tr><td colspan="5" class="p-12 text-center text-slate-400 italic">กำลังโหลดข้อมูล...</td></tr>
+                            <tr><td colspan="5" class="p-12 text-center text-slate-400 italic">กำลังดึงข้อมูลใบงานของคุณ...</td></tr>
                         </tbody>
                     </table>
                 </div>
@@ -51,13 +53,13 @@
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
         import { getFirestore, collection, query, where, getDocs, orderBy } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
-        import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
+        import { getAuth, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
 
-        // ตรวจสอบ Config ตรงนี้ให้ครบนะครับ โดยเฉพาะ projectId
+        // แก้ไข projectId หาย เพื่อให้ Sidebar และสคริปต์ทำงานได้
         const firebaseConfig = {
             apiKey: "AIzaSyAa2uSD_tjNqYE2eXnZcn75h_jAVscDG-c",
             authDomain: "salesupportsystemapp.firebaseapp.com",
-            projectId: "salesupportsystemapp", // ห้ามหาย!
+            projectId: "salesupportsystemapp", 
             storageBucket: "salesupportsystemapp.firebasestorage.app",
             messagingSenderId: "840890441207",
             appId: "1:840890441207:web:f3a5076d46e963a90de2f2"
@@ -67,39 +69,27 @@
         const db = getFirestore(app);
         const auth = getAuth(app);
 
-        // ฟังก์ชันโหลด Sidebar (ทำแยกออกมาเพื่อให้รันแม้ส่วนอื่นมีปัญหา)
-        const loadSidebar = async () => {
-            try {
-                const res = await fetch('sidebar.html');
-                const html = await res.text();
-                document.getElementById('sidebar-placeholder').innerHTML = html;
-            } catch (err) { console.error("Sidebar load failed"); }
-        };
-        loadSidebar();
+        // ส่ง logout ไป Global Scope เพื่อแก้ปัญหาปุ่มกดไม่ได้
+        window.logout = () => signOut(auth).then(() => location.href = 'login.html');
 
-        onAuthStateChanged(auth, async (user) => {
-            if (user) {
-                fetchMyTickets(user.email);
-            } else {
-                window.location.href = "login.html";
-            }
+        // โหลด Sidebar
+        fetch('sidebar.html').then(r => r.text()).then(h => document.getElementById('sidebar-placeholder').innerHTML = h);
+
+        onAuthStateChanged(auth, (user) => {
+            if (user) { loadMyTickets(user.email); } 
+            else { window.location.href = "login.html"; }
         });
 
-        async function fetchMyTickets(email) {
+        async function loadMyTickets(email) {
             const tbody = document.getElementById('ticket-list-body');
             try {
-                // อย่าลืมกดสร้าง Index ใน Firebase Console ตามลิงก์ในรูปภาพนะครับ
-                const q = query(
-                    collection(db, "tickets"),
-                    where("ownerEmail", "==", email),
-                    orderBy("createdAt", "desc")
-                );
-
+                // กรองเฉพาะงานของผู้ใช้คนนี้
+                const q = query(collection(db, "tickets"), where("ownerEmail", "==", email), orderBy("createdAt", "desc"));
                 const snap = await getDocs(q);
                 tbody.innerHTML = '';
 
                 if (snap.empty) {
-                    tbody.innerHTML = '<tr><td colspan="5" class="p-16 text-center text-slate-400">คุณยังไม่มีข้อมูลใบงาน</td></tr>';
+                    tbody.innerHTML = '<tr><td colspan="5" class="p-16 text-center text-slate-400">ไม่พบรายการใบงานของคุณ</td></tr>';
                     return;
                 }
 
@@ -107,23 +97,19 @@
                     const data = doc.data();
                     const date = data.createdAt?.toDate ? data.createdAt.toDate().toLocaleDateString('th-TH') : '---';
                     tbody.innerHTML += `
-                        <tr class="hover:bg-slate-50 transition">
-                            <td class="p-6 text-xs font-bold text-slate-300">#${doc.id.substring(0,6)}</td>
+                        <tr class="hover:bg-slate-50/50 transition">
+                            <td class="p-6 text-[10px] font-bold text-slate-400">#${doc.id.substring(0, 6)}</td>
                             <td class="p-6 font-semibold text-slate-700">${data.subject || 'ไม่มีหัวข้อ'}</td>
-                            <td class="p-6 text-center">
-                                <span class="px-3 py-1 rounded-full text-[10px] font-bold uppercase ${getStatusStyle(data.status)}">
-                                    ${data.status || 'Pending'}
-                                </span>
-                            </td>
+                            <td class="p-6 text-center"><span class="status-badge ${getStatusStyle(data.status)}">${data.status || 'Pending'}</span></td>
                             <td class="p-6 text-sm text-slate-500">${date}</td>
                             <td class="p-6 text-center">
-                                <button onclick="window.location.href='ticket-detail.html?id=${doc.id}'" class="text-[#5c56f1] font-bold text-sm hover:underline">เปิดดู</button>
+                                <button onclick="location.href='ticket-detail.html?id=${doc.id}'" class="text-[#5c56f1] font-bold hover:underline">เปิดดู</button>
                             </td>
-                        </tr>
-                    `;
+                        </tr>`;
                 });
             } catch (err) {
-                tbody.innerHTML = `<tr><td colspan="5" class="p-12 text-center text-red-400">กรุณากด 'Create Index' ใน Firebase Console เพื่อเริ่มใช้งาน</td></tr>`;
+                // หากยังไม่ได้สร้าง Index ระบบจะแจ้งเตือนตรงนี้
+                tbody.innerHTML = '<tr><td colspan="5" class="p-12 text-center text-red-400">กรุณากด "Create Index" ในหน้า Console เพื่อแสดงข้อมูล</td></tr>';
             }
         }
 

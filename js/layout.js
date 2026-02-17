@@ -19,5 +19,12 @@ async function loadComponent(id, file) {
 }
 
 // โหลด sidebar + topbar
-loadComponent("sidebar-container", "./components/sidebar.html");
-loadComponent("topbar-container", "./components/topbar.html");
+loadComponent(
+  "sidebar-container",
+  "/Sale-Support-System/components/sidebar.html"
+);
+
+loadComponent(
+  "topbar-container",
+  "/Sale-Support-System/components/topbar.html"
+);

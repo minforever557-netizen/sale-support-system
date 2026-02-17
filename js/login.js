@@ -72,3 +72,13 @@ btn.addEventListener("click", async () => {
   }
 
 });
+// =============================
+// SAVE USER SESSION
+// =============================
+localStorage.setItem("user", JSON.stringify({
+    name: userData.name,
+    lastname: userData.lastname || "",
+    email: userData.email,
+    role: userData.role
+}));
+

@@ -1,13 +1,16 @@
-// Firebase SDK (ESM VERSION)
+// ================= FIREBASE IMPORT =================
 import { initializeApp } from
 "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
 
-import { getAuth }
-from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
+import {
+  getFirestore,
+  collection,
+  getDocs
+} from
+"https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 
-import { getFirestore }
-from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 
+// ================= FIREBASE CONFIG =================
 const firebaseConfig = {
   apiKey: "AIzaSyAa2uSD_tjNqYE2eXnZcn75h_jAVscDG-c",
   authDomain: "salesupportsystemapp.firebaseapp.com",
@@ -17,7 +20,15 @@ const firebaseConfig = {
   appId: "1:840890441207:web:f3a5076d46e963a90de2f2"
 };
 
-const app = initializeApp(firebaseConfig);
 
-export const auth = getAuth(app);
-export const db = getFirestore(app);
+// ================= INITIALIZE =================
+const app = initializeApp(firebaseConfig);
+const db = getFirestore(app);
+
+
+// ================= EXPORT =================
+export {
+  db,
+  collection,
+  getDocs
+};

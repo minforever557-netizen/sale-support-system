@@ -49,9 +49,13 @@ btn.addEventListener("click", async () => {
         notify("Login Success", "success");
 
         // ✅ จำ session
-     localStorage.setItem("username", user.username);
-
-
+     localStorage.setItem("user", JSON.stringify({
+    name: data.name,
+    lastname: data.lastname,
+    email: data.email,
+    role: data.role
+        }));
+    
         setTimeout(() => {
           window.location.href = "dashboard.html";
         }, 800);

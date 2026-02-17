@@ -8,8 +8,9 @@
     <link href="https://fonts.googleapis.com/css2?family=Kanit:wght@300;400;600&display=swap" rel="stylesheet">
     <style>
         body { font-family: 'Kanit', sans-serif; }
-        .sla-urgent { animation: pulse-red 2s infinite; }
-        @keyframes pulse-red { 0% { background-color: #fee2e2; } 50% { background-color: #fecaca; } 100% { background-color: #fee2e2; } }
+        .sla-warning { background-color: #fff7ed; border-left: 4px solid #f97316; }
+        .sla-danger { background-color: #fef2f2; border-left: 4px solid #ef4444; animation: pulse 2s infinite; }
+        @keyframes pulse { 0% { opacity: 1; } 50% { opacity: 0.7; } 100% { opacity: 1; } }
     </style>
 </head>
 <body class="bg-slate-50 flex min-h-screen">
@@ -29,13 +30,13 @@
                 <div class="overflow-x-auto">
                     <table class="w-full text-left">
                         <thead>
-                            <tr class="bg-slate-50 border-b border-slate-100">
-                                <th class="p-6 text-[10px] font-black text-slate-400 uppercase tracking-widest">ความด่วน</th>
-                                <th class="p-6 text-[10px] font-black text-slate-400 uppercase tracking-widest">ผู้แจ้ง/เบอร์ติดต่อ</th>
-                                <th class="p-6 text-[10px] font-black text-slate-400 uppercase tracking-widest">หัวข้อ (SLA)</th>
-                                <th class="p-6 text-[10px] font-black text-slate-400 uppercase tracking-widest">เวลาที่แจ้ง</th>
-                                <th class="p-6 text-[10px] font-black text-slate-400 uppercase tracking-widest">เวลาที่เหลือ (SLA)</th>
-                                <th class="p-6 text-[10px] font-black text-slate-400 uppercase tracking-widest text-right">จัดการ</th>
+                            <tr class="bg-slate-50/50 border-b border-slate-100">
+                                <th class="p-6 text-[11px] font-black text-slate-400 uppercase tracking-widest">ความด่วน</th>
+                                <th class="p-6 text-[11px] font-black text-slate-400 uppercase tracking-widest">ผู้แจ้ง/เบอร์ติดต่อ</th>
+                                <th class="p-6 text-[11px] font-black text-slate-400 uppercase tracking-widest">หัวข้อ (SLA)</th>
+                                <th class="p-6 text-[11px] font-black text-slate-400 uppercase tracking-widest">เวลาที่แจ้ง</th>
+                                <th class="p-6 text-[11px] font-black text-slate-400 uppercase tracking-widest">เวลาที่เหลือ (SLA)</th>
+                                <th class="p-6 text-[11px] font-black text-slate-400 uppercase tracking-widest text-right">จัดการ</th>
                             </tr>
                         </thead>
                         <tbody id="admin-ticket-list" class="divide-y divide-slate-50">
@@ -43,13 +44,15 @@
                     </table>
                 </div>
             </div>
+            <div id="no-data-msg" class="hidden p-20 text-center text-slate-400 italic">ไม่พบรายการงานค้างในขณะนี้</div>
         </main>
     </div>
 
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
-        import { getFirestore, collection, query, where, orderBy, onSnapshot, doc, updateDoc, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+        import { getFirestore, collection, query, where, onSnapshot, doc, updateDoc, serverTimestamp, orderBy } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
 
+        // Firebase Config (ใช้ตัวเดิมของคุณ)
         const firebaseConfig = {
             apiKey: "AIzaSyAa2uSD_tjNqYE2eXnZcn75h_jAVscDG-c",
             authDomain: "salesupportsystemapp.firebaseapp.com",
@@ -61,69 +64,79 @@
         const app = initializeApp(firebaseConfig);
         const db = getFirestore(app);
 
-        // โหลด Sidebar/Topbar
+        // โหลด UI Components
         fetch('./components/sidebar.html').then(r => r.text()).then(h => document.getElementById('sidebar-placeholder').innerHTML = h).catch(()=>{});
+        fetch('./components/topbar.html').then(r => r.text()).then(h => document.getElementById('topbar-placeholder').innerHTML = h).catch(()=>{});
 
-        // ตั้งค่า SLA (ชั่วโมง)
+        // SLA Config (ชั่วโมง)
         const slaConfig = { "internet": 4, "billing": 24, "installation": 8 };
 
-        // ฟังก์ชันคำนวณเวลาที่เหลือ (Business Hours: 08:30 - 17:30, Mon-Fri)
-        function calculateRemainingSLA(startTime, slaHours) {
+        // ฟังก์ชันคำนวณ SLA แบบเวลาทำการ (8:30 - 17:30)
+        function getSLARemaining(createdDate, slaHours) {
             const now = new Date();
-            const start = startTime.toDate();
-            
-            // เพิ่มชั่วโมง SLA (แบบง่ายเพื่อแสดงผลเบื้องต้น - ในระบบจริงจะใช้ Library เช่น date-fns-tz เพื่อความแม่นยำสูง)
+            const start = createdDate.toDate();
+            // การคำนวณเบื้องต้น: (Deadline = เวลาสร้าง + SLA) 
             const deadline = new Date(start.getTime() + (slaHours * 60 * 60 * 1000));
-            const diffMs = deadline - now;
-            
-            if (diffMs < 0) return { text: "Over SLA", color: "text-red-600 font-black", urgent: true };
-            
-            const hours = Math.floor(diffMs / (1000 * 60 * 60));
-            const mins = Math.floor((diffMs % (1000 * 60 * 60)) / (1000 * 60));
-            
-            let color = "text-green-600";
-            if (hours < 2) color = "text-orange-600 font-bold";
-            if (hours < 1) color = "text-red-500 font-black sla-urgent";
+            const diff = deadline - now;
 
-            return { text: `${hours}ชม. ${mins}น.`, color: color, urgent: hours < 1 };
+            if (diff <= 0) return { text: "เกินกำหนด (Over)", class: "text-red-600 font-bold", urgent: true };
+            
+            const hours = Math.floor(diff / 3600000);
+            const mins = Math.floor((diff % 3600000) / 60000);
+            
+            let statusClass = "text-green-600";
+            if (hours < 2) statusClass = "text-orange-500 font-bold";
+            if (hours < 1) statusClass = "text-red-500 font-black animate-pulse";
+
+            return { text: `${hours}ชม. ${mins}น.`, class: statusClass, urgent: hours < 1 };
         }
 
-        // ดึงข้อมูล Real-time เฉพาะงานที่ยังไม่เสร็จ
-        const q = query(
-            collection(db, "tickets"), 
-            where("status", "in", ["On Progress", "Open"]), 
-            orderBy("createdAt", "asc")
-        );
+        // ดึงข้อมูล Real-time (แก้ไข Query ให้ง่ายขึ้นเพื่อลดปัญหา Index)
+        const ticketsRef = collection(db, "tickets");
+        const q = query(ticketsRef, orderBy("createdAt", "asc")); // ดึงทั้งหมดแล้วค่อยกรองที่ Client-side เพื่อป้องกัน Error Index
 
-        onSnapshot(q, (snap) => {
+        onSnapshot(q, (snapshot) => {
             const list = document.getElementById('admin-ticket-list');
-            list.innerHTML = snap.docs.map(doc => {
-                const t = doc.data();
-                const slaHours = slaConfig[t.topic] || 24;
-                const slaStatus = calculateRemainingSLA(t.createdAt, slaHours);
+            const noData = document.getElementById('no-data-msg');
+            
+            // กรองเฉพาะสถานะที่ต้องการแสดง
+            const pendingTickets = snapshot.docs.filter(doc => 
+                doc.data().status === "On Progress" || doc.data().status === "Open" || !doc.data().status
+            );
+
+            if (pendingTickets.length === 0) {
+                list.innerHTML = "";
+                noData.classList.remove('hidden');
+                return;
+            }
+
+            noData.classList.add('hidden');
+            list.innerHTML = pendingTickets.map(docSnap => {
+                const t = docSnap.data();
+                const sla = getSLARemaining(t.createdAt, slaConfig[t.topic] || 24);
                 
                 return `
-                    <tr class="${slaStatus.urgent ? 'bg-red-50/30' : 'hover:bg-slate-50'} transition-colors">
+                    <tr class="hover:bg-slate-50 transition-colors">
                         <td class="p-6">
-                            <span class="w-3 h-3 rounded-full block ${slaStatus.urgent ? 'bg-red-500 animate-ping' : 'bg-slate-300'}"></span>
+                            <span class="flex h-3 w-3 rounded-full ${sla.urgent ? 'bg-red-500' : 'bg-slate-300'}"></span>
                         </td>
                         <td class="p-6">
-                            <p class="text-sm font-bold text-slate-700">${t.owner || 'Unknown'}</p>
-                            <p class="text-xs text-slate-400">${t.id_number}</p>
+                            <p class="text-sm font-bold text-slate-700">${t.owner || 'ไม่ระบุชื่อ'}</p>
+                            <p class="text-[10px] text-slate-400">${t.id_number}</p>
                         </td>
                         <td class="p-6">
                             <p class="text-sm font-bold text-slate-700 capitalize">${t.topic}</p>
-                            <p class="text-[10px] text-slate-400">SLA Standard: ${slaHours} Hours</p>
+                            <p class="text-[10px] text-slate-400">SLA: ${slaConfig[t.topic] || 24}H</p>
                         </td>
                         <td class="p-6 text-sm text-slate-500">
                             ${t.createdAt?.toDate().toLocaleString('th-TH', {hour:'2-digit', minute:'2-digit', day:'2-digit', month:'2-digit'})}
                         </td>
                         <td class="p-6">
-                            <span class="text-sm ${slaStatus.color}">${slaStatus.text}</span>
+                            <span class="text-sm ${sla.class}">${sla.text}</span>
                         </td>
                         <td class="p-6 text-right">
-                            <button onclick="processTicket('${doc.id}')" class="bg-blue-600 text-white px-4 py-2 rounded-xl text-xs font-bold hover:bg-blue-700 transition shadow-md">
-                                รับเรื่อง / ปิดงาน
+                            <button onclick="closeTask('${docSnap.id}')" class="bg-blue-600 text-white px-5 py-2 rounded-xl text-xs font-bold hover:bg-blue-700 shadow-sm transition">
+                                จัดการ / ปิดงาน
                             </button>
                         </td>
                     </tr>
@@ -131,17 +144,21 @@
             }).join('');
         });
 
-        // ฟังก์ชันรับเรื่อง/ปิดงาน (ตัวอย่าง)
-        window.processTicket = async (id) => {
-            const note = prompt("ระบุหมายเหตุการปิดงาน:");
-            if (note) {
-                await updateDoc(doc(db, "tickets", id), {
-                    status: "Success",
-                    adminNote: note,
-                    adminName: "Admin User", // สมมติชื่อ Admin
-                    closedAt: serverTimestamp()
-                });
-                alert("ปิดงานเรียบร้อย!");
+        // ฟังก์ชันปิดงาน
+        window.closeTask = async (id) => {
+            const note = prompt("ระบุหมายเหตุการปิดงาน (Admin Note):");
+            if (note !== null) {
+                try {
+                    await updateDoc(doc(db, "tickets", id), {
+                        status: "Success",
+                        adminNote: note,
+                        adminName: "Admin System",
+                        closedAt: serverTimestamp()
+                    });
+                    alert("ปิดงานเรียบร้อยแล้ว");
+                } catch (err) {
+                    alert("เกิดข้อผิดพลาด: " + err.message);
+                }
             }
         };
     </script>

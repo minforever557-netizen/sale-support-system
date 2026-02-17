@@ -8,67 +8,76 @@
     <link href="https://fonts.googleapis.com/css2?family=Kanit:wght@300;400;600&display=swap" rel="stylesheet">
     <style>
         body { font-family: 'Kanit', sans-serif; background-color: #f8fafc; }
-        .glass-card { background: white; border-radius: 2rem; box-shadow: 0 4px 20px rgba(0,0,0,0.03); }
+        .glass-card { background: white; border-radius: 2rem; box-shadow: 0 4px 20px rgba(0,0,0,0.03); transition: transform 0.2s; }
+        .glass-card:hover { transform: translateY(-5px); }
     </style>
 </head>
-<body class="flex min-h-screen">
+<body class="flex min-h-screen items-start">
 
     <aside id="sidebar-placeholder" class="hidden lg:block w-64 sticky top-0 h-screen border-r border-slate-200 bg-white"></aside>
 
-    <div class="flex-1 flex flex-col min-w-0">
+    <div class="flex-1 flex flex-col min-w-0 h-full">
         
         <header class="bg-white/80 backdrop-blur-md sticky top-0 z-40 border-b border-slate-100 px-8 py-4">
             <div class="flex flex-col md:flex-row md:items-center justify-between gap-4">
                 
                 <div class="flex items-center gap-4">
-                    <div id="user-avatar" class="w-12 h-12 bg-[#5c56f1] rounded-2xl flex items-center justify-center text-white font-bold text-xl shadow-lg shadow-indigo-100">
+                    <div id="top-avatar-circle" class="w-12 h-12 bg-[#5c56f1] rounded-2xl flex items-center justify-center text-white font-bold text-xl shadow-lg shadow-indigo-100">
                         ?
                     </div>
                     <div class="flex flex-col">
                         <div class="flex items-center gap-2">
-                            <span id="topbar-fullname" class="text-slate-800 font-bold leading-tight">Loading...</span>
+                            <span id="top-fullname" class="text-slate-800 font-bold leading-tight">กำลังโหลด...</span>
                             <span class="text-slate-300">|</span>
-                            <span id="topbar-username" class="text-[#5c56f1] text-xs font-bold uppercase tracking-wider">@username</span>
+                            <span id="top-username" class="text-[#5c56f1] text-xs font-black uppercase tracking-wider">@username</span>
                         </div>
-                        <span id="topbar-email" class="text-slate-400 text-xs">email@example.com</span>
+                        <span id="top-email" class="text-slate-400 text-xs">email@example.com</span>
                     </div>
                 </div>
 
-                <div class="flex flex-col md:items-end bg-slate-50 px-5 py-2 rounded-2xl border border-slate-100">
-                    <div id="realtime-clock" class="text-lg font-bold text-slate-700 tracking-tight">00:00:00</div>
-                    <div id="realtime-date" class="text-[10px] font-black text-slate-400 uppercase tracking-widest">วันจันทร์ที่ 1 มกราคม 2567</div>
+                <div class="flex flex-col md:items-end bg-slate-50 px-6 py-2.5 rounded-[1.25rem] border border-slate-100">
+                    <div id="top-clock" class="text-xl font-bold text-slate-700 tracking-tight leading-none">00:00:00</div>
+                    <div id="top-date" class="text-[10px] font-black text-slate-400 uppercase tracking-widest mt-1">วันที่กำลังโหลด...</div>
                 </div>
-
             </div>
         </header>
 
         <main class="p-8 space-y-8">
-            <h2 class="text-2xl font-bold text-slate-800">Dashboard Overview</h2>
+            <div class="flex items-center justify-between">
+                <h2 class="text-2xl font-bold text-slate-800 tracking-tight">Dashboard Overview</h2>
+                <span class="bg-indigo-100 text-[#5c56f1] text-[10px] font-bold px-3 py-1 rounded-full uppercase tracking-tighter">Personal View</span>
+            </div>
 
             <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
                 <div class="glass-card p-8 border-l-8 border-orange-500">
-                    <p class="text-[11px] font-black text-slate-400 uppercase tracking-widest mb-1">Total Tickets</p>
+                    <p class="text-[11px] font-black text-slate-400 uppercase tracking-widest mb-1">ใบงานของฉันทั้งหมด</p>
                     <h3 id="stat-total" class="text-5xl font-bold text-slate-800">0</h3>
                 </div>
+
                 <div class="glass-card p-8 border-l-8 border-emerald-500">
-                    <p class="text-[11px] font-black text-slate-400 uppercase tracking-widest mb-1">On Progress</p>
+                    <p class="text-[11px] font-black text-slate-400 uppercase tracking-widest mb-1">กำลังดำเนินการ</p>
                     <h3 id="stat-progress" class="text-5xl font-bold text-slate-800">0</h3>
                 </div>
+
                 <div class="glass-card p-8 border-l-8 border-blue-500">
-                    <p class="text-[11px] font-black text-slate-400 uppercase tracking-widest mb-1">Closed Case</p>
+                    <p class="text-[11px] font-black text-slate-400 uppercase tracking-widest mb-1">ปิดงานแล้ว</p>
                     <h3 id="stat-closed" class="text-5xl font-bold text-slate-800">0</h3>
                 </div>
             </div>
 
-            <div class="glass-card p-8 min-h-[300px] flex items-center justify-center border-2 border-dashed border-slate-100">
-                <p class="text-slate-300">พื้นที่สำหรับแสดงกราฟสถิติรายเดือน</p>
+            <div class="glass-card p-10 min-h-[400px] flex flex-col items-center justify-center border-2 border-dashed border-slate-100">
+                <div class="w-16 h-16 bg-slate-50 rounded-full flex items-center justify-center mb-4">
+                    <span class="text-2xl">📊</span>
+                </div>
+                <p class="text-slate-400 font-medium">สถิติรายเดือนของคุณจะปรากฏที่นี่</p>
+                <p class="text-slate-300 text-xs mt-1 italic">ระบบกำลังรวบรวมข้อมูลเพิ่มเติม...</p>
             </div>
         </main>
     </div>
 
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
-        import { getFirestore, doc, getDoc, collection, getDocs } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+        import { getFirestore, doc, getDoc, collection, getDocs, query, where } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
         import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
 
         const firebaseConfig = {
@@ -84,45 +93,50 @@
         const db = getFirestore(app);
         const auth = getAuth(app);
 
-        // ดึง Sidebar
+        // --- 1. Load Sidebar ---
         fetch('./components/sidebar.html').then(r => r.text()).then(h => document.getElementById('sidebar-placeholder').innerHTML = h);
 
-        // --- 1. ระบบ Realtime Clock (วัน/เวลา) ---
-        function updateClock() {
-            const now = new Date();
-            const optionsDate = { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' };
-            
-            // เวลา
-            document.getElementById('realtime-clock').innerText = now.toLocaleTimeString('th-TH');
-            // วันที่
-            document.getElementById('realtime-date').innerText = now.toLocaleDateString('th-TH', optionsDate);
+        // --- 2. Realtime Clock Logic ---
+        function startClock() {
+            const update = () => {
+                const now = new Date();
+                document.getElementById('top-clock').innerText = now.toLocaleTimeString('th-TH', { hour12: false });
+                document.getElementById('top-date').innerText = now.toLocaleDateString('th-TH', { 
+                    weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' 
+                });
+            };
+            setInterval(update, 1000);
+            update();
         }
-        setInterval(updateClock, 1000);
-        updateClock();
+        startClock();
 
-        // --- 2. ตรวจสอบ User และดึงข้อมูล Profile แสดงบน Topbar ---
+        // --- 3. Auth & Data Loading Logic ---
         onAuthStateChanged(auth, async (user) => {
             if (user) {
-                // ดึงข้อมูลจากคอลเลกชัน admin
+                // ก) ดึงข้อมูลโปรไฟล์ผู้ใช้งาน
                 const userDoc = await getDoc(doc(db, "admin", user.uid));
                 if (userDoc.exists()) {
                     const data = userDoc.data();
-                    // แสดงใน Topbar
-                    document.getElementById('topbar-fullname').innerText = data.name; // ชื่อ-นามสกุล
-                    document.getElementById('topbar-username').innerText = `@${data.username}`; // Username
-                    document.getElementById('topbar-email').innerText = data.email; // Email
-                    document.getElementById('user-avatar').innerText = data.name[0].toUpperCase();
+                    document.getElementById('top-fullname').innerText = data.name || 'Anonymous';
+                    document.getElementById('top-username').innerText = `@${data.username || 'user'}`;
+                    document.getElementById('top-email').innerText = data.email || user.email;
+                    document.getElementById('top-avatar-circle').innerText = data.name ? data.name[0].toUpperCase() : '?';
                 }
-                updateStats(); // ดึงตัวเลข Dashboard
+
+                // ข) ดึงสถิติเฉพาะของ User คนนี้จาก Collection "tickets"
+                updatePersonalStats(user.email);
             } else {
                 window.location.href = "login.html";
             }
         });
 
-        // --- 3. ดึงสถิติจาก Database (Real Data) ---
-        async function updateStats() {
+        // --- 4. ฟังก์ชันดึงสถิติเฉพาะบุคคล ---
+        async function updatePersonalStats(userEmail) {
             try {
-                const snap = await getDocs(collection(db, "tickets"));
+                // กรองเฉพาะงานที่เจ้าของ (ownerEmail) ตรงกับ User ที่ Login
+                const q = query(collection(db, "tickets"), where("ownerEmail", "==", userEmail));
+                const snap = await getDocs(q);
+                
                 let total = 0, progress = 0, closed = 0;
 
                 snap.forEach(doc => {
@@ -132,10 +146,13 @@
                     if (status === "Completed" || status === "Closed") closed++;
                 });
 
+                // อัปเดตตัวเลขลงหน้าจอ
                 document.getElementById('stat-total').innerText = total;
                 document.getElementById('stat-progress').innerText = progress;
                 document.getElementById('stat-closed').innerText = closed;
-            } catch (err) { console.error(err); }
+            } catch (err) {
+                console.error("Error loading stats:", err);
+            }
         }
     </script>
 </body>

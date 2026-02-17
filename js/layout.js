@@ -95,8 +95,8 @@ async function initLayout() {
     if (!checkAuth()) return;
 
     // ✅ Load Layout
-    await loadComponent("sidebar", "/components/sidebar.html");
-    await loadComponent("topbar", "/components/topbar.html");
+    await loadComponent("sidebar", "../components/sidebar.html");
+    await loadComponent("topbar", "../components/topbar.html");
 
     // ✅ Load User Info
     loadUserToTopbar();

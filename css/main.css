@@ -1,0 +1,32 @@
+body{
+  font-family: system-ui;
+  background:#f9fafb;
+}
+
+.card{
+  background:white;
+  border-radius:16px;
+  padding:32px;
+  box-shadow:0 2px 10px rgba(0,0,0,0.05);
+}
+
+.input{
+  width:100%;
+  padding:12px;
+  border:1px solid #e5e7eb;
+  border-radius:10px;
+  margin-top:6px;
+}
+
+.btn-main{
+  background:#22C55E;
+  color:white;
+  padding:12px;
+  border-radius:10px;
+  width:100%;
+  font-weight:600;
+}
+
+.btn-main:hover{
+  opacity:.9;
+}

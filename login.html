@@ -1,51 +1,99 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="th">
 <head>
-
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-<title>Login - Sale Support</title>
+<title>Sale Support Login</title>
 
 <script src="https://cdn.tailwindcss.com"></script>
-<link rel="stylesheet" href="css/main.css">
 
 </head>
 
-<body class="flex items-center justify-center h-screen">
+<body class="bg-gray-100 flex items-center justify-center h-screen">
 
-<div class="card w-full max-w-md">
+<!-- LOGIN CARD -->
+<div class="bg-white shadow-xl rounded-2xl p-8 w-full max-w-md">
 
-  <h2 class="text-2xl font-bold text-center text-green-600">
-    Sale Support System
-  </h2>
+    <h1 class="text-2xl font-bold text-green-600 text-center">
+        Sale Support System
+    </h1>
 
-  <p class="text-center text-gray-400 mb-6">
-    Helpdesk Login
-  </p>
+    <p class="text-center text-gray-400 mb-6">
+        Helpdesk Login
+    </p>
 
-  <label>Username</label>
-  <input  id="username"  type="text"  placeholder="Username"  class="w-full p-3 border rounded-lg"/>
-  <label class="mt-4 block">Password</label>
-  <input id="password" type="password"
-  class="input" placeholder="Password">
+    <!-- Username -->
+    <label class="block mb-2">Username</label>
+    <input
+        id="username"
+        type="text"
+        placeholder="Enter username"
+        class="w-full p-3 border rounded-lg mb-4 focus:ring-2 focus:ring-green-400"
+    />
 
-<button id="loginBtn" class="btn-main">
-  Login
-</button>
+    <!-- Password -->
+    <label class="block mb-2">Password</label>
+    <input
+        id="password"
+        type="password"
+        placeholder="Enter password"
+        class="w-full p-3 border rounded-lg mb-6 focus:ring-2 focus:ring-green-400"
+    />
 
+    <!-- LOGIN BUTTON -->
+    <button
+        id="loginBtn"
+        class="w-full bg-green-500 hover:bg-green-600 text-white p-3 rounded-lg transition"
+    >
+        Login
+    </button>
 
-  <div class="flex justify-between mt-4 text-sm">
-    <a href="#">Register</a>
-    <a href="#">Forgot Password</a>
-  </div>
+    <div class="flex justify-between mt-4 text-sm">
+        <a href="#" class="text-gray-600 hover:text-green-600">
+            Register
+        </a>
+
+        <a href="#" class="text-gray-600 hover:text-green-600">
+            Forgot Password
+        </a>
+    </div>
 
 </div>
 
+<!-- Notify Box -->
+<div id="notify"
+class="fixed top-5 right-5 hidden px-6 py-3 rounded-xl shadow-lg text-white
+transform translate-x-40 opacity-0 transition-all duration-500">
+</div>
+
+<!-- LOGIN SCRIPT -->
 <script type="module" src="js/login.js"></script>
-<!-- NOTIFICATION AREA -->
-<div id="notifyArea"
-class="fixed top-5 right-5 space-y-3 z-50"></div>
+
+<!-- Notify Animation -->
+<script>
+function notify(message,type="success"){
+    const box=document.getElementById("notify");
+
+    box.innerText=message;
+
+    box.className=
+    "fixed top-5 right-5 px-6 py-3 rounded-xl shadow-lg text-white transition-all duration-500";
+
+    if(type==="success"){
+        box.classList.add("bg-green-500");
+    }else{
+        box.classList.add("bg-red-500");
+    }
+
+    box.classList.remove("hidden","translate-x-40","opacity-0");
+
+    setTimeout(()=>{
+        box.classList.add("translate-x-40","opacity-0");
+        setTimeout(()=>box.classList.add("hidden"),500);
+    },2000);
+}
+</script>
 
 </body>
 </html>

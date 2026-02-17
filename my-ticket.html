@@ -15,6 +15,31 @@
 <body class="bg-[#f8fafc] flex min-h-screen">
 
     <aside id="sidebar-placeholder" class="hidden lg:block w-72 bg-white border-r border-slate-100"></aside>
+     <div class="flex-1 flex flex-col min-w-0 h-full">
+        
+        <header class="bg-white/80 backdrop-blur-md sticky top-0 z-40 border-b border-slate-100 px-8 py-4">
+            <div class="flex flex-col md:flex-row md:items-center justify-between gap-4">
+                
+                <div class="flex items-center gap-4">
+                    <div id="top-avatar-circle" class="w-12 h-12 bg-[#5c56f1] rounded-2xl flex items-center justify-center text-white font-bold text-xl shadow-lg shadow-indigo-100">
+                        ?
+                    </div>
+                    <div class="flex flex-col">
+                        <div class="flex items-center gap-2">
+                            <span id="top-fullname" class="text-slate-800 font-bold leading-tight">กำลังโหลด...</span>
+                            <span class="text-slate-300">|</span>
+                            <span id="top-username" class="text-[#5c56f1] text-xs font-black uppercase tracking-wider">@username</span>
+                        </div>
+                        <span id="top-email" class="text-slate-400 text-xs">email@example.com</span>
+                    </div>
+                </div>
+
+                <div class="flex flex-col md:items-end bg-slate-50 px-6 py-2.5 rounded-[1.25rem] border border-slate-100">
+                    <div id="top-clock" class="text-xl font-bold text-slate-700 tracking-tight leading-none">00:00:00</div>
+                    <div id="top-date" class="text-[10px] font-black text-slate-400 uppercase tracking-widest mt-1">วันที่กำลังโหลด...</div>
+                </div>
+            </div>
+        </header>
 
     <div class="flex-1 flex flex-col min-w-0">
         <header id="topbar-placeholder" class="bg-white/80 backdrop-blur-md sticky top-0 z-40 h-20 flex items-center px-8 border-b border-slate-100"></header>

@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>User Management - Sale Support System</title>
+    <title>User Management & Register - Sale Support System</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://fonts.googleapis.com/css2?family=Kanit:wght@300;400;600&display=swap" rel="stylesheet">
     <style>
@@ -14,18 +14,14 @@
 </head>
 <body class="bg-slate-50 flex min-h-screen">
 
-    <aside id="sidebar-placeholder" class="hidden lg:block w-64 bg-white border-r border-slate-200"></aside>
-
     <div class="flex-1 flex flex-col min-w-0">
-        <header id="topbar-placeholder" class="bg-white shadow-sm border-b border-slate-200 sticky top-0 z-40 h-16 flex items-center px-6"></header>
-
         <main class="p-4 md:p-8">
             <div class="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-6">
                 <div>
-                    <h2 class="text-2xl font-bold text-slate-800 tracking-tight">จัดการผู้ใช้งาน (User Management)</h2>
-                    <p class="text-sm text-slate-500">แก้ไขข้อมูลพนักงาน ทีม และเบอร์โทรศัพท์จาก Database</p>
+                    <h2 class="text-2xl font-bold text-slate-800 tracking-tight">จัดการผู้ใช้งาน</h2>
+                    <p class="text-sm text-slate-500">ตรวจสอบและเพิ่มพนักงานเข้าสู่ระบบ</p>
                 </div>
-                <button onclick="openUserModal()" class="bg-indigo-600 text-white px-6 py-3 rounded-2xl font-bold hover:bg-indigo-700 transition shadow-lg flex items-center gap-2 active:scale-95">
+                <button onclick="openRegisterModal()" class="bg-indigo-600 text-white px-6 py-3 rounded-2xl font-bold hover:bg-indigo-700 transition shadow-lg flex items-center gap-2 active:scale-95">
                     <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
                         <path fill-rule="evenodd" d="M10 3a1 1 0 011 1v5h5a1 1 0 110 2h-5v5a1 1 0 11-2 0v-5H4a1 1 0 110-2h5V4a1 1 0 011-1z" clip-rule="evenodd" />
                     </svg>
@@ -41,72 +37,69 @@
                                 <th class="p-6 text-[10px] font-black text-slate-400 uppercase tracking-widest">พนักงาน / ทีม</th>
                                 <th class="p-6 text-[10px] font-black text-slate-400 uppercase tracking-widest">เบอร์โทรศัพท์</th>
                                 <th class="p-6 text-[10px] font-black text-slate-400 uppercase tracking-widest text-center">บทบาท</th>
-                                <th class="p-6 text-[10px] font-black text-slate-400 uppercase tracking-widest text-right">แอคชั่น</th>
+                                <th class="p-6 text-[10px] font-black text-slate-400 uppercase tracking-widest text-right">การจัดการ</th>
                             </tr>
                         </thead>
                         <tbody id="user-list" class="divide-y divide-slate-50"></tbody>
                     </table>
                 </div>
             </div>
-            <div id="loading-status" class="p-20 text-center text-slate-400 italic">กำลังเชื่อมต่อฐานข้อมูล...</div>
         </main>
     </div>
 
-    <div id="userModal" class="hidden fixed inset-0 z-50 flex items-center justify-center p-4">
-        <div class="absolute inset-0 bg-slate-900/60 backdrop-blur-sm" onclick="closeUserModal()"></div>
+    <div id="registerModal" class="hidden fixed inset-0 z-50 flex items-center justify-center p-4">
+        <div class="absolute inset-0 bg-slate-900/60 backdrop-blur-sm" onclick="closeRegisterModal()"></div>
         <div class="relative bg-white w-full max-w-lg rounded-[3rem] shadow-2xl overflow-hidden modal-animate">
             <div class="bg-indigo-600 p-8 text-white">
-                <h3 id="modal-title" class="text-xl font-bold">ข้อมูลพนักงาน</h3>
-                <p class="text-indigo-100 text-xs mt-1">บันทึกข้อมูลและ Stamp ลง Database ทันที</p>
+                <h3 id="modal-title" class="text-xl font-bold">ลงทะเบียนพนักงานใหม่</h3>
+                <p class="text-indigo-100 text-xs mt-1">ข้อมูลจะถูกบันทึกเป็นสิทธิ์ User โดยอัตโนมัติ</p>
             </div>
             
-            <form id="userForm" class="p-8 space-y-4">
-                <input type="hidden" id="user-doc-id">
-                
-                <div class="space-y-4">
-                    <div>
-                        <label class="block text-[10px] font-black text-slate-400 uppercase mb-1 ml-2">ชื่อ-นามสกุล</label>
-                        <input type="text" id="user-name" class="w-full p-4 bg-slate-50 border-2 border-slate-100 rounded-2xl focus:border-indigo-500 outline-none transition" required>
-                    </div>
-                    
-                    <div class="grid grid-cols-2 gap-4">
-                        <div>
-                            <label class="block text-[10px] font-black text-slate-400 uppercase mb-1 ml-2">เบอร์โทรศัพท์ (Phone No.)</label>
-                            <input type="text" id="user-phone" placeholder="06xxxxxxxx" class="w-full p-4 bg-slate-50 border-2 border-slate-100 rounded-2xl focus:border-indigo-500 outline-none transition">
-                        </div>
-                        <div>
-                            <label class="block text-[10px] font-black text-slate-400 uppercase mb-1 ml-2">บทบาท</label>
-                            <select id="user-role" class="w-full p-4 bg-slate-50 border-2 border-slate-100 rounded-2xl focus:border-indigo-500 outline-none transition">
-                                <option value="admin">Admin</option>
-                                <option value="user">User</option>
-                            </select>
-                        </div>
-                    </div>
+            <form id="registerForm" class="p-8 space-y-4">
+                <input type="hidden" id="edit-doc-id"> <div>
+                    <label class="block text-[10px] font-black text-slate-400 uppercase mb-1 ml-2">ชื่อ-นามสกุล</label>
+                    <input type="text" id="reg-name" class="w-full p-4 bg-slate-50 border-2 border-slate-100 rounded-2xl focus:border-indigo-500 outline-none transition" required>
+                </div>
 
+                <div class="grid grid-cols-2 gap-4">
                     <div>
-                        <label class="block text-[10px] font-black text-slate-400 uppercase mb-2 ml-2 tracking-widest">เลือกทีม (Team)</label>
-                        <div class="grid grid-cols-1 gap-2 ml-2" id="team-group">
-                            <label class="flex items-center gap-2 text-sm text-slate-600">
-                                <input type="checkbox" name="team-choice" value="FBB Telesale" onchange="toggleTeam(this)" class="w-4 h-4 rounded border-slate-300 text-indigo-600 focus:ring-indigo-500"> FBB Telesale
-                            </label>
-                            <label class="flex items-center gap-2 text-sm text-slate-600">
-                                <input type="checkbox" name="team-choice" value="FBB Dealer Sale" onchange="toggleTeam(this)" class="w-4 h-4 rounded border-slate-300 text-indigo-600 focus:ring-indigo-500"> FBB Dealer Sale
-                            </label>
-                            <label class="flex items-center gap-2 text-sm text-slate-600">
-                                <input type="checkbox" name="team-choice" value="FBB Direct Sale" onchange="toggleTeam(this)" class="w-4 h-4 rounded border-slate-300 text-indigo-600 focus:ring-indigo-500"> FBB Direct Sale
-                            </label>
-                        </div>
+                        <label class="block text-[10px] font-black text-slate-400 uppercase mb-1 ml-2">อีเมล</label>
+                        <input type="email" id="reg-email" class="w-full p-4 bg-slate-50 border-2 border-slate-100 rounded-2xl focus:border-indigo-500 outline-none transition" required>
                     </div>
-
-                    <div id="subteam-container" class="hidden transition-all">
-                        <label class="block text-[10px] font-black text-slate-400 uppercase mb-1 ml-2">เลือกกลุ่ม (Sub Team)</label>
-                        <select id="user-subteam" class="w-full p-4 bg-slate-50 border-2 border-slate-100 rounded-2xl focus:border-indigo-500 outline-none transition"></select>
+                    <div>
+                        <label class="block text-[10px] font-black text-slate-400 uppercase mb-1 ml-2">เบอร์โทรศัพท์ (Phone No.)</label>
+                        <input type="text" id="reg-phone" class="w-full p-4 bg-slate-50 border-2 border-slate-100 rounded-2xl focus:border-indigo-500 outline-none transition" placeholder="0636359535" required>
                     </div>
                 </div>
 
+                <div>
+                    <label class="block text-[10px] font-black text-slate-400 uppercase mb-2 ml-2 tracking-widest">เลือกทีม (Team)</label>
+                    <div class="grid grid-cols-1 gap-2 ml-2">
+                        <label class="flex items-center gap-2 text-sm text-slate-600 cursor-pointer">
+                            <input type="checkbox" name="team-choice" value="FBB Telesale" onchange="handleTeamSelect(this)" class="w-4 h-4 rounded border-slate-300 text-indigo-600"> FBB Telesale
+                        </label>
+                        <label class="flex items-center gap-2 text-sm text-slate-600 cursor-pointer">
+                            <input type="checkbox" name="team-choice" value="FBB Dealer Sale" onchange="handleTeamSelect(this)" class="w-4 h-4 rounded border-slate-300 text-indigo-600"> FBB Dealer Sale
+                        </label>
+                        <label class="flex items-center gap-2 text-sm text-slate-600 cursor-pointer">
+                            <input type="checkbox" name="team-choice" value="FBB Direct Sale" onchange="handleTeamSelect(this)" class="w-4 h-4 rounded border-slate-300 text-indigo-600"> FBB Direct Sale
+                        </label>
+                    </div>
+                </div>
+
+                <div id="subteam-area" class="hidden">
+                    <label class="block text-[10px] font-black text-slate-400 uppercase mb-1 ml-2">กลุ่มย่อย (Sub Team)</label>
+                    <select id="reg-subteam" class="w-full p-4 bg-slate-50 border-2 border-slate-100 rounded-2xl focus:border-indigo-500 outline-none transition"></select>
+                </div>
+
+                <div id="password-area">
+                    <label class="block text-[10px] font-black text-slate-400 uppercase mb-1 ml-2">รหัสผ่าน</label>
+                    <input type="password" id="reg-password" class="w-full p-4 bg-slate-50 border-2 border-slate-100 rounded-2xl focus:border-indigo-500 outline-none transition" placeholder="อย่างน้อย 6 ตัวอักษร">
+                </div>
+
                 <div class="pt-6 flex gap-3">
-                    <button type="button" onclick="closeUserModal()" class="flex-1 py-4 text-slate-500 font-bold hover:bg-slate-100 rounded-2xl transition">ยกเลิก</button>
-                    <button type="submit" id="submit-btn" class="flex-[2] py-4 bg-indigo-600 text-white rounded-2xl font-bold hover:bg-indigo-700 shadow-lg transition active:scale-95">บันทึกข้อมูล</button>
+                    <button type="button" onclick="closeRegisterModal()" class="flex-1 py-4 text-slate-500 font-bold hover:bg-slate-100 rounded-2xl transition">ยกเลิก</button>
+                    <button type="submit" id="submit-reg" class="flex-[2] py-4 bg-indigo-600 text-white rounded-2xl font-bold hover:bg-indigo-700 shadow-lg transition active:scale-95">บันทึกข้อมูล</button>
                 </div>
             </form>
         </div>
@@ -115,6 +108,7 @@
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
         import { getFirestore, collection, onSnapshot, doc, setDoc, updateDoc, deleteDoc, query, orderBy, serverTimestamp, getDoc } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+        import { getAuth, createUserWithEmailAndPassword } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
 
         const firebaseConfig = {
             apiKey: "AIzaSyAa2uSD_tjNqYE2eXnZcn75h_jAVscDG-c",
@@ -127,49 +121,59 @@
 
         const app = initializeApp(firebaseConfig);
         const db = getFirestore(app);
+        const auth = getAuth(app);
 
-        // UI Helpers
-        window.toggleTeam = (checkbox) => {
+        // --- UI Logic ---
+
+        window.handleTeamSelect = (checkbox) => {
             const checkboxes = document.getElementsByName('team-choice');
-            const subContainer = document.getElementById('subteam-container');
-            const subSelect = document.getElementById('user-subteam');
+            const subArea = document.getElementById('subteam-area');
+            const subSelect = document.getElementById('reg-subteam');
 
-            // ให้เลือกได้เพียงทีมเดียวตามโครงสร้างฐานข้อมูล
             checkboxes.forEach(cb => { if (cb !== checkbox) cb.checked = false; });
 
             if (checkbox.checked) {
-                subContainer.classList.remove('hidden');
+                subArea.classList.remove('hidden');
                 let options = '';
                 if (checkbox.value === 'FBB Telesale') {
                     options = `<option value="FBB Telesale">FBB Telesale</option>`;
                 } else {
-                    // สร้าง Sub Team 1-10 สำหรับ Dealer และ Direct
-                    const prefix = checkbox.value;
                     for (let i = 1; i <= 10; i++) {
-                        options += `<option value="${prefix} ${i}">${prefix} ${i}</option>`;
+                        options += `<option value="${checkbox.value} ${i}">${checkbox.value} ${i}</option>`;
                     }
                 }
                 subSelect.innerHTML = options;
             } else {
-                subContainer.classList.add('hidden');
+                subArea.classList.add('hidden');
             }
         };
 
-        // 1. ดึงข้อมูล Real-time จาก Collection "admin"
-        const q = query(collection(db, "admin"), orderBy("name", "asc"));
-        onSnapshot(q, (snapshot) => {
-            const list = document.getElementById('user-list');
-            document.getElementById('loading-status').classList.add('hidden');
+        window.openRegisterModal = () => {
+            document.getElementById('registerForm').reset();
+            document.getElementById('edit-doc-id').value = '';
+            document.getElementById('password-area').classList.remove('hidden');
+            document.getElementById('subteam-area').classList.add('hidden');
+            document.getElementById('modal-title').innerText = 'ลงทะเบียนพนักงานใหม่';
+            document.getElementById('registerModal').classList.remove('hidden');
+        };
 
+        window.closeRegisterModal = () => document.getElementById('registerModal').classList.add('hidden');
+
+        // --- Data Logic ---
+
+        // 1. ดึงรายชื่อ Real-time
+        onSnapshot(query(collection(db, "admin"), orderBy("name", "asc")), (snapshot) => {
+            const list = document.getElementById('user-list');
             list.innerHTML = snapshot.docs.map(docSnap => {
                 const u = docSnap.data();
                 return `
-                    <tr class="hover:bg-slate-50/80 transition-colors">
+                    <tr class="hover:bg-slate-50 transition-colors">
                         <td class="p-6">
                             <p class="text-sm font-bold text-slate-700">${u.name || '-'}</p>
                             <p class="text-[10px] text-indigo-500 font-bold uppercase">TEAM: ${u.Team || 'N/A'} | SUB: ${u['Sub Team'] || '-'}</p>
                         </td>
-                        <td class="p-6 text-sm text-slate-500 font-medium">${u['Phone No.'] || '-'}</td> <td class="p-6 text-center">
+                        <td class="p-6 text-sm text-slate-500 font-medium">${u['Phone No.'] || '-'}</td>
+                        <td class="p-6 text-center">
                             <span class="px-3 py-1 rounded-full text-[10px] font-black uppercase bg-indigo-100 text-indigo-700">${u.role || 'user'}</span>
                         </td>
                         <td class="p-6 text-right">
@@ -180,73 +184,74 @@
             }).join('');
         });
 
-        // 2. ฟังก์ชันแก้ไข: ดึงข้อมูลสดจาก Database (Direct Fetch)
-        window.editUserAction = async (id) => {
-            try {
-                const docSnap = await getDoc(doc(db, "admin", id));
-                if (docSnap.exists()) {
-                    const data = docSnap.data();
-                    document.getElementById('user-doc-id').value = id;
-                    document.getElementById('user-name').value = data.name || '';
-                    document.getElementById('user-phone').value = data['Phone No.'] || '';
-                    document.getElementById('user-role').value = data.role || 'user';
-                    
-                    // ตั้งค่า Checkbox และ Sub Team
-                    const checkboxes = document.getElementsByName('team-choice');
-                    checkboxes.forEach(cb => {
-                        if (cb.value === data.Team) {
-                            cb.checked = true;
-                            window.toggleTeam(cb);
-                            document.getElementById('user-subteam').value = data['Sub Team'];
-                        } else {
-                            cb.checked = false;
-                        }
-                    });
-
-                    document.getElementById('modal-title').innerText = 'แก้ไขข้อมูลพนักงาน';
-                    document.getElementById('userModal').classList.remove('hidden');
-                }
-            } catch (err) { alert("ดึงข้อมูลไม่สำเร็จ: " + err.message); }
-        };
-
-        // 3. บันทึกและ Stamp ข้อมูล
-        document.getElementById('userForm').addEventListener('submit', async (e) => {
+        // 2. บันทึกข้อมูล (Register/Update)
+        document.getElementById('registerForm').addEventListener('submit', async (e) => {
             e.preventDefault();
-            const id = document.getElementById('user-doc-id').value;
-            const selectedCb = Array.from(document.getElementsByName('team-choice')).find(cb => cb.checked);
-            
+            const id = document.getElementById('edit-doc-id').value;
+            const btn = document.getElementById('submit-reg');
+            const selectedTeam = Array.from(document.getElementsByName('team-choice')).find(cb => cb.checked);
+
+            if (!selectedTeam) return alert("กรุณาเลือกทีม");
+
             const userData = {
-                name: document.getElementById('user-name').value.trim(),
-                'Phone No.': document.getElementById('user-phone').value.trim(),
-                role: document.getElementById('user-role').value,
-                Team: selectedCb ? selectedCb.value : '',
-                'Sub Team': document.getElementById('user-subteam').value,
+                name: document.getElementById('reg-name').value,
+                email: document.getElementById('reg-email').value,
+                'Phone No.': document.getElementById('reg-phone').value,
+                Team: selectedTeam.value,
+                'Sub Team': document.getElementById('reg-subteam').value,
+                role: "user", // บังคับเป็น user เสมอสำหรับการเพิ่มพนักงานใหม่
                 updatedAt: serverTimestamp()
             };
 
             try {
+                btn.disabled = true;
                 if (id) {
+                    // กรณีแก้ไขข้อมูลเดิม
                     await updateDoc(doc(db, "admin", id), userData);
                 } else {
-                    const newId = userData.name.toLowerCase().replace(/\s+/g, '_');
-                    await setDoc(doc(db, "admin", newId), { ...userData, createdAt: serverTimestamp(), password: "123456" });
+                    // กรณีลงทะเบียนใหม่ (Register)
+                    const password = document.getElementById('reg-password').value;
+                    if (password.length < 6) throw new Error("รหัสผ่านต้องมี 6 ตัวขึ้นไป");
+                    
+                    const userCredential = await createUserWithEmailAndPassword(auth, userData.email, password);
+                    await setDoc(doc(db, "admin", userCredential.user.uid), {
+                        ...userData,
+                        password: password,
+                        createdAt: serverTimestamp()
+                    });
                 }
-                closeUserModal();
-            } catch (err) { alert("บันทึกไม่สำเร็จ: " + err.message); }
+                closeRegisterModal();
+            } catch (err) { alert("เกิดข้อผิดพลาด: " + err.message); }
+            finally { btn.disabled = false; }
         });
 
-        window.openUserModal = () => {
-            document.getElementById('userForm').reset();
-            document.getElementById('user-doc-id').value = '';
-            document.getElementById('subteam-container').classList.add('hidden');
-            document.getElementById('modal-title').innerText = 'เพิ่มผู้ใช้ใหม่';
-            document.getElementById('userModal').classList.remove('hidden');
+        // 3. ฟังก์ชันแก้ไข (ดึงข้อมูลมาใส่ Modal Register)
+        window.editUserAction = async (id) => {
+            const docSnap = await getDoc(doc(db, "admin", id));
+            if (docSnap.exists()) {
+                const data = docSnap.data();
+                document.getElementById('edit-doc-id').value = id;
+                document.getElementById('reg-name').value = data.name || '';
+                document.getElementById('reg-email').value = data.email || '';
+                document.getElementById('reg-phone').value = data['Phone No.'] || '';
+                document.getElementById('password-area').classList.add('hidden'); // แก้ไขไม่ต้องแก้รหัส
+                
+                const checkboxes = document.getElementsByName('team-choice');
+                checkboxes.forEach(cb => {
+                    if (cb.value === data.Team) {
+                        cb.checked = true;
+                        window.handleTeamSelect(cb);
+                        document.getElementById('reg-subteam').value = data['Sub Team'];
+                    }
+                });
+                
+                document.getElementById('modal-title').innerText = 'แก้ไขข้อมูลพนักงาน';
+                document.getElementById('registerModal').classList.remove('hidden');
+            }
         };
 
-        window.closeUserModal = () => document.getElementById('userModal').classList.add('hidden');
-
         window.deleteUser = async (id) => {
-            if (confirm("ยืนยันการลบพนักงาน?")) await deleteDoc(doc(db, "admin", id));
+            if (confirm("ยืนยันการลบ?")) await deleteDoc(doc(db, "admin", id));
         };
     </script>
 </body>

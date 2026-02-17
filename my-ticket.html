@@ -26,7 +26,7 @@
             <div class="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-6">
                 <div>
                     <h2 class="text-2xl font-bold text-gray-800 tracking-tight">ใบงานของฉัน (My Tickets)</h2>
-                    <p class="text-sm text-gray-500">ติดตามสถานะใบงานที่คุณแจ้งไว้ในระบบ</p>
+                    <p class="text-sm text-gray-500">ติดตามสถานะและรายการที่คุณแจ้งไว้ในระบบ</p>
                 </div>
                 <a href="new-ticket.html" class="bg-green-600 text-white px-6 py-3 rounded-2xl font-bold hover:bg-green-700 transition shadow-lg shadow-green-200 flex items-center gap-2">
                     <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" /></svg>
@@ -39,7 +39,7 @@
                     <span class="absolute inset-y-0 left-0 pl-4 flex items-center text-gray-400">
                         <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" /></svg>
                     </span>
-                    <input type="text" id="searchInput" placeholder="ค้นหาหัวข้อปัญหา หรือ Internet No..." 
+                    <input type="text" id="searchInput" placeholder="ค้นหาหัวข้อ หรือหมายเลข Internet..." 
                         class="w-full pl-11 pr-4 py-3 bg-gray-50 border border-gray-100 rounded-2xl focus:ring-2 focus:ring-green-500 outline-none transition">
                 </div>
                 <select id="sortOrder" class="bg-gray-50 border border-gray-100 text-gray-600 px-6 py-3 rounded-2xl focus:ring-2 focus:ring-green-500 outline-none font-bold cursor-pointer">
@@ -61,7 +61,7 @@
                             </tr>
                         </thead>
                         <tbody id="ticket-list" class="divide-y divide-gray-50">
-                            <tr><td colspan="5" class="p-20 text-center text-gray-400">กำลังดึงข้อมูลใบงานของคุณ...</td></tr>
+                            <tr><td colspan="5" class="p-20 text-center text-gray-400 italic">กำลังดึงข้อมูลใบงานของคุณ...</td></tr>
                         </tbody>
                     </table>
                 </div>
@@ -93,7 +93,7 @@
         const firebaseConfig = {
             apiKey: "AIzaSyAa2uSD_tjNqYE2eXnZcn75h_jAVscDG-c",
             authDomain: "salesupportsystemapp.firebaseapp.com",
-            projectId: "salesupportsystemapp",
+            projectId: "salesupportsystemapp", // เพิ่ม Project ID เพื่อแก้ Error
             storageBucket: "salesupportsystemapp.firebasestorage.app",
             messagingSenderId: "840890441207",
             appId: "1:840890441207:web:f3a5076d46e963a90de2f2"
@@ -105,11 +105,11 @@
         let allTicketsData = [];
         let currentUserEmail = "";
 
-        // Load Components
+        // Component Loading
         fetch('./components/sidebar.html').then(r => r.text()).then(h => document.getElementById('sidebar-placeholder').innerHTML = h).catch(()=>{});
         fetch('./components/topbar.html').then(r => r.text()).then(h => document.getElementById('topbar-placeholder').innerHTML = h).catch(()=>{});
 
-        // ตรวจสอบการล็อกอิน และดึง Email ของ User
+        // Authentication & Data Load
         onAuthStateChanged(auth, (user) => {
             if (user) {
                 currentUserEmail = user.email;
@@ -119,10 +119,10 @@
             }
         });
 
-        const renderTickets = (data) => {
+        const renderMyTickets = (data) => {
             const list = document.getElementById('ticket-list');
             if (data.length === 0) {
-                list.innerHTML = `<tr><td colspan="5" class="p-20 text-center text-gray-400 italic">คุณยังไม่มีใบงานในระบบ</td></tr>`;
+                list.innerHTML = `<tr><td colspan="5" class="p-20 text-center text-gray-400 italic">ไม่พบรายการใบงานของคุณ</td></tr>`;
                 return;
             }
 
@@ -134,10 +134,10 @@
                 return `
                     <tr class="hover:bg-green-50/50 transition-colors">
                         <td class="p-6 text-sm text-gray-500 font-medium">${dateStr}</td>
-                        <td class="p-6 text-sm text-gray-800 font-semibold">${t.topic}</td>
+                        <td class="p-6 text-sm text-gray-800 font-semibold">${t.topic || t.subject}</td>
                         <td class="p-6 text-sm text-gray-600">${t.id_number}</td>
                         <td class="p-6 text-center">
-                            <span class="px-4 py-1.5 rounded-full text-[10px] font-black uppercase tracking-widest ${statusStyle}">${t.status || 'On Progress'}</span>
+                            <span class="px-4 py-1.5 rounded-full text-[10px] font-black uppercase tracking-widest ${statusStyle}">${t.status || 'Pending'}</span>
                         </td>
                         <td class="p-6 text-right">
                             <button onclick="viewTicketDetail('${t.docId}')" class="text-green-600 font-bold hover:text-green-800 transition underline underline-offset-4 decoration-2">ดูรายละเอียด</button>
@@ -148,24 +148,23 @@
         };
 
         const fetchMyTickets = async (order = "desc") => {
-            if (!currentUserEmail) return;
             const list = document.getElementById('ticket-list');
-            
             try {
-                // แก้ไข Query: เพิ่ม where เพื่อกรองเฉพาะ ownerEmail ที่ตรงกับคนล็อกอิน
-                // หมายเหตุ: หากพึ่งเคยทำครั้งแรก Firebase อาจแจ้งเตือนให้ไปกดสร้าง Index ใน Console
+                // กรองเฉพาะเจ้าของใบงานที่ล็อกอินอยู่
                 const q = query(
                     collection(db, "tickets"), 
                     where("ownerEmail", "==", currentUserEmail), 
                     orderBy("createdAt", order)
                 );
-                
                 const snap = await getDocs(q);
                 allTicketsData = snap.docs.map(doc => ({ ...doc.data(), docId: doc.id }));
-                renderTickets(allTicketsData);
+                renderMyTickets(allTicketsData);
             } catch (err) {
                 console.error(err);
-                list.innerHTML = `<tr><td colspan="5" class="p-20 text-center text-red-500 font-bold">ไม่สามารถดึงข้อมูลได้ (โปรดตรวจสอบ Firestore Index)</td></tr>`;
+                // แสดงข้อความแนะนำเรื่อง Index หากเกิด Error
+                list.innerHTML = `<tr><td colspan="5" class="p-20 text-center text-red-500 font-bold">
+                    ไม่สามารถดึงข้อมูลได้ (โปรดตรวจสอบ Firestore Index ในลิงก์ Console)
+                </td></tr>`;
             }
         };
 
@@ -175,7 +174,7 @@
                 String(t.topic || "").toLowerCase().includes(term) || 
                 String(t.id_number || "").toLowerCase().includes(term)
             );
-            renderTickets(filtered);
+            renderMyTickets(filtered);
         });
 
         document.getElementById('sortOrder').addEventListener('change', (e) => fetchMyTickets(e.target.value));
@@ -184,52 +183,40 @@
             const modal = document.getElementById('detailModal');
             const body = document.getElementById('modalBody');
             modal.classList.remove('hidden');
-            body.innerHTML = `<p class="text-center py-10 text-gray-400 italic">กำลังดึงรายละเอียด...</p>`;
+            body.innerHTML = `<p class="text-center py-10 text-gray-400 italic">กำลังดึงข้อมูล...</p>`;
 
             try {
                 const snap = await getDoc(doc(db, "tickets", id));
                 if (snap.exists()) {
                     const d = snap.data();
                     const createTime = d.createdAt ? d.createdAt.toDate().toLocaleString('th-TH') : '-';
-                    const closeTime = d.closedAt ? d.closedAt.toDate().toLocaleString('th-TH') : 'กำลังดำเนินการ';
+                    const closeTime = d.closedAt ? d.closedAt.toDate().toLocaleString('th-TH') : 'รอดำเนินการ';
 
                     body.innerHTML = `
                         <div class="grid grid-cols-2 gap-4 bg-gray-50 p-6 rounded-[2rem] border border-gray-100 shadow-inner">
                             <div>
-                                <p class="text-[10px] text-gray-400 uppercase font-black tracking-widest mb-1">สถานะปัจจุบัน</p>
-                                <p class="text-sm font-bold text-green-600">${d.status || 'On Progress'}</p>
+                                <p class="text-[10px] text-gray-400 uppercase font-black tracking-widest mb-1">สถานะ</p>
+                                <p class="text-sm font-bold text-gray-800">${d.status || 'On Progress'}</p>
                             </div>
                             <div>
                                 <p class="text-[10px] text-gray-400 uppercase font-black tracking-widest mb-1">วันเวลาแจ้ง</p>
                                 <p class="text-sm font-bold text-gray-800">${createTime}</p>
                             </div>
                         </div>
-
                         <div class="px-2 space-y-4">
-                            <div class="grid grid-cols-2 gap-4">
-                                <p class="text-sm text-gray-500">หัวข้อ: <b class="text-gray-800">${d.topic}</b></p>
-                                <p class="text-sm text-gray-500">Internet No: <b class="text-gray-800">${d.id_number}</b></p>
-                            </div>
+                            <p class="text-sm text-gray-500">หัวข้อ: <b class="text-gray-800">${d.topic || d.subject}</b></p>
+                            <p class="text-sm text-gray-500">หมายเลข Internet: <b class="text-gray-800">${d.id_number}</b></p>
                             <div>
-                                <p class="text-[10px] text-gray-400 uppercase font-black mb-2">รายละเอียดที่คุณแจ้ง</p>
+                                <p class="text-[10px] text-gray-400 uppercase font-black mb-2">รายละเอียดปัญหา</p>
                                 <div class="bg-white p-5 rounded-2xl border border-gray-100 text-gray-700 whitespace-pre-wrap text-sm leading-relaxed">${d.detail}</div>
                             </div>
                         </div>
-
                         <div class="bg-orange-50 p-6 rounded-[2rem] border border-orange-100 space-y-4 shadow-sm">
-                            <div>
-                                <p class="text-[10px] text-orange-400 uppercase font-black mb-1">การตอบกลับจากเจ้าหน้าที่</p>
-                                <div class="text-sm text-gray-700 italic bg-white/60 p-4 rounded-xl border border-orange-100 min-h-[50px]">${d.adminNote || 'ยังไม่มีการตอบกลับจากเจ้าหน้าที่'}</div>
-                            </div>
-                            <div class="grid grid-cols-2 gap-4 pt-2 border-t border-orange-100/50">
-                                <div>
-                                    <p class="text-[10px] text-orange-400 uppercase font-black mb-1">ผู้ดูแล</p>
-                                    <p class="text-sm font-bold text-gray-800">${d.adminName || '-'}</p>
-                                </div>
-                                <div>
-                                    <p class="text-[10px] text-orange-400 uppercase font-black mb-1">วันที่ปิดงาน</p>
-                                    <p class="text-sm font-bold text-gray-800">${closeTime}</p>
-                                </div>
+                            <p class="text-[10px] text-orange-400 uppercase font-black mb-1">การตอบกลับจากเจ้าหน้าที่</p>
+                            <div class="text-sm text-gray-700 italic bg-white/60 p-4 rounded-xl border border-orange-100 min-h-[50px]">${d.adminNote || 'อยู่ระหว่างตรวจสอบ'}</div>
+                            <div class="grid grid-cols-2 gap-4">
+                                <p class="text-xs text-orange-400">ผู้ดูแล: <b>${d.adminName || '-'}</b></p>
+                                <p class="text-xs text-orange-400 text-right">ปิดงานเมื่อ: <b>${closeTime}</b></p>
                             </div>
                         </div>
                     `;

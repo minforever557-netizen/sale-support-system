@@ -4,92 +4,65 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-<title>Sale Support System</title>
+<title>Sale Support - Login</title>
 
 <!-- Tailwind -->
 <script src="https://cdn.tailwindcss.com"></script>
 
-<script>
-tailwind.config = {
-  theme: {
-    extend: {
-      colors: {
-        primary: "#E8F8F0",   // เขียวอ่อน
-        accent: "#FF8A00",    // ส้ม
-        main: "#22C55E"       // เขียวหลัก
-      }
-    }
-  }
-}
-</script>
-
 </head>
 
-<body class="bg-primary h-screen overflow-hidden">
+<body class="bg-gray-100">
 
-<div class="flex h-full">
+<!-- ===== LOGIN CONTAINER ===== -->
+<div class="min-h-screen flex items-center justify-center">
 
-  <!-- ================= SIDEBAR ================= -->
-  <aside id="sidebar"
-    class="w-64 bg-white shadow-lg hidden md:block">
+  <div class="bg-white shadow-xl rounded-xl p-8 w-full max-w-md">
 
-    <div class="p-5 text-xl font-bold text-main">
-      Sale Support
-    </div>
-
-    <nav class="mt-6 space-y-2 px-4">
-
-      <a class="menu">Dashboard</a>
-
-      <div class="text-gray-400 text-xs mt-4">TICKET</div>
-      <a class="menu">New Ticket</a>
-      <a class="menu">My Ticket</a>
-      <a class="menu">All Ticket</a>
-
-      <div class="text-gray-400 text-xs mt-4">ADMIN</div>
-      <a class="menu">Ticket Admin</a>
-      <a class="menu">User Management</a>
-      <a class="menu">Topic Management</a>
-
-    </nav>
-  </aside>
-
-
-  <!-- ================= MAIN ================= -->
-  <div class="flex-1 flex flex-col">
-
-    <!-- TOP BAR -->
-    <header class="bg-white shadow px-6 py-3 flex justify-between items-center">
-
-      <button class="md:hidden" onclick="toggleSidebar()">
-        ☰
-      </button>
-
-      <h1 class="font-semibold text-gray-700">
-        Dashboard
+      <!-- Logo / Title -->
+      <h1 class="text-2xl font-bold text-center mb-6">
+          Sale Support System
       </h1>
 
-      <div class="flex items-center gap-3">
-        <span class="text-sm">Welcome</span>
-        <div class="w-8 h-8 bg-main rounded-full"></div>
+      <!-- Username -->
+      <div class="mb-4">
+          <label class="block text-sm mb-1">Username</label>
+          <input
+              id="username"
+              type="text"
+              placeholder="Enter username"
+              class="w-full border rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
+          >
       </div>
 
-    </header>
-
-    <!-- PAGE CONTENT -->
-    <main class="flex-1 overflow-auto p-6">
-
-      <div class="bg-white rounded-xl shadow p-6">
-        ✅ Layout Ready (Step 1 Complete)
+      <!-- Password -->
+      <div class="mb-6">
+          <label class="block text-sm mb-1">Password</label>
+          <input
+              id="password"
+              type="password"
+              placeholder="Enter password"
+              class="w-full border rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
+          >
       </div>
 
-    </main>
+      <!-- Login Button -->
+      <button
+          onclick="login()"
+          class="w-full bg-blue-600 hover:bg-blue-700 text-white py-2 rounded-lg font-semibold transition"
+      >
+          Login
+      </button>
+
+      <!-- Status -->
+      <p id="loginStatus" class="text-center text-red-500 mt-4 text-sm"></p>
 
   </div>
 
 </div>
 
-<script src="/js/layout.js"></script>
+
+<!-- ✅ IMPORTANT: ต้องเป็น module -->
+<script type="module" src="./js/login.js"></script>
 
 </body>
 </html>

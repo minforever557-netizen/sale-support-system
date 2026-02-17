@@ -1,84 +1,51 @@
+// ================= LOGIN =================
 import {
-  db,
+  getFirestore,
   collection,
   getDocs
-} from "./firebase.js";
+} from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 
-const btn = document.getElementById("loginBtn");
+import {
+  getAuth,
+  signOut
+} from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
 
-btn.addEventListener("click", async () => {
+import { app } from "./firebase-config.js";
 
-  const usernameInput =
-    document.getElementById("username");
+const db = getFirestore(app);
+const auth = getAuth(app);
 
-  const passwordInput =
-    document.getElementById("password");
+// ===== LOGIN BUTTON =====
+window.login = async function () {
 
-  if (!usernameInput || !passwordInput) {
-    console.error("Input not found");
-    return;
-  }
-
-  const username = usernameInput.value.trim().toLowerCase();
-  const password = passwordInput.value.trim();
+  const username = document.getElementById("username").value;
+  const password = document.getElementById("password").value;
 
   console.log("Login Clicked:", username);
 
-  try {
+  const querySnapshot = await getDocs(collection(db, "admin"));
 
-    const querySnapshot =
-      await getDocs(collection(db, "admin"));
+  let loginSuccess = false;
 
-    let loginSuccess = false;
+  querySnapshot.forEach((doc) => {
 
-    querySnapshot.forEach((doc) => {
+    const data = doc.data();   // ✅ สำคัญมาก
 
-      const user = doc.data();
+    if (
+      data.username === username &&
+      data.password === password
+    ) {
 
-      const dbUser =
-        user.username.trim().toLowerCase();
+      loginSuccess = true;
 
-      const dbPass =
-        user.password.trim();
+      // ✅ save session
+      localStorage.setItem("user", JSON.stringify(data));
 
-      if (dbUser === username &&
-          dbPass === password) {
-
-        loginSuccess = true;
-
-        notify("Login Success", "success");
-
-        // ✅ จำ session
-     localStorage.setItem("user", JSON.stringify({
-    name: data.name,
-    lastname: data.lastname,
-    email: data.email,
-    role: data.role
-        }));
-    
-        setTimeout(() => {
-          window.location.href = "dashboard.html";
-        }, 800);
-      }
-    });
-
-    if (!loginSuccess) {
-      notify("Username หรือ Password ไม่ถูกต้อง", "error");
+      window.location.href = "dashboard.html";
     }
+  });
 
-  } catch (err) {
-    console.error(err);
-    notify("System Error", "error");
+  if (!loginSuccess) {
+    alert("Username หรือ Password ไม่ถูกต้อง");
   }
-
-});
-// =============================
-// SAVE USER SESSION
-// =============================
-localStorage.setItem("user", JSON.stringify({
-    name: userData.name,
-    lastname: userData.lastname || "",
-    email: userData.email,
-    role: userData.role
-}));
-
+};

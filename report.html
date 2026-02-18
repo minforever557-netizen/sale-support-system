@@ -15,11 +15,9 @@
     <div class="flex-1 flex flex-col min-w-0">
         
         <header class="bg-white border-b border-slate-200 sticky top-0 z-40 px-8 py-4 flex justify-between items-center">
+            <h2 class="text-xl font-bold text-slate-800">📊 Report Dashboard</h2>
             <div class="flex items-center gap-4">
-                <h2 class="text-xl font-bold text-slate-800">📊 Report Dashboard</h2>
-            </div>
-            <div class="flex items-center gap-4">
-                <div class="flex items-center gap-2 bg-slate-50 p-1.5 rounded-xl border border-slate-200">
+                <div class="flex items-center gap-2 bg-slate-100 p-1.5 rounded-xl border border-slate-200">
                     <input type="date" id="startDate" class="bg-transparent border-none text-sm focus:ring-0 p-1">
                     <span class="text-slate-400">-</span>
                     <input type="date" id="endDate" class="bg-transparent border-none text-sm focus:ring-0 p-1">
@@ -49,21 +47,15 @@
             <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
                 <div class="bg-white p-8 rounded-3xl shadow-sm border border-slate-100">
                     <h4 class="font-bold text-slate-700 mb-6">สัดส่วนหัวข้อปัญหา (%)</h4>
-                    <div class="h-64 flex justify-center">
-                        <canvas id="topicChart"></canvas>
-                    </div>
+                    <div class="h-64 flex justify-center"><canvas id="topicChart"></canvas></div>
                 </div>
                 <div class="bg-white p-8 rounded-3xl shadow-sm border border-slate-100">
-                    <h4 class="font-bold text-slate-700 mb-6">อัตราการปิดงานตาม SLA</h4>
-                    <div class="h-64 flex justify-center">
-                        <canvas id="slaChart"></canvas>
-                    </div>
+                    <h4 class="font-bold text-slate-700 mb-6">ประสิทธิภาพ SLA (%)</h4>
+                    <div class="h-64 flex justify-center"><canvas id="slaChart"></canvas></div>
                 </div>
                 <div class="bg-white p-8 rounded-3xl shadow-sm border border-slate-100 lg:col-span-2">
-                    <h4 class="font-bold text-slate-700 mb-6">จำนวน Topic ที่แต่ละทีมส่งเข้ามา</h4>
-                    <div class="h-80">
-                        <canvas id="teamChart"></canvas>
-                    </div>
+                    <h4 class="font-bold text-slate-700 mb-6">จำนวนใบงานแยกตามทีมและสัดส่วน (%)</h4>
+                    <div class="h-80"><canvas id="teamChart"></canvas></div>
                 </div>
             </div>
         </div>
@@ -71,25 +63,24 @@
 
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
-        import { getFirestore, collection, getDocs, query } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+        import { getFirestore, collection, getDocs, query, where } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
 
-        // --- 1. โหลด Sidebar อัตโนมัติ ---
-        // ใช้หลักการเดียวกับ System Log เพื่อให้ sidebar/topbar กลับมา
-        fetch('sidebar.html')
+        // --- 1. Load Sidebar (Fix 404) ---
+        fetch('./sidebar.html')
             .then(res => res.text())
             .then(html => {
                 document.getElementById('sidebar-container').innerHTML = html;
-                // หลังจากโหลด sidebar เสร็จ ให้รัน Script ภายในนั้น (เพื่อเช็ค Role)
                 const scripts = document.getElementById('sidebar-container').querySelectorAll('script');
                 scripts.forEach(oldScript => {
                     const newScript = document.createElement('script');
                     newScript.type = oldScript.type || 'text/javascript';
-                    newScript.text = oldScript.text;
+                    if (oldScript.src) newScript.src = oldScript.src;
+                    else newScript.text = oldScript.text;
                     document.body.appendChild(newScript);
                 });
-            });
+            }).catch(err => console.error("Sidebar load failed:", err));
 
-        // --- 2. Firebase Config & Logic ---
+        // --- 2. Firebase Setup ---
         const firebaseConfig = {
             apiKey: "AIzaSyAa2uSD_tjNqYE2eXnZcn75h_jAVscDG-c",
             authDomain: "salesupportsystemapp.firebaseapp.com",
@@ -98,21 +89,81 @@
             messagingSenderId: "840890441207",
             appId: "1:840890441207:web:f3a5076d46e963a90de2f2"
         };
-
         const app = initializeApp(firebaseConfig);
         const db = getFirestore(app);
 
-        // ฟังก์ชันวาดกราฟ (จะเรียกใช้เมื่อกดกรองข้อมูล)
-        async function renderReports() {
-            const querySnapshot = await getDocs(collection(db, "tickets"));
-            const data = [];
-            querySnapshot.forEach(doc => data.push(doc.data()));
+        let charts = {};
 
-            // Logic ประมวลผลข้อมูลที่นี่...
-            // (เหมือนกับที่เคยแนะนำไปก่อนหน้า)
+        // --- 3. Report Logic ---
+        async function renderReports() {
+            const ticketSnap = await getDocs(collection(db, "tickets"));
+            const tickets = [];
+            ticketSnap.forEach(doc => tickets.push(doc.data()));
+
+            const total = tickets.length;
+            let inSla = 0, overSla = 0;
+            const topicStats = {}, teamStats = {};
+
+            tickets.forEach(t => {
+                // SLA (อ้างอิงจากฟิลด์ status หรือ sla_status ของคุณ)
+                if (t.status === 'Closed' || t.sla_status === 'In SLA') inSla++;
+                else overSla++;
+
+                // Topic & Team
+                if(t.topic) topicStats[t.topic] = (topicStats[t.topic] || 0) + 1;
+                if(t.team) teamStats[t.team] = (teamStats[t.team] || 0) + 1;
+            });
+
+            // Update UI
+            document.getElementById('stat-total').innerText = total;
+            document.getElementById('stat-inSla').innerText = inSla;
+            document.getElementById('stat-overSla').innerText = overSla;
+
+            // Clear old charts
+            Object.values(charts).forEach(c => c.destroy());
+
+            // Render Charts
+            const ctxTopic = document.getElementById('topicChart').getContext('2d');
+            charts.topic = new Chart(ctxTopic, {
+                type: 'pie',
+                data: {
+                    labels: Object.keys(topicStats),
+                    datasets: [{
+                        data: Object.values(topicStats),
+                        backgroundColor: ['#5c56f1', '#818cf8', '#c7d2fe', '#312e81', '#4338ca']
+                    }]
+                }
+            });
+
+            const ctxSla = document.getElementById('slaChart').getContext('2d');
+            charts.sla = new Chart(ctxSla, {
+                type: 'doughnut',
+                data: {
+                    labels: ['ทันเวลา', 'เกิน SLA'],
+                    datasets: [{
+                        data: [inSla, overSla],
+                        backgroundColor: ['#10b981', '#f43f5e']
+                    }]
+                }
+            });
+
+            const ctxTeam = document.getElementById('teamChart').getContext('2d');
+            charts.team = new Chart(ctxTeam, {
+                type: 'bar',
+                data: {
+                    labels: Object.keys(teamStats),
+                    datasets: [{
+                        label: 'จำนวนงาน',
+                        data: Object.values(teamStats),
+                        backgroundColor: '#5c56f1',
+                        borderRadius: 8
+                    }]
+                },
+                options: { scales: { y: { beginAtZero: true } } }
+            });
         }
 
-        document.getElementById('btnFilter').addEventListener('click', renderReports);
+        document.getElementById('btnFilter').onclick = renderReports;
         renderReports();
     </script>
 </body>

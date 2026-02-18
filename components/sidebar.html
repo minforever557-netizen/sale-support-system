@@ -101,28 +101,30 @@
         }
     });
 
-    // --- 3. Role Check & Session Manager ---
+    // --- 3. Role Check & Session Manager (FIXED) ---
     onAuthStateChanged(auth, async (user) => {
         if (user) {
             try {
-                // ดึงข้อมูลจากคอลเลกชัน 'admin' (ตัวเล็ก) ตามหน้าตา Database จริงของคุณ
                 const adminRef = doc(db, "admin", user.uid);
                 const adminSnap = await getDoc(adminRef);
                 
                 if (adminSnap.exists()) {
                     let userData = adminSnap.data();
                     
-                    // ป้องกัน Error "Phone No." โดยการย้ายค่าเข้าฟิลด์ใหม่ชั่วคราวในระดับ Code
                     if (userData["Phone No."]) {
                         userData.phone_no = userData["Phone No."];
                     }
                     
                     currentSessionUser = userData;
 
-                    // เงื่อนไข: ถ้ามีข้อมูลในคอลเลกชัน admin ให้เปิดเมนูทันที (ไม่ต้องรอเช็คคำว่า user/admin)
+                    // ตรวจสอบ Role อย่างละเอียด: ต้องเป็น 'admin' เท่านั้นจึงจะเห็นเมนู
                     const adminSection = document.getElementById('admin-menu-section');
                     if (adminSection) {
-                        adminSection.classList.remove('hidden');
+                        if (userData.role === 'admin') {
+                            adminSection.classList.remove('hidden');
+                        } else {
+                            adminSection.classList.add('hidden');
+                        }
                     }
                     
                     window.saveActivityLog('PAGE_VIEW', `เข้าสู่หน้า: ${currentPage || 'Dashboard'}`);

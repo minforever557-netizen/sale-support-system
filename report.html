@@ -171,27 +171,34 @@
         }
 
         function initData() {
-            onSnapshot(collection(db, "tickets"), (snapshot) => {
-                rawTickets = snapshot.docs.map(doc => {
-                    const d = doc.data();
-                    const ts = d.timestamp?.toDate() || new Date();
-                    
-                    // --- หัวใจสำคัญ: การ Mapping แบบยืดหยุ่น ---
-                    return {
-                        id: doc.id,
-                        mainTeam: d["Sender team"] || d["sender team"] || d["Team"] || "ไม่ระบุทีม",
-                        subTeam: d["sender subteam"] || d["Sender subteam"] || d["SubTeam"] || "ทั่วไป",
-                        owner: d["Owner"] || d["owner"] || d["Name"] || "ไม่ระบุคน",
-                        topic: d["Topic"] || d["topic"] || "อื่นๆ",
-                        status: d.sla_status || "Pending",
-                        dateStr: ts.toISOString().split('T')[0],
-                        q: 'Q' + Math.ceil((ts.getMonth() + 1) / 3),
-                        y: ts.getFullYear()
-                    };
-                });
-                applyFilters();
-            });
-        }
+    onSnapshot(collection(db, "tickets"), (snapshot) => {
+        rawTickets = snapshot.docs.map(doc => {
+            const d = doc.data();
+            const ts = d.timestamp?.toDate() || new Date();
+            
+            // --- แก้ไขจุดนี้เพื่อให้ดึง Team และ Subteam ให้เจอ ---
+            return {
+                id: doc.id,
+                // ดึง Team: ลองหาทุกลำดับ (Sender team / Sender Team / Team / team)
+                mainTeam: d["Sender team"] || d["Sender Team"] || d["sender team"] || d["Team"] || d["team"] || "ไม่ระบุทีมหลัก",
+                
+                // ดึง Subteam: ลองหาทุกลำดับ (sender subteam / Sender subteam / SubTeam / subteam)
+                subTeam: d["sender subteam"] || d["Sender subteam"] || d["sender Subteam"] || d["SubTeam"] || d["subteam"] || "ไม่ระบุทีมย่อย",
+                
+                // ข้อมูลพนักงานและหัวข้อ (ที่คุณแจ้งว่ามาแล้ว)
+                owner: d["Owner"] || d["owner"] || d["Name"] || "ไม่ระบุชื่อ",
+                topic: d["Topic"] || d["topic"] || "อื่นๆ",
+                
+                status: d.sla_status || "Pending",
+                dateStr: ts.toISOString().split('T')[0],
+                q: 'Q' + Math.ceil((ts.getMonth() + 1) / 3),
+                y: ts.getFullYear()
+            };
+        });
+        console.log("Ticket ตัวอย่างที่ดึงมา:", rawTickets[0]); // เช็คที่ Console ว่าชื่อทีมมาหรือยัง
+        applyFilters();
+    });
+}
 
         window.toggleFilterUI = () => {
             const mode = document.getElementById('filter-mode').value;

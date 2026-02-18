@@ -3,13 +3,9 @@
     #admin-menu-section.hidden-secure {
         display: none !important;
     }
-
-    /* สไตล์สำหรับ Mobile Drawer */
-    #mobile-drawer-wrapper.active .drawer-backdrop { opacity: 1; }
-    #mobile-drawer-wrapper.active .drawer-panel { transform: translateX(0); }
 </style>
 
-<aside id="sidebar-main-container" class="hidden lg:flex flex-col w-64 bg-white h-screen border-r border-slate-200 sticky top-0 overflow-y-auto z-50">
+<div class="flex flex-col w-64 bg-white h-screen border-r border-slate-200 sticky top-0 overflow-y-auto z-50">
     <div class="p-6">
         <h1 class="text-xl font-bold text-[#5c56f1] flex items-center gap-2">
             <span class="w-8 h-8 bg-[#5c56f1] rounded-lg flex items-center justify-center text-white text-xs">S</span>
@@ -64,18 +60,6 @@
             <span class="text-lg">🚪</span> ออกจากระบบ
         </button>
     </div>
-</aside>
-
-<div id="mobile-drawer-wrapper" class="fixed inset-0 z-[100] hidden lg:hidden">
-    <div class="drawer-backdrop absolute inset-0 bg-slate-900/50 backdrop-blur-sm opacity-0 transition-opacity duration-300" onclick="window.toggleMobileMenu()"></div>
-    <div class="drawer-panel absolute left-0 top-0 bottom-0 w-72 bg-white shadow-2xl -translate-x-full transition-transform duration-300 ease-out flex flex-col">
-        <div class="p-6 border-b flex items-center justify-between">
-            <span class="font-bold text-[#5c56f1]">SALE SUPPORT</span>
-            <button onclick="window.toggleMobileMenu()" class="text-slate-400 text-xl"><i class="fa-solid fa-xmark"></i></button>
-        </div>
-        <div id="mobile-nav-placeholder" class="flex-1 overflow-y-auto">
-            </div>
-    </div>
 </div>
 
 <script type="module">
@@ -98,35 +82,7 @@
 
     let currentSessionUser = null;
 
-    // --- ฟังก์ชัน Hamburger Menu (เพิ่มใหม่) ---
-    window.toggleMobileMenu = () => {
-        const wrapper = document.getElementById('mobile-drawer-wrapper');
-        const placeholder = document.getElementById('mobile-nav-placeholder');
-        
-        if (wrapper.classList.contains('hidden')) {
-            // Clone เมนูจาก Desktop มาไว้ใน Mobile (ทำครั้งเดียวเพื่อคงความสามารถของ Script เดิม)
-            if (placeholder.innerHTML.trim() === "") {
-                const navContent = document.querySelector('#sidebar-main-container nav').cloneNode(true);
-                const logoutBtn = document.querySelector('#sidebar-logout-btn').parentElement.cloneNode(true);
-                placeholder.appendChild(navContent);
-                placeholder.appendChild(logoutBtn);
-                
-                // ผูก Event Logout ให้ปุ่มที่ Clone มาใหม่
-                placeholder.querySelector('#sidebar-logout-btn')?.addEventListener('click', () => {
-                    if (confirm("คุณต้องการออกจากระบบใช่หรือไม่?")) {
-                        signOut(auth).then(() => window.location.replace("login.html"));
-                    }
-                });
-            }
-            wrapper.classList.remove('hidden');
-            setTimeout(() => wrapper.classList.add('active'), 10);
-        } else {
-            wrapper.classList.remove('active');
-            setTimeout(() => wrapper.classList.add('hidden'), 300);
-        }
-    };
-
-    // --- 1. Global Activity Tracker (ห้ามแก้ไข) ---
+    // --- 1. Global Activity Tracker ---
     window.saveActivityLog = async (actionType, details, isError = false) => {
         const user = auth.currentUser;
         if (!user) return;
@@ -144,7 +100,7 @@
         } catch (err) { console.error("Logging failed", err); }
     };
 
-    // --- 2. Active Link Highlight (ห้ามแก้ไข) ---
+    // --- 2. Active Link Highlight ---
     const currentPage = window.location.pathname.split("/").pop();
     document.querySelectorAll('.nav-link').forEach(link => {
         if (link.getAttribute('href') === currentPage) {
@@ -152,12 +108,13 @@
         }
     });
 
-    // --- 3. Role Check & Secure Display (ห้ามแก้ไข) ---
+    // --- 3. Role Check & Secure Display ---
     onAuthStateChanged(auth, async (user) => {
         const adminSection = document.getElementById('admin-menu-section');
 
         if (user) {
             try {
+                // อ้างอิงไปที่คอลเลกชัน admin ตามโครงสร้าง Database ของคุณ
                 const userRef = doc(db, "admin", user.uid);
                 const userSnap = await getDoc(userRef);
                 
@@ -165,10 +122,12 @@
                     const userData = userSnap.data();
                     currentSessionUser = userData;
 
+                    // ตรวจสอบค่าในฟิลด์ role อย่างละเอียด
                     const userRole = (userData.role || "").toString().toLowerCase().trim();
                     console.log("Logged in as:", userData.name, "| Role:", userRole);
 
                     if (adminSection) {
+                        // ต้องมีค่าเป็น admin เท่านั้นจึงจะเอาคลาสซ่อนออก
                         if (userRole === 'admin') {
                             adminSection.classList.remove('hidden-secure');
                             console.log("Status: Admin menu unlocked.");
@@ -177,15 +136,18 @@
                             console.log("Status: Access denied, hiding admin menu.");
                         }
                     }
+                    
                     window.saveActivityLog('PAGE_VIEW', `เข้าสู่หน้า: ${currentPage || 'Dashboard'}`);
                 }
-            } catch (err) { console.error("Auth Error:", err); }
+            } catch (err) { 
+                console.error("Auth Error:", err); 
+            }
         } else {
             if (!window.location.href.includes("login.html")) window.location.replace("login.html");
         }
     });
 
-    // --- 4. Handle Logout (ห้ามแก้ไข) ---
+    // --- 4. Handle Logout ---
     document.getElementById('sidebar-logout-btn')?.addEventListener('click', () => {
         if (confirm("คุณต้องการออกจากระบบใช่หรือไม่?")) {
             signOut(auth).then(() => window.location.replace("login.html"));

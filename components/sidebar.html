@@ -101,29 +101,35 @@
         }
     });
 
-    // --- 3. Role Check & Session Manager (FIXED) ---
+    // --- 3. Role Check & Session Manager (แบบดักทุกชื่อฟิลด์) ---
     onAuthStateChanged(auth, async (user) => {
+        // บังคับซ่อนทันทีที่เริ่มรัน เพื่อป้องกัน User เห็นเมนูแวบๆ
+        const adminSection = document.getElementById('admin-menu-section');
+        if (adminSection) adminSection.classList.add('hidden');
+
         if (user) {
             try {
                 const adminRef = doc(db, "admin", user.uid);
                 const adminSnap = await getDoc(adminRef);
                 
                 if (adminSnap.exists()) {
-                    let userData = adminSnap.data();
-                    
-                    if (userData["Phone No."]) {
-                        userData.phone_no = userData["Phone No."];
-                    }
-                    
+                    const userData = adminSnap.data();
                     currentSessionUser = userData;
 
-                    // ตรวจสอบ Role อย่างละเอียด: ต้องเป็น 'admin' เท่านั้นจึงจะเห็นเมนู
-                    const adminSection = document.getElementById('admin-menu-section');
+                    // ตรวจหาค่า Role แบบไม่สนชื่อฟิลด์ (ดักทั้ง role, Role, ROLE)
+                    const rawRole = userData.role || userData.Role || userData.ROLE || "";
+                    const userRole = rawRole.toString().toLowerCase().trim();
+                    
+                    console.log("Current User Role in DB:", userRole); // เช็คใน Console (F12) ว่าระบบเห็นเราเป็นอะไร
+
                     if (adminSection) {
-                        if (userData.role === 'admin') {
+                        // เงื่อนไขเดียวที่จะทำให้เมนูโผล่คือต้องเป็น 'admin' เท่านั้น
+                        if (userRole === 'admin') {
                             adminSection.classList.remove('hidden');
+                            adminSection.style.display = 'block'; // บังคับแสดงผลด้วย Style
                         } else {
                             adminSection.classList.add('hidden');
+                            adminSection.style.display = 'none'; // บังคับซ่อนด้วย Style
                         }
                     }
                     

@@ -46,7 +46,7 @@
 
     <div id="editModal" class="hidden fixed inset-0 z-[100] flex items-center justify-center p-4">
         <div class="absolute inset-0 modal-backdrop" onclick="closeModal()"></div>
-        <div class="relative bg-white w-full max-w-2xl rounded-[2.5rem] shadow-2xl overflow-hidden animate-in fade-in zoom-in duration-300">
+        <div class="relative bg-white w-full max-w-2xl rounded-[2.5rem] shadow-2xl overflow-hidden animate-in duration-300">
             
             <div class="bg-slate-900 p-8 text-white">
                 <div class="flex justify-between items-start">
@@ -119,7 +119,8 @@
 
     <script type="module">
         import { initializeApp, getApps } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
-        import { getFirestore, collection, doc, getDoc, getDocs, updateDoc, onSnapshot } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+        // เพิ่ม FieldPath ในส่วนของ import เพื่อแก้ปัญหาชื่อฟิลด์ที่มีจุด (.)
+        import { getFirestore, collection, doc, getDoc, getDocs, updateDoc, onSnapshot, FieldPath } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
         import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
 
         const firebaseConfig = {
@@ -200,7 +201,7 @@
             document.getElementById('edit-username').value = u.username || "";
             document.getElementById('edit-email').value = u.email || "";
             document.getElementById('edit-password').value = "";
-            document.getElementById('edit-phone').value = u["Phone No."] || "";
+            document.getElementById('edit-phone').value = u["Phone No."] || ""; // แก้ไขการดึงข้อมูล Phone No.
             document.getElementById('edit-role').value = u.role || "user";
             
             const mainTeam = allTeams.find(t => t.name === u.Team && t.type === "main");
@@ -242,26 +243,28 @@
                 const mainSelect = document.getElementById('edit-main-team');
                 const mainTeamName = mainSelect.options[mainSelect.selectedIndex].text;
                 
-                // ใช้โครงสร้าง Object เพื่อรองรับฟิลด์ที่มีจุด (.)
-                const updateData = {
-                    "name": document.getElementById('edit-name').value,
-                    "username": document.getElementById('edit-username').value,
-                    "email": document.getElementById('edit-email').value,
-                    "Phone No.": document.getElementById('edit-phone').value,
-                    "role": document.getElementById('edit-role').value,
-                    "Team": mainTeamName.includes("เลือกทีม") ? "" : mainTeamName,
-                    "Sub Team": document.getElementById('edit-sub-team').value
-                };
+                // ใช้ FieldPath เพื่อจัดการฟิลด์ที่มีจุดและช่องว่างให้บันทึกได้สำเร็จเหมือนหน้า profile
+                const updateData = {};
+                updateData["name"] = document.getElementById('edit-name').value;
+                updateData["username"] = document.getElementById('edit-username').value;
+                updateData["email"] = document.getElementById('edit-email').value;
+                updateData[new FieldPath("Phone No.")] = document.getElementById('edit-phone').value; // จุดสำคัญที่แก้ Error
+                updateData["role"] = document.getElementById('edit-role').value;
+                updateData["Team"] = mainTeamName.includes("เลือกทีม") ? "" : mainTeamName;
+                updateData["Sub Team"] = document.getElementById('edit-sub-team').value;
 
                 if (pass) {
                     if (pass.length < 6) throw new Error("รหัสผ่านต้องมี 6 ตัวขึ้นไป");
-                    updateData.lastRequestPass = pass;
+                    updateData["tempPass"] = pass; // เก็บไว้เป็นข้อมูลอ้างอิงให้ Admin
                 }
 
                 await updateDoc(doc(db, "admin", uid), updateData);
                 closeModal();
-                alert("อัปเดตข้อมูลสำเร็จ!");
-            } catch (err) { alert("Error: " + err.message); }
+                alert("อัปเดตข้อมูลพนักงานสำเร็จ!");
+            } catch (err) { 
+                console.error(err);
+                alert("Error: " + err.message); 
+            }
             finally { btn.disabled = false; btn.innerHTML = `<i class="fa-solid fa-floppy-disk"></i> บันทึกข้อมูลทั้งหมด`; }
         };
     </script>

@@ -13,6 +13,8 @@
         .glass-card { background: white; border-radius: 2.5rem; border: 1px solid #f1f5f9; box-shadow: 0 10px 50px rgba(0,0,0,0.04); }
         textarea { resize: none; line-height: 2; scrollbar-width: none; }
         textarea::-webkit-scrollbar { display: none; }
+        
+        /* Success Overlay */
         #success-overlay {
             display: none;
             position: fixed;
@@ -52,7 +54,7 @@
                         <div class="space-y-3">
                             <label class="text-[11px] font-black text-slate-400 uppercase tracking-widest ml-2">1. หัวข้อปัญหา</label>
                             <select id="topic" required class="w-full px-6 py-4 bg-slate-50 border border-slate-100 rounded-2xl focus:border-[#5c67f2] outline-none transition-all font-semibold text-slate-600">
-                                <option value="">กำลังโหลดหัวข้อ...</option>
+                                <option value="">เลือกหัวข้อปัญหา</option>
                             </select>
                         </div>
                         <div class="space-y-3">
@@ -69,11 +71,11 @@
                                 <p class="text-[11px] font-black text-emerald-700 uppercase" id="sla-hours-text"></p>
                             </div>
                         </div>
-                        <textarea id="detail-input" rows="8" required 
+                        <textarea id="detail-input" rows="10" required 
                             class="w-full px-8 py-6 bg-white border-2 border-slate-100 rounded-[2rem] focus:border-[#5c67f2] outline-none transition-all text-slate-700 shadow-sm"></textarea>
                     </div>
 
-                    <button type="submit" id="submitBtn" class="w-full py-5 bg-[#5c67f2] text-white rounded-[2rem] font-bold text-lg hover:bg-[#4a54d4] transition-all shadow-xl flex justify-center items-center gap-3">
+                    <button type="submit" id="submitBtn" class="w-full py-5 bg-[#5c67f2] text-white rounded-[2rem] font-bold text-lg hover:bg-[#4a54d4] transition-all shadow-xl flex justify-center items-center gap-3 active:scale-95">
                         <i class="fa-solid fa-paper-plane text-sm"></i> ยืนยันการส่งข้อมูล
                     </button>
                 </form>
@@ -88,20 +90,6 @@
             </div>
             <h2 class="text-3xl font-bold text-slate-800 mb-2">ส่งใบงานสำเร็จ!</h2>
             <p class="text-slate-500">ระบบกำลังนำคุณไปยังรายการใบงานของคุณ...</p>
-        </div>
-    </div>
-
-    <div id="logout-modal" class="fixed inset-0 z-[100] hidden flex items-center justify-center p-4">
-        <div class="absolute inset-0 bg-slate-900/50 backdrop-blur-sm" id="logout-backdrop"></div>
-        <div class="relative bg-white w-full max-w-sm rounded-[3rem] p-10 shadow-2xl scale-90 opacity-0 transition-all duration-300" id="logout-content">
-            <div class="text-center">
-                <h3 class="text-2xl font-bold text-slate-800 mb-2">Logout?</h3>
-                <p class="text-slate-500 mb-8">ต้องการออกจากระบบใช่หรือไม่?</p>
-                <div class="flex gap-3">
-                    <button id="confirm-logout" class="flex-1 py-4 bg-red-500 text-white rounded-2xl font-bold">ยืนยัน</button>
-                    <button id="close-logout" class="flex-1 py-4 bg-slate-100 text-slate-600 rounded-2xl font-bold">ยกเลิก</button>
-                </div>
-            </div>
         </div>
     </div>
 
@@ -131,7 +119,7 @@
         const topicSelect = document.getElementById('topic');
         const detailInput = document.getElementById('detail-input');
 
-        // --- 1. Auth & Sidebar/Topbar ---
+        // 1. ตรวจสอบสถานะและโหลด Layout
         onAuthStateChanged(auth, async (user) => {
             if (user) {
                 const adminDoc = await getDoc(doc(db, "admin", user.uid));
@@ -139,6 +127,7 @@
                 userDataGlobal = adminDoc.exists() ? adminDoc.data() : (userDoc.exists() ? userDoc.data() : {});
                 userDataGlobal.uid = user.uid;
                 userDataGlobal.email = user.email;
+                
                 loadLayout(userDataGlobal);
             } else {
                 window.location.replace("login.html");
@@ -146,7 +135,10 @@
         });
 
         async function loadLayout(userData) {
-            const comps = [{ id: 'sidebar-placeholder', url: './components/sidebar.html' }, { id: 'topbar-placeholder', url: './components/topbar.html' }];
+            const comps = [
+                { id: 'sidebar-placeholder', url: './components/sidebar.html' },
+                { id: 'topbar-placeholder', url: './components/topbar.html' }
+            ];
             for (const comp of comps) {
                 const res = await fetch(comp.url);
                 if (res.ok) {
@@ -154,7 +146,9 @@
                     el.innerHTML = await res.text();
                     el.classList.remove('hidden');
                     el.querySelectorAll("script").forEach(s => {
-                        const ns = document.createElement("script"); ns.type = "module"; ns.textContent = s.textContent; document.head.appendChild(ns);
+                        const ns = document.createElement("script");
+                        ns.type = "module"; ns.textContent = s.textContent;
+                        document.head.appendChild(ns);
                     });
                 }
             }
@@ -166,7 +160,7 @@
             }, 800);
         }
 
-        // --- 2. Checklist Logic (Fixed Double) ---
+        // 2. จัดการหัวข้อ และ Checklist (ป้องกันเบิ้ล)
         onSnapshot(collection(db, "topics"), (snapshot) => {
             topicSelect.innerHTML = '<option value="">เลือกหัวข้อปัญหา</option>';
             snapshot.forEach(doc => {
@@ -197,75 +191,57 @@
             if (detailInput.value !== restored.join("\n")) detailInput.value = restored.join("\n");
         });
 
-        // --- 3. บันทึกข้อมูล (ตรงตาม Format เดิมเป๊ะ) ---
+        // 3. บันทึกข้อมูล (ใช้ Field ตามระบบเดิม)
         ticketForm.addEventListener('submit', async (e) => {
             e.preventDefault();
             const btn = document.getElementById('submitBtn');
             const originalBtn = btn.innerHTML;
+            
             btn.disabled = true;
             btn.innerHTML = `<i class="fa-solid fa-spinner animate-spin"></i> กำลังบันทึก...`;
 
             try {
                 const selectedTopic = topicsData[topicSelect.value];
                 const slaHours = parseInt(selectedTopic.sla) || 0;
-                
-                // คำนวณวันครบกำหนด
                 const dDate = new Date();
                 dDate.setHours(dDate.getHours() + slaHours);
 
-                // บันทึกตามโครงสร้างเดิมในรูปที่ 9
-                // บันทึกข้อมูล (แก้ไข Field ให้ตรงตามระบบเดิมที่คุณแนบมา)
-await addDoc(collection(db, "tickets"), {
-    topic: selectedTopic.name,             // เดิมใช้ subject -> เปลี่ยนเป็น topic
-    topicId: topicSelect.value,            // เพิ่ม topicId
-    id_number: document.getElementById('id_number').value.trim(),
-    detail: detailInput.value,             // เดิมใช้ details -> เปลี่ยนเป็น detail (ไม่มี s)
-    status: "Pending",
-    owner: userDataGlobal.name || "Unknown", // เดิมใช้ sender_name -> เปลี่ยนเป็น owner
-    ownerEmail: userDataGlobal.email || "",  // เพิ่ม ownerEmail
-    sender_uid: userDataGlobal.uid,
-    sender_team: userDataGlobal.Team || "N/A",
-    sender_subteam: userDataGlobal["Sub Team"] || "N/A",
-    createdAt: serverTimestamp(),          // เดิมใช้ created_at -> เปลี่ยนเป็น createdAt (A ตัวใหญ่)
-    sla_hours: slaHours,                   // เดิมใช้ sla -> เปลี่ยนเป็น sla_hours
-    due_at: dDate                          // เก็บไว้อ้างอิงเวลาครบกำหนด
-});
+                // บันทึกเข้า Firebase (ปรับ Field ให้ตรงตามรูปที่ 9)
+                await addDoc(collection(db, "tickets"), {
+                    topic: selectedTopic.name,        // เดิม subject -> topic
+                    topicId: topicSelect.value,       // เพิ่ม id หัวข้อ
+                    id_number: document.getElementById('id_number').value.trim(),
+                    detail: detailInput.value,        // เดิม details -> detail
+                    status: "Pending",
+                    owner: userDataGlobal.name || "Unknown", // เดิม sender_name -> owner
+                    ownerEmail: userDataGlobal.email || "",  // เพิ่มเมลผู้แจ้ง
+                    sender_uid: userDataGlobal.uid,
+                    sender_team: userDataGlobal.Team || "N/A",
+                    sender_subteam: userDataGlobal["Sub Team"] || "N/A",
+                    createdAt: serverTimestamp(),     // เดิม created_at -> createdAt
+                    sla_hours: slaHours,              // เดิม sla -> sla_hours
+                    due_at: dDate                     // เวลาครบกำหนด
+                });
 
-                // Success Animation
+                // แสดง Animation สำเร็จ
                 const overlay = document.getElementById('success-overlay');
                 const content = document.getElementById('success-content');
                 overlay.style.display = 'flex';
                 setTimeout(() => {
-                    content.classList.remove('opacity-0', 'scale-95');
-                    content.classList.add('opacity-100', 'scale-100');
+                    content.classList.replace('opacity-0', 'opacity-100');
+                    content.classList.replace('scale-95', 'scale-100');
                 }, 50);
 
-                setTimeout(() => { window.location.href = "myticket.html"; }, 2200);
+                setTimeout(() => { 
+                    window.location.href = "myticket.html"; 
+                }, 2200);
 
             } catch (error) {
                 console.error("Save error:", error);
-                alert("ล้มเหลว: " + error.message);
-                btn.disabled = false; btn.innerHTML = originalBtn;
+                alert("เกิดข้อผิดพลาด: " + error.message);
+                btn.disabled = false;
+                btn.innerHTML = originalBtn;
             }
-        });
-
-        // Logout Modal Logic
-        window.openLogoutModal = () => {
-            document.getElementById('logout-modal').classList.remove('hidden');
-            setTimeout(() => {
-                document.getElementById('logout-backdrop').classList.replace('opacity-0', 'opacity-100');
-                document.getElementById('logout-content').classList.replace('opacity-0', 'opacity-100');
-                document.getElementById('logout-content').classList.replace('scale-90', 'scale-100');
-            }, 10);
-        };
-        document.getElementById('close-logout').onclick = () => {
-            document.getElementById('logout-modal').classList.add('hidden');
-        };
-        document.getElementById('confirm-logout').onclick = async () => {
-            await signOut(auth); window.location.replace("login.html");
-        };
-        document.addEventListener('click', (e) => {
-            if (e.target.closest('#sidebar-logout-btn') || e.target.closest('#main-logout-btn')) openLogoutModal();
         });
     </script>
 </body>

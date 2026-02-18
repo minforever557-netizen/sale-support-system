@@ -3,16 +3,16 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Report Dashboard - Sale Support</title>
+    <title>Advanced Report - Sale Support</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <link href="https://fonts.googleapis.com/css2?family=Kanit:wght@300;400;600&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
     <style>
         body { font-family: 'Kanit', sans-serif; background-color: #f8fafc; }
-        .glass-card { background: white; border-radius: 2rem; box-shadow: 0 4px 20px -2px rgba(0,0,0,0.05); }
-        .modal-active { overflow: hidden; }
-        .modal-backdrop-blur { backdrop-filter: blur(10px); background-color: rgba(15, 23, 42, 0.5); }
+        .glass-card { background: white; border-radius: 2rem; border: 1px solid #eef2f6; transition: all 0.3s ease; }
+        .glass-card:hover { transform: translateY(-2px); box-shadow: 0 10px 30px -5px rgba(0,0,0,0.05); }
+        .breadcrumb-item { @apply text-slate-400 hover:text-indigo-600 cursor-pointer transition-colors; }
     </style>
 </head>
 <body class="flex min-h-screen">
@@ -22,54 +22,63 @@
     <div class="flex-1 flex flex-col min-w-0">
         <div id="topbar-placeholder"></div>
 
-        <main class="p-4 md:p-8 space-y-8">
-            <header class="flex justify-between items-end">
+        <main class="p-4 md:p-8 space-y-6">
+            <div class="flex flex-col md:flex-row md:items-center justify-between gap-4">
                 <div>
-                    <h2 class="text-2xl font-bold text-slate-800 tracking-tight">Report Dashboard</h2>
-                    <p class="text-sm text-slate-500">สรุปผลการทำงานรายทีมและรายหัวข้อ</p>
+                    <nav class="flex items-center gap-2 text-sm mb-2" id="breadcrumb">
+                        <span class="breadcrumb-item" onclick="resetDrilldown()">Dashboard</span>
+                        <i class="fa-solid fa-chevron-right text-[10px] text-slate-300"></i>
+                        <span id="current-view-label" class="text-slate-800 font-bold uppercase tracking-wider">ภาพรวมทีมหลัก</span>
+                    </nav>
+                    <h2 class="text-2xl font-black text-slate-800" id="view-title">Team Performance</h2>
                 </div>
-                <div class="bg-white px-4 py-2 rounded-xl border border-slate-200">
-                    <select id="subTeamFilter" class="outline-none text-sm font-semibold text-slate-600 bg-transparent cursor-pointer">
-                        <option value="all">--- ทุกทีมย่อย (ภาพรวมทั้งหมด) ---</option>
-                    </select>
-                </div>
-            </header>
-
-            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <div class="glass-card p-8 border-l-4 border-l-indigo-500">
-                    <p class="text-slate-400 text-xs font-black uppercase tracking-widest">ใบงานทั้งหมด</p>
-                    <h3 id="stat-total" class="text-5xl font-bold text-slate-800 mt-2">0</h3>
-                </div>
-                <div class="glass-card p-8 border-l-4 border-l-emerald-500">
-                    <p class="text-emerald-500 text-xs font-black uppercase tracking-widest">ดำเนินการสำเร็จ (In SLA)</p>
-                    <h3 id="stat-inSla" class="text-5xl font-bold text-slate-800 mt-2">0</h3>
+                
+                <div class="flex items-center gap-2 bg-white p-2 rounded-2xl shadow-sm border border-slate-100">
+                    <button onclick="resetDrilldown()" class="px-4 py-2 text-xs font-bold bg-slate-100 text-slate-600 rounded-xl hover:bg-slate-200">
+                        <i class="fa-solid fa-rotate-left mr-1"></i> รีเซ็ต
+                    </button>
                 </div>
             </div>
 
-            <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
-                <div class="glass-card p-8">
-                    <h4 class="font-bold text-slate-700 mb-6 flex items-center gap-2">
-                        <i class="fa-solid fa-chart-pie text-indigo-500"></i> สัดส่วนหัวข้อปัญหา
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                <div class="glass-card p-6 border-b-4 border-indigo-500">
+                    <p class="text-[10px] font-black text-slate-400 uppercase tracking-widest">Total Tickets</p>
+                    <h3 id="stat-total" class="text-4xl font-bold text-slate-800 mt-1">0</h3>
+                </div>
+                <div class="glass-card p-6 border-b-4 border-emerald-500">
+                    <p class="text-[10px] font-black text-emerald-400 uppercase tracking-widest">In SLA Rate</p>
+                    <h3 id="stat-sla" class="text-4xl font-bold text-slate-800 mt-1">0%</h3>
+                </div>
+                <div class="glass-card p-6 border-b-4 border-orange-400">
+                    <p class="text-[10px] font-black text-orange-400 uppercase tracking-widest">Unique Users</p>
+                    <h3 id="stat-users" class="text-4xl font-bold text-slate-800 mt-1">0</h3>
+                </div>
+            </div>
+
+            <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+                <div class="glass-card p-8 lg:col-span-1">
+                    <h4 class="font-bold text-slate-700 mb-6 flex items-center justify-between">
+                        <span><i class="fa-solid fa-chart-pie mr-2 text-indigo-500"></i> สัดส่วนหัวข้อ</span>
                     </h4>
-                    <div class="h-80"><canvas id="topicChart"></canvas></div>
+                    <div class="h-64"><canvas id="topicChart"></canvas></div>
                 </div>
 
-                <div class="glass-card p-8">
+                <div class="glass-card p-8 lg:col-span-2">
                     <h4 class="font-bold text-slate-700 mb-6 flex items-center gap-2">
-                        <i class="fa-solid fa-users text-emerald-500"></i> สถิติรายทีม (Main Team)
+                        <i class="fa-solid fa-list-ul text-indigo-500"></i> 
+                        <span id="table-title">รายละเอียดทีมหลัก</span>
                     </h4>
                     <div class="overflow-x-auto">
                         <table class="w-full text-left">
                             <thead>
-                                <tr class="text-[10px] font-black text-slate-400 uppercase tracking-widest border-b">
-                                    <th class="pb-4">ชื่อทีม</th>
-                                    <th class="pb-4 text-center">จำนวน</th>
-                                    <th class="pb-4 text-right">สัดส่วน</th>
+                                <tr class="text-[11px] font-black text-slate-400 uppercase border-b border-slate-50">
+                                    <th class="pb-4">ชื่อเรียก (NAME)</th>
+                                    <th class="pb-4 text-center">จำนวนเคส</th>
+                                    <th class="pb-4 text-right">สัดส่วน %</th>
                                 </tr>
                             </thead>
-                            <tbody id="teamTableBody" class="divide-y divide-slate-50">
-                                <tr><td colspan="3" class="py-10 text-center text-slate-400 italic">กำลังโหลดข้อมูล...</td></tr>
-                            </tbody>
+                            <tbody id="drilldown-table-body" class="divide-y divide-slate-50">
+                                </tbody>
                         </table>
                     </div>
                 </div>
@@ -77,26 +86,29 @@
         </main>
     </div>
 
-    <div id="subteam-modal" class="fixed inset-0 z-[100] hidden flex items-center justify-center p-4">
-        <div class="absolute inset-0 modal-backdrop-blur" onclick="closeSubTeamModal()"></div>
-        <div class="relative bg-white w-full max-w-sm rounded-[2.5rem] p-8 shadow-2xl scale-100 transition-all">
-            <h3 id="modal-team-name" class="text-xl font-bold text-slate-800 mb-2 text-indigo-600"></h3>
-            <p class="text-xs text-slate-400 font-bold uppercase tracking-widest mb-4">รายชื่อทีมย่อยที่พบในระบบ</p>
-            <div id="subteam-list" class="space-y-2 max-h-60 overflow-y-auto pr-2"></div>
-            <button onclick="closeSubTeamModal()" class="w-full mt-6 py-4 bg-slate-100 text-slate-600 rounded-2xl font-bold hover:bg-slate-200 transition">ปิด</button>
-        </div>
-    </div>
+    <div id="detail-modal" class="fixed inset-0 z-[150] hidden flex items-center justify-center p-4">
+        <div class="absolute inset-0 bg-slate-900/60 backdrop-blur-sm" onclick="closeDetailModal()"></div>
+        <div class="relative bg-white w-full max-w-4xl rounded-[2.5rem] shadow-2xl overflow-hidden animate-in fade-in zoom-in duration-200">
+            <div class="p-8 max-h-[90vh] overflow-y-auto">
+                <div class="flex justify-between items-start mb-8">
+                    <div>
+                        <h3 id="modal-title" class="text-3xl font-black text-slate-800"></h3>
+                        <p id="modal-subtitle" class="text-indigo-500 font-bold text-sm uppercase mt-1"></p>
+                    </div>
+                    <button onclick="closeDetailModal()" class="bg-slate-100 p-2 rounded-full hover:bg-slate-200 transition-colors">
+                        <i class="fa-solid fa-xmark text-slate-500 w-6 h-6 flex items-center justify-center"></i>
+                    </button>
+                </div>
 
-    <div id="logout-modal" class="fixed inset-0 z-[110] hidden flex items-center justify-center p-4">
-        <div class="absolute inset-0 modal-backdrop-blur opacity-0 transition-opacity duration-300" id="logout-backdrop"></div>
-        <div class="relative bg-white w-full max-w-sm rounded-[3rem] p-10 shadow-2xl scale-90 opacity-0" id="logout-content">
-            <div class="text-center">
-                <div class="w-20 h-20 bg-red-50 rounded-full flex items-center justify-center mx-auto mb-6"><span class="text-3xl">🚪</span></div>
-                <h3 class="text-2xl font-bold text-slate-800 mb-2">Logout?</h3>
-                <p class="text-slate-500 mb-8 text-sm">ต้องการออกจากระบบใช่หรือไม่?</p>
-                <div class="flex gap-3">
-                    <button id="confirm-logout" class="flex-1 py-4 bg-red-500 text-white rounded-2xl font-bold hover:bg-red-600 transition shadow-lg">ยืนยัน</button>
-                    <button id="close-logout" class="flex-1 py-4 bg-slate-100 text-slate-600 rounded-2xl font-bold hover:bg-slate-200">ยกเลิก</button>
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+                    <div>
+                        <h5 class="text-xs font-black text-slate-400 uppercase tracking-widest mb-4">หัวข้อที่ส่งเข้ามา (Topics)</h5>
+                        <div id="modal-topic-list" class="space-y-2"></div>
+                    </div>
+                    <div>
+                        <h5 class="text-xs font-black text-slate-400 uppercase tracking-widest mb-4">รายชื่อผู้ส่งงาน (Users)</h5>
+                        <div id="modal-user-list" class="space-y-2"></div>
+                    </div>
                 </div>
             </div>
         </div>
@@ -122,162 +134,205 @@
 
         let allTickets = [];
         let topicChart = null;
+        let drillLevel = 'MAIN'; // MAIN, SUB
+        let activeMainTeam = null;
 
-        // --- 1. Load Layout (Sidebar & Topbar) ---
+        // --- 1. Load Layout ---
         async function loadLayout(userData, email) {
             const comps = [
                 { id: 'sidebar-placeholder', url: './components/sidebar.html' },
                 { id: 'topbar-placeholder', url: './components/topbar.html' }
             ];
-
             for (const comp of comps) {
-                try {
-                    const res = await fetch(comp.url);
-                    if (res.ok) {
-                        const el = document.getElementById(comp.id);
-                        el.innerHTML = await res.text();
-                        el.classList.remove('hidden');
-                        
-                        el.querySelectorAll("script").forEach(oldScript => {
-                            const newScript = document.createElement("script");
-                            newScript.type = "module";
-                            newScript.textContent = oldScript.textContent;
-                            document.head.appendChild(newScript);
-                        });
-                    }
-                } catch (e) { console.error("Error loading component:", e); }
+                const res = await fetch(comp.url);
+                if (res.ok) {
+                    const el = document.getElementById(comp.id);
+                    el.innerHTML = await res.text();
+                    el.classList.remove('hidden');
+                    el.querySelectorAll("script").forEach(s => {
+                        const ns = document.createElement("script");
+                        ns.type = "module"; ns.textContent = s.textContent;
+                        document.head.appendChild(ns);
+                    });
+                }
             }
-
-            // Set Topbar Info
-            setTimeout(() => {
-                const nameEl = document.querySelector('#topbar-user-name');
-                const emailEl = document.querySelector('#topbar-user-email');
-                if (nameEl) nameEl.innerText = userData.name || "Admin";
-                if (emailEl) emailEl.innerText = email;
-            }, 600);
         }
 
-        // --- 2. Auth Check ---
+        // --- 2. Auth & Data ---
         onAuthStateChanged(auth, async (user) => {
             if (user) {
                 const adminDoc = await getDoc(doc(db, "admin", user.uid));
                 if (adminDoc.exists()) {
                     loadLayout(adminDoc.data(), user.email);
-                    initDataListener();
+                    initData();
                 } else { window.location.replace("login.html"); }
             } else { window.location.replace("login.html"); }
         });
 
-        // --- 3. Dashboard Logic ---
-        function initDataListener() {
+        function initData() {
             onSnapshot(collection(db, "tickets"), (snapshot) => {
-                allTickets = snapshot.docs.map(d => d.data());
-                
-                // Build Sub Team Filter
-                const subTeams = [...new Set(allTickets.map(t => t["Sub Team"]).filter(Boolean))];
-                const filter = document.getElementById('subTeamFilter');
-                filter.innerHTML = `<option value="all">--- ทุกทีมย่อย (ภาพรวมทั้งหมด) ---</option>` + 
-                    subTeams.map(st => `<option value="${st}">${st}</option>`).join('');
-
+                allTickets = snapshot.docs.map(d => ({id: d.id, ...d.data()}));
                 renderDashboard();
             });
         }
 
-        function renderDashboard() {
-            const selectedSubTeam = document.getElementById('subTeamFilter').value;
-            const filtered = selectedSubTeam === 'all' ? allTickets : allTickets.filter(t => t["Sub Team"] === selectedSubTeam);
-            
-            const total = filtered.length;
-            const inSla = filtered.filter(t => t.sla_status === 'In SLA').length;
-            
-            document.getElementById('stat-total').innerText = total;
-            document.getElementById('stat-inSla').innerText = inSla;
+        // --- 3. Rendering Engine ---
+        window.renderDashboard = () => {
+            const statTotal = allTickets.length;
+            const slaCount = allTickets.filter(t => t.sla_status === 'In SLA').length;
+            const uniqueUsers = new Set(allTickets.map(t => t.userEmail || t.userName)).size;
 
+            document.getElementById('stat-total').innerText = statTotal.toLocaleString();
+            document.getElementById('stat-sla').innerText = statTotal > 0 ? ((slaCount/statTotal)*100).toFixed(1) + '%' : '0%';
+            document.getElementById('stat-users').innerText = uniqueUsers.toLocaleString();
+
+            if (drillLevel === 'MAIN') {
+                renderMainTeamView();
+            } else {
+                renderSubTeamView(activeMainTeam);
+            }
+        }
+
+        function renderMainTeamView() {
+            const stats = {};
             const topicStats = {};
-            const teamStats = {};
-
-            filtered.forEach(t => {
-                const topic = t.topic || "ไม่ระบุหัวข้อ";
-                const team = t["Team"] || "ไม่ระบุทีม";
-                const subTeam = t["Sub Team"] || "ไม่ระบุทีมย่อย";
-
-                topicStats[topic] = (topicStats[topic] || 0) + 1;
-                
-                if (!teamStats[team]) teamStats[team] = { count: 0, subTeams: new Set() };
-                teamStats[team].count++;
-                teamStats[team].subTeams.add(subTeam);
+            allTickets.forEach(t => {
+                const team = t.Team || "ไม่ระบุทีม";
+                stats[team] = (stats[team] || 0) + 1;
+                topicStats[t.topic || "อื่นๆ"] = (topicStats[t.topic || "อื่นๆ"] || 0) + 1;
             });
 
-            // Render Chart
-            if(topicChart) topicChart.destroy();
-            topicChart = new Chart(document.getElementById('topicChart'), {
+            updateChart(topicStats);
+            updateTable(stats, allTickets.length, 'Main Team', (name) => {
+                activeMainTeam = name;
+                drillLevel = 'SUB';
+                renderDashboard();
+            });
+            
+            document.getElementById('table-title').innerText = "สถิติรายทีมหลัก";
+            document.getElementById('current-view-label').innerText = "ภาพรวมทีมหลัก";
+        }
+
+        function renderSubTeamView(mainTeamName) {
+            const filtered = allTickets.filter(t => t.Team === mainTeamName);
+            const stats = {};
+            const topicStats = {};
+            
+            filtered.forEach(t => {
+                const sub = t["Sub Team"] || "ไม่ระบุทีมย่อย";
+                stats[sub] = (stats[sub] || 0) + 1;
+                topicStats[t.topic || "อื่นๆ"] = (topicStats[t.topic || "อื่นๆ"] || 0) + 1;
+            });
+
+            updateChart(topicStats);
+            updateTable(stats, filtered.length, 'Sub Team', (subName) => {
+                showDeepDetail(mainTeamName, subName);
+            });
+
+            document.getElementById('table-title').innerText = `ทีมย่อยภายใต้: ${mainTeamName}`;
+            document.getElementById('current-view-label').innerText = mainTeamName;
+        }
+
+        // --- 4. Helpers ---
+        function updateChart(stats) {
+            const ctx = document.getElementById('topicChart');
+            const total = Object.values(stats).reduce((a, b) => a + b, 0);
+            
+            if (topicChart) topicChart.destroy();
+            topicChart = new Chart(ctx, {
                 type: 'doughnut',
                 data: {
-                    labels: Object.keys(topicStats),
+                    labels: Object.keys(stats),
                     datasets: [{
-                        data: Object.values(topicStats),
-                        backgroundColor: ['#5c56f1', '#818cf8', '#a5b4fc', '#c7d2fe', '#e0e7ff'],
+                        data: Object.values(stats),
+                        backgroundColor: ['#6366f1', '#10b981', '#f59e0b', '#ef4444', '#8b5cf6', '#ec4899', '#94a3b8'],
                         borderWidth: 0
                     }]
                 },
-                options: { plugins: { legend: { position: 'bottom' } }, cutout: '70%' }
+                options: {
+                    responsive: true, maintainAspectRatio: false,
+                    plugins: {
+                        legend: { display: false },
+                        tooltip: {
+                            callbacks: {
+                                label: (item) => {
+                                    const val = item.raw;
+                                    const pct = ((val/total)*100).toFixed(1);
+                                    return ` ${item.label}: ${val} เคส (${pct}%)`;
+                                }
+                            }
+                        }
+                    },
+                    cutout: '75%'
+                }
             });
-
-            // Render Table
-            const tbody = document.getElementById('teamTableBody');
-            tbody.innerHTML = Object.entries(teamStats).map(([name, data]) => `
-                <tr class="hover:bg-slate-50 transition cursor-pointer group" onclick='showSubTeams("${name}", ${JSON.stringify(Array.from(data.subTeams))})'>
-                    <td class="py-4">
-                        <div class="font-bold text-slate-700 group-hover:text-indigo-600">${name}</div>
-                        <div class="text-[9px] text-slate-400 uppercase">คลิกเพื่อดูรายละเอียดทีมย่อย</div>
-                    </td>
-                    <td class="py-4 text-center font-bold text-indigo-600">${data.count}</td>
-                    <td class="py-4 text-right text-slate-400 text-xs">${((data.count/total)*100).toFixed(1)}%</td>
-                </tr>
-            `).join('');
         }
 
-        // --- 4. Modals & Actions ---
-        window.showSubTeams = (name, list) => {
-            document.getElementById('modal-team-name').innerText = name;
-            document.getElementById('subteam-list').innerHTML = list.map(item => `
-                <div class="flex items-center gap-3 p-3 bg-slate-50 rounded-xl border border-slate-100">
-                    <div class="w-2 h-2 bg-indigo-400 rounded-full"></div>
-                    <span class="text-sm font-medium text-slate-600">${item}</span>
+        function updateTable(stats, total, type, onClick) {
+            const tbody = document.getElementById('drilldown-table-body');
+            tbody.innerHTML = Object.entries(stats).sort((a,b) => b[1] - a[1]).map(([name, count]) => `
+                <tr class="hover:bg-indigo-50/50 cursor-pointer group transition-all" onclick="drillClick('${name}')">
+                    <td class="py-5">
+                        <div class="font-bold text-slate-700 group-hover:text-indigo-600">${name}</div>
+                        <div class="text-[9px] text-slate-400 font-black uppercase tracking-widest mt-0.5">คลิกเพื่อเจาะลึกข้อมูล</div>
+                    </td>
+                    <td class="py-5 text-center font-bold text-slate-600">${count.toLocaleString()}</td>
+                    <td class="py-5 text-right font-bold text-indigo-500">${((count/total)*100).toFixed(1)}%</td>
+                </tr>
+            `).join('');
+            
+            window.drillClick = onClick;
+        }
+
+        // --- 5. Level 3: Deep Detail (Modal) ---
+        function showDeepDetail(main, sub) {
+            const filtered = allTickets.filter(t => t.Team === main && t["Sub Team"] === sub);
+            const total = filtered.length;
+
+            document.getElementById('modal-title').innerText = sub;
+            document.getElementById('modal-subtitle').innerText = `Main Team: ${main}`;
+
+            // Group Topics
+            const topics = {};
+            const users = {};
+            filtered.forEach(t => {
+                topics[t.topic || "อื่นๆ"] = (topics[t.topic || "อื่นๆ"] || 0) + 1;
+                const userName = t.userName || t.userEmail || "ไม่ระบุชื่อ";
+                users[userName] = (users[userName] || 0) + 1;
+            });
+
+            document.getElementById('modal-topic-list').innerHTML = Object.entries(topics).sort((a,b) => b[1]-a[1]).map(([name, count]) => `
+                <div class="flex items-center justify-between p-4 bg-slate-50 rounded-2xl border border-slate-100">
+                    <span class="font-bold text-slate-700 text-sm">${name}</span>
+                    <div class="text-right">
+                        <div class="text-indigo-600 font-black text-sm">${count} เคส</div>
+                        <div class="text-[10px] text-slate-400">${((count/total)*100).toFixed(1)}%</div>
+                    </div>
                 </div>
             `).join('');
-            document.getElementById('subteam-modal').classList.remove('hidden');
-        };
 
-        window.closeSubTeamModal = () => document.getElementById('subteam-modal').classList.add('hidden');
+            document.getElementById('modal-user-list').innerHTML = Object.entries(users).sort((a,b) => b[1]-a[1]).map(([name, count]) => `
+                <div class="flex items-center gap-3 p-3 hover:bg-slate-50 rounded-2xl transition-colors">
+                    <div class="w-10 h-10 bg-indigo-100 text-indigo-600 rounded-full flex items-center justify-center font-bold text-xs">
+                        ${name.substring(0,2).toUpperCase()}
+                    </div>
+                    <div class="flex-1">
+                        <div class="text-sm font-bold text-slate-700">${name}</div>
+                        <div class="text-[10px] text-slate-400">ส่งงานทั้งหมด ${count} เคส</div>
+                    </div>
+                </div>
+            `).join('');
 
-        // Logout Functions (Matching Audit Log Code)
-        window.openLogoutModal = () => {
-            const modal = document.getElementById('logout-modal');
-            modal.classList.remove('hidden');
-            document.body.classList.add('modal-active');
-            setTimeout(() => {
-                document.getElementById('logout-backdrop').classList.add('opacity-100');
-                document.getElementById('logout-content').classList.remove('scale-90', 'opacity-0');
-            }, 10);
-        };
+            document.getElementById('detail-modal').classList.remove('hidden');
+        }
 
-        const closeLogoutModal = () => {
-            document.getElementById('logout-backdrop').classList.remove('opacity-100');
-            document.getElementById('logout-content').classList.add('scale-90', 'opacity-0');
-            setTimeout(() => {
-                document.getElementById('logout-modal').classList.add('hidden');
-                document.body.classList.remove('modal-active');
-            }, 300);
-        };
+        window.resetDrilldown = () => {
+            drillLevel = 'MAIN';
+            activeMainTeam = null;
+            renderDashboard();
+        }
 
-        document.getElementById('close-logout').onclick = closeLogoutModal;
-        document.getElementById('confirm-logout').onclick = async () => {
-            await signOut(auth);
-            window.location.replace("login.html");
-        };
-
-        document.getElementById('subTeamFilter').onchange = renderDashboard;
+        window.closeDetailModal = () => document.getElementById('detail-modal').classList.add('hidden');
 
     </script>
 </body>

@@ -9,84 +9,59 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
     <style>
         body { font-family: 'Kanit', sans-serif; background-color: #f8fafc; }
-        .glass-card { background: white; border-radius: 2rem; box-shadow: 0 4px 20px rgba(0,0,0,0.02); transition: all 0.3s ease; border: 1px solid #f1f5f9; }
-        .glass-card:hover { transform: translateY(-5px); box-shadow: 0 12px 30px rgba(0,0,0,0.05); }
+        .glass-card { background: white; border-radius: 2.5rem; box-shadow: 0 4px 20px rgba(0,0,0,0.02); transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1); border: 1px solid #f1f5f9; }
+        .glass-card:hover { transform: translateY(-5px); box-shadow: 0 15px 35px rgba(0,0,0,0.06); }
         
-        .stat-icon { @apply w-12 h-12 rounded-2xl flex items-center justify-center mb-4 text-xl; }
-        
-        /* Modal Animation */
+        /* Modal Animation - ให้เหมือน My Ticket */
         .modal-active { overflow: hidden; }
         #logout-modal { transition: visibility 0.3s; }
         #modal-backdrop { transition: opacity 0.3s ease-out; }
-        #modal-content { transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1); }
+        #logout-modal-content { transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1); }
 
-        /* Custom Scroll */
-        ::-webkit-scrollbar { width: 6px; }
-        ::-webkit-scrollbar-track { background: transparent; }
-        ::-webkit-scrollbar-thumb { background: #e2e8f0; border-radius: 10px; }
+        #sidebar-placeholder { min-width: 256px; }
+        
+        /* Progress Circle Animation */
+        #progress-circle { transition: stroke-dasharray 1s ease-in-out; }
     </style>
 </head>
 <body class="flex min-h-screen items-start">
 
     <aside id="sidebar-placeholder" class="hidden lg:block w-64 sticky top-0 h-screen border-r border-slate-200 bg-white"></aside>
 
-    <div class="flex-1 flex flex-col min-w-0 h-full">
-        
-        <header class="bg-white/80 backdrop-blur-md sticky top-0 z-40 border-b border-slate-100 px-8 py-4">
-            <div class="flex flex-col md:flex-row md:items-center justify-between gap-4">
-                <div class="flex items-center gap-4">
-                    <div id="top-avatar-circle" class="w-12 h-12 bg-indigo-600 rounded-2xl flex items-center justify-center text-white font-bold text-xl shadow-lg shadow-indigo-100">?</div>
-                    <div class="flex flex-col">
-                        <div class="flex items-center gap-2">
-                            <span id="top-fullname" class="text-slate-800 font-bold leading-tight tracking-tight text-lg">กำลังโหลด...</span>
-                        </div>
-                        <span id="top-email" class="text-slate-400 text-xs">email@example.com</span>
-                    </div>
-                </div>
+    <div class="flex-1 flex flex-col min-w-0">
+        <div id="topbar-placeholder"></div>
 
-                <div class="flex items-center gap-6">
-                    <div class="hidden md:flex flex-col items-end">
-                        <div id="top-clock" class="text-xl font-bold text-slate-700 tracking-tight">00:00:00</div>
-                        <div id="top-date" class="text-[10px] font-black text-indigo-500 uppercase tracking-widest">Date Loading...</div>
-                    </div>
-                </div>
-            </div>
-        </header>
-
-        <main class="p-8 space-y-8 max-w-7xl mx-auto w-full">
+        <main class="p-6 md:p-10 max-w-7xl mx-auto w-full space-y-8">
             
-            <div class="flex flex-col md:flex-row md:items-center justify-between gap-4">
+            <div class="flex flex-col md:flex-row justify-between items-start md:items-center gap-6">
                 <div>
                     <h2 class="text-3xl font-bold text-slate-800 tracking-tight">แผงควบคุมระบบ</h2>
-                    <p class="text-slate-500 mt-1">สรุปข้อมูลการดำเนินงานของคุณในวันนี้</p>
+                    <p class="text-slate-500 mt-1">สรุปข้อมูลการดำเนินงานประจำวันของคุณ</p>
                 </div>
-                <div class="flex gap-2">
-                    <a href="create-ticket.html" class="bg-indigo-600 hover:bg-indigo-700 text-white px-6 py-3 rounded-2xl font-bold text-sm transition-all flex items-center gap-2 shadow-lg shadow-indigo-100">
-                        <i class="fa-solid fa-plus text-xs"></i>
-                        สร้างใบงานใหม่
-                    </a>
-                </div>
+                <a href="new-ticket.html" class="bg-[#5c67f2] hover:bg-[#4a54d4] text-white px-8 py-3.5 rounded-2xl font-bold transition-all shadow-lg shadow-indigo-100 flex items-center gap-2 active:scale-95">
+                    <span class="text-xl">+</span> สร้างใบงานใหม่
+                </a>
             </div>
 
             <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
-                <div class="glass-card p-8">
-                    <div class="stat-icon bg-orange-50 text-orange-500">
+                <div class="glass-card p-8 bg-white">
+                    <div class="w-12 h-12 rounded-2xl bg-orange-50 text-orange-500 flex items-center justify-center mb-6 text-xl">
                         <i class="fa-solid fa-ticket"></i>
                     </div>
-                    <p class="text-[11px] font-black text-slate-400 uppercase tracking-widest mb-1">ใบงานของฉันทั้งหมด</p>
+                    <p class="text-[11px] font-black text-slate-400 uppercase tracking-widest mb-1">ใบงานทั้งหมด</p>
                     <h3 id="stat-total" class="text-5xl font-bold text-slate-800">0</h3>
                 </div>
 
-                <div class="glass-card p-8">
-                    <div class="stat-icon bg-emerald-50 text-emerald-500">
+                <div class="glass-card p-8 bg-white">
+                    <div class="w-12 h-12 rounded-2xl bg-indigo-50 text-indigo-500 flex items-center justify-center mb-6 text-xl">
                         <i class="fa-solid fa-spinner"></i>
                     </div>
                     <p class="text-[11px] font-black text-slate-400 uppercase tracking-widest mb-1">กำลังดำเนินการ</p>
                     <h3 id="stat-progress" class="text-5xl font-bold text-slate-800">0</h3>
                 </div>
 
-                <div class="glass-card p-8">
-                    <div class="stat-icon bg-blue-50 text-blue-500">
+                <div class="glass-card p-8 bg-white">
+                    <div class="w-12 h-12 rounded-2xl bg-emerald-50 text-emerald-500 flex items-center justify-center mb-6 text-xl">
                         <i class="fa-solid fa-circle-check"></i>
                     </div>
                     <p class="text-[11px] font-black text-slate-400 uppercase tracking-widest mb-1">ปิดงานแล้ว (เดือนนี้)</p>
@@ -100,36 +75,36 @@
                     <div class="flex items-center justify-between px-2">
                         <h4 class="font-bold text-slate-800 flex items-center gap-2">
                             <i class="fa-solid fa-clock-rotate-left text-orange-500"></i>
-                            ใบงานที่ใกล้ครบกำหนด (SLA)
+                            งานที่ต้องเร่งดำเนินการ (SLA)
                         </h4>
-                        <a href="my-ticket.html" class="text-xs font-bold text-indigo-600 hover:underline">ดูทั้งหมด</a>
+                        <a href="my-ticket.html" class="text-xs font-black text-[#5c67f2] hover:underline uppercase tracking-wider">ดูทั้งหมด</a>
                     </div>
                     
                     <div id="sla-container" class="space-y-4">
-                        <div class="glass-card p-6 flex items-center justify-center text-slate-400 text-sm italic">
-                            กำลังตรวจสอบสถานะ SLA...
+                        <div class="glass-card p-10 flex items-center justify-center text-slate-400 text-sm italic">
+                            กำลังโหลดข้อมูล...
                         </div>
                     </div>
                 </div>
 
                 <div class="space-y-6">
                     <h4 class="font-bold text-slate-800 px-2 flex items-center gap-2">
-                        <i class="fa-solid fa-chart-line text-indigo-500"></i>
+                        <i class="fa-solid fa-chart-line text-[#5c67f2]"></i>
                         ประสิทธิภาพเดือนนี้
                     </h4>
-                    <div class="glass-card p-8 space-y-6 text-center">
-                        <div class="relative w-32 h-32 mx-auto">
-                            <svg class="w-full h-full" viewBox="0 0 36 36">
-                                <path class="text-slate-100" stroke-width="3" stroke="currentColor" fill="none" d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831" />
-                                <path id="progress-circle" class="text-indigo-500" stroke-width="3" stroke-dasharray="0, 100" stroke-linecap="round" stroke="currentColor" fill="none" d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831" />
+                    <div class="glass-card p-8 flex flex-col items-center">
+                        <div class="relative w-40 h-40">
+                            <svg class="w-full h-full transform -rotate-90" viewBox="0 0 36 36">
+                                <circle cx="18" cy="18" r="16" fill="none" class="stroke-slate-100" stroke-width="3"></circle>
+                                <circle id="progress-circle" cx="18" cy="18" r="16" fill="none" class="stroke-[#5c67f2]" stroke-width="3" stroke-dasharray="0 100" stroke-linecap="round"></circle>
                             </svg>
                             <div class="absolute inset-0 flex flex-col items-center justify-center">
-                                <span id="eff-percent" class="text-2xl font-black text-slate-800">0%</span>
-                                <span class="text-[8px] font-bold text-slate-400 uppercase tracking-tighter">Success Rate</span>
+                                <span id="eff-percent" class="text-3xl font-black text-slate-800 tracking-tighter">0%</span>
+                                <span class="text-[9px] font-black text-slate-400 uppercase tracking-widest">Success</span>
                             </div>
                         </div>
-                        <div class="pt-4 border-t border-slate-50">
-                            <p class="text-xs text-slate-500 leading-relaxed italic">"อัตราการปิดงานสำเร็จเทียบกับงานทั้งหมดที่คุณได้รับมอบหมาย"</p>
+                        <div class="mt-8 pt-6 border-t border-slate-50 w-full text-center">
+                            <p class="text-xs text-slate-500 leading-relaxed">คำนวณจากสัดส่วนการปิดงานสำเร็จเทียบกับงานทั้งหมดของคุณ</p>
                         </div>
                     </div>
                 </div>
@@ -141,10 +116,10 @@
     <div id="logout-modal" class="fixed inset-0 z-[100] hidden">
         <div class="absolute inset-0 bg-slate-900/40 backdrop-blur-sm opacity-0" id="modal-backdrop"></div>
         <div class="absolute inset-0 flex items-center justify-center p-4">
-            <div class="bg-white w-full max-w-sm rounded-[2.5rem] p-8 shadow-2xl scale-90 opacity-0" id="modal-content">
+            <div class="bg-white w-full max-w-sm rounded-[2.5rem] p-8 shadow-2xl scale-90 opacity-0" id="logout-modal-content">
                 <div class="w-20 h-20 bg-red-50 rounded-full flex items-center justify-center mx-auto mb-6 text-4xl">🚪</div>
                 <h3 class="text-2xl font-bold text-slate-800 text-center mb-2">ออกจากระบบ?</h3>
-                <p class="text-slate-500 text-center mb-8">ยืนยันการออกจากระบบ Sale Support System</p>
+                <p class="text-slate-500 text-center mb-8 text-sm">คุณต้องการออกจากระบบ Sale Support System ใช่หรือไม่?</p>
                 <div class="flex gap-3">
                     <button id="close-logout" class="flex-1 py-4 bg-slate-100 text-slate-600 rounded-2xl font-bold hover:bg-slate-200 transition-colors">ยกเลิก</button>
                     <button id="confirm-logout" class="flex-1 py-4 bg-red-500 text-white rounded-2xl font-bold hover:bg-red-600 shadow-lg shadow-red-100 transition-all active:scale-95">ยืนยัน</button>
@@ -155,7 +130,7 @@
 
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
-        import { getFirestore, doc, getDoc, collection, getDocs, query, where, orderBy, limit } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+        import { getFirestore, doc, getDoc, collection, getDocs, query, where } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
         import { getAuth, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
 
         const firebaseConfig = {
@@ -171,68 +146,34 @@
         const db = getFirestore(app);
         const auth = getAuth(app);
 
-        // --- UI Logic ---
-        const modal = document.getElementById('logout-modal');
-        const backdrop = document.getElementById('modal-backdrop');
-        const content = document.getElementById('modal-content');
-
-        const openLogoutModal = () => {
-            modal.classList.remove('hidden');
-            document.body.classList.add('modal-active');
-            setTimeout(() => {
-                backdrop.classList.add('opacity-100');
-                content.classList.add('opacity-100', 'scale-100');
-            }, 10);
-        };
-
-        const closeLogoutModal = () => {
-            backdrop.classList.remove('opacity-100');
-            content.classList.remove('opacity-100', 'scale-100');
-            setTimeout(() => {
-                modal.classList.add('hidden');
-                document.body.classList.remove('modal-active');
-            }, 300);
-        };
-
-        document.getElementById('close-logout').addEventListener('click', closeLogoutModal);
-        document.getElementById('confirm-logout').addEventListener('click', async () => {
-            await signOut(auth);
-            window.location.replace("login.html");
-        });
-
-        // Clock
-        setInterval(() => {
-            const now = new Date();
-            document.getElementById('top-clock').innerText = now.toLocaleTimeString('th-TH', { hour12: false });
-            document.getElementById('top-date').innerText = now.toLocaleDateString('th-TH', { weekday: 'short', day: 'numeric', month: 'short', year: 'numeric' });
-        }, 1000);
-
-        // --- Data Logic ---
+        // --- Layout & Auth ---
         onAuthStateChanged(auth, async (user) => {
             if (user) {
-                // Sidebar load
-                const r = await fetch('./components/sidebar.html');
-                if (r.ok) {
-                    document.getElementById('sidebar-placeholder').innerHTML = await r.text();
-                    const btnLogout = document.getElementById('main-logout-btn');
-                    if (btnLogout) btnLogout.onclick = (e) => { e.preventDefault(); openLogoutModal(); };
-                }
-
-                // Load Profile
-                const userDoc = await getDoc(doc(db, "admin", user.uid));
-                if (userDoc.exists()) {
-                    const data = userDoc.data();
-                    document.getElementById('top-fullname').innerText = data.name || 'Anonymous';
-                    document.getElementById('top-email').innerText = data.email || user.email;
-                    document.getElementById('top-avatar-circle').innerText = data.name ? data.name[0].toUpperCase() : '?';
-                }
-
+                await loadLayout();
                 loadDashboardData(user.email);
             } else {
                 window.location.replace("login.html");
             }
         });
 
+        const loadLayout = async () => {
+            // Sidebar
+            const sidebar = await fetch('./components/sidebar.html').then(r => r.text());
+            document.getElementById('sidebar-placeholder').innerHTML = sidebar;
+            
+            // Topbar
+            const topbarRes = await fetch('./components/topbar.html');
+            if (topbarRes.ok) {
+                document.getElementById('topbar-placeholder').innerHTML = await topbarRes.text();
+            }
+
+            // Bind Sidebar Logout Event
+            document.addEventListener('click', (e) => {
+                if (e.target.closest('#main-logout-btn')) openLogoutModal();
+            });
+        };
+
+        // --- Dashboard Logic ---
         async function loadDashboardData(userEmail) {
             try {
                 const q = query(collection(db, "tickets"), where("ownerEmail", "==", userEmail));
@@ -246,60 +187,72 @@
                     total++;
                     if (["In Progress", "Pending"].includes(d.status)) {
                         progress++;
-                        // ถ้างานยังไม่เสร็จ และมี sla_due ให้เก็บไว้ดู
                         if(d.sla_due) slaTasks.push({id: doc.id, ...d});
                     }
-                    if (["Completed", "Closed", "Success"].includes(d.status)) closed++;
+                    if (["Completed", "Success", "Success (SLA)"].includes(d.status)) closed++;
                 });
 
-                // Update Stats
                 document.getElementById('stat-total').innerText = total;
                 document.getElementById('stat-progress').innerText = progress;
                 document.getElementById('stat-closed').innerText = closed;
 
-                // Update Efficiency Circle
                 const rate = total > 0 ? Math.round((closed / total) * 100) : 0;
                 document.getElementById('eff-percent').innerText = rate + '%';
-                document.getElementById('progress-circle').setAttribute('stroke-dasharray', `${rate}, 100`);
+                document.getElementById('progress-circle').setAttribute('stroke-dasharray', `${rate} 100`);
 
-                // Update SLA Alert Section
                 renderSLATasks(slaTasks);
-
             } catch (err) {
-                console.error("Dashboard error:", err);
+                console.error("Data Load Error:", err);
             }
         }
 
         function renderSLATasks(tasks) {
             const container = document.getElementById('sla-container');
             if (tasks.length === 0) {
-                container.innerHTML = `<div class="glass-card p-10 text-center text-slate-400 text-sm">ไม่มีงานค้างที่ต้องเร่งดำเนินการ 😊</div>`;
+                container.innerHTML = `<div class="glass-card p-10 text-center text-slate-400 text-sm">ไม่มีงานที่ต้องเร่งดำเนินการในขณะนี้ ✨</div>`;
                 return;
             }
 
-            // เรียงลำดับตามเวลาที่ใกล้จะถึงที่สุด
             tasks.sort((a, b) => a.sla_due.seconds - b.sla_due.seconds);
 
             container.innerHTML = tasks.slice(0, 3).map(t => {
                 const dueDate = t.sla_due.toDate();
                 const isOverdue = dueDate < new Date();
-                
                 return `
-                    <div class="glass-card p-5 flex items-center justify-between border-l-4 ${isOverdue ? 'border-red-500' : 'border-orange-400'}">
-                        <div class="min-w-0 flex-1 pr-4">
-                            <h5 class="text-sm font-bold text-slate-800 truncate">${t.topic}</h5>
-                            <p class="text-[10px] text-slate-400 font-medium">Internet No: ${t.id_number || '-'}</p>
+                    <div class="glass-card p-6 flex items-center justify-between border-l-[6px] ${isOverdue ? 'border-red-500' : 'border-orange-400'}">
+                        <div>
+                            <h5 class="font-bold text-slate-800">${t.topic}</h5>
+                            <p class="text-[10px] text-slate-400 font-black uppercase tracking-widest mt-1">ID: ${t.id_number || '-'}</p>
                         </div>
                         <div class="text-right">
                             <p class="text-[10px] font-black ${isOverdue ? 'text-red-500 animate-pulse' : 'text-slate-400'} uppercase">
-                                ${isOverdue ? 'Overdue' : 'Due At'}
+                                ${isOverdue ? 'เกินกำหนด' : 'ครบกำหนดใน'}
                             </p>
-                            <p class="text-xs font-bold text-slate-700">${dueDate.toLocaleTimeString('th-TH', {hour:'2-digit', minute:'2-digit'})} น.</p>
+                            <p class="text-sm font-bold text-slate-700">${dueDate.toLocaleTimeString('th-TH', {hour:'2-digit', minute:'2-digit'})} น.</p>
                         </div>
                     </div>
                 `;
             }).join('');
         }
+
+        // --- Logout Modal UI Controls ---
+        const openLogoutModal = () => {
+            const m = document.getElementById('logout-modal');
+            m.classList.remove('hidden');
+            setTimeout(() => {
+                document.getElementById('modal-backdrop').classList.add('opacity-100');
+                document.getElementById('logout-modal-content').classList.add('opacity-100', 'scale-100');
+            }, 10);
+        };
+
+        const closeLogoutModal = () => {
+            document.getElementById('modal-backdrop').classList.remove('opacity-100');
+            document.getElementById('logout-modal-content').classList.remove('opacity-100', 'scale-100');
+            setTimeout(() => document.getElementById('logout-modal').classList.add('hidden'), 300);
+        };
+
+        document.getElementById('close-logout').onclick = closeLogoutModal;
+        document.getElementById('confirm-logout').onclick = () => signOut(auth).then(() => window.location.replace("login.html"));
     </script>
 </body>
 </html>

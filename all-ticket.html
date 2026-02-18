@@ -8,69 +8,41 @@
     <link href="https://fonts.googleapis.com/css2?family=Kanit:wght@300;400;600&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
     <style>
-        body { font-family: 'Kanit', sans-serif; background-color: #f0fdf4; }
-        
-        /* Custom Scrollbar */
-        .custom-scroll::-webkit-scrollbar { width: 6px; }
-        .custom-scroll::-webkit-scrollbar-track { background: #f1f1f1; }
-        .custom-scroll::-webkit-scrollbar-thumb { background: #10b981; border-radius: 10px; }
-
-        /* Modal & UI Elements */
-        .modal-animate { transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1); }
-        .modal-backdrop-blur { backdrop-filter: blur(8px); background-color: rgba(6, 78, 59, 0.4); }
+        body { font-family: 'Kanit', sans-serif; background-color: #f8fafc; }
+        .status-badge { @apply px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-widest; }
         .modal-active { overflow: hidden; }
-
-        /* Status Glow */
-        .status-badge { position: relative; overflow: hidden; }
-        .status-badge::after { content: ''; position: absolute; top: 0; left: -100%; width: 100%; height: 100%; background: linear-gradient(90deg, transparent, rgba(255,255,255,0.4), transparent); transition: 0.5s; }
-        .group:hover .status-badge::after { left: 100%; }
+        .modal-backdrop-blur { backdrop-filter: blur(10px); background-color: rgba(15, 23, 42, 0.5); }
     </style>
 </head>
 <body class="flex min-h-screen">
 
-    <aside id="sidebar-placeholder" class="hidden lg:block w-64 sticky top-0 h-screen bg-white border-r border-emerald-100"></aside>
+    <aside id="sidebar-placeholder" class="hidden lg:block w-64 sticky top-0 h-screen bg-white border-r border-slate-200"></aside>
 
     <div class="flex-1 flex flex-col min-w-0">
         <div id="topbar-placeholder"></div>
 
-        <main class="p-4 md:p-8 max-w-7xl mx-auto w-full">
-            <div class="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-8">
-                <div>
-                    <h2 class="text-3xl font-bold text-slate-800 tracking-tight">รายการใบงานทั้งหมด</h2>
-                    <p class="text-emerald-600 font-medium text-sm mt-1">Global Ticket Monitoring & History</p>
-                </div>
+        <main class="p-4 md:p-8">
+            <div class="mb-8">
+                <h2 class="text-2xl font-bold text-slate-800 tracking-tight">รายการใบงานทั้งหมด</h2>
+                <p class="text-sm text-slate-500">ตรวจสอบและติดตามสถานะใบงานของพนักงานทุกคนในระบบ</p>
             </div>
 
-            <div class="bg-white p-4 rounded-[2.5rem] shadow-sm border border-emerald-100 mb-8 flex flex-col md:flex-row gap-4 items-center">
-                <div class="relative flex-1 w-full">
-                    <i class="fa-solid fa-magnifying-glass absolute left-6 top-1/2 -translate-y-1/2 text-emerald-400"></i>
-                    <input type="text" id="searchInput" placeholder="ค้นหาชื่อผู้สร้าง, หมายเลข Internet หรือหัวข้อ..." 
-                        class="w-full pl-14 pr-6 py-4 bg-emerald-50/50 border border-transparent focus:bg-white focus:border-emerald-500 rounded-[1.8rem] outline-none transition-all">
-                </div>
-                <div class="flex items-center gap-3 w-full md:w-auto">
-                    <span class="text-xs font-black text-emerald-800 uppercase tracking-widest ml-2 whitespace-nowrap">เรียงตาม</span>
-                    <select id="sortOrder" class="bg-emerald-50 border border-emerald-100 text-emerald-700 px-6 py-4 rounded-[1.5rem] focus:bg-white outline-none font-bold cursor-pointer transition-all w-full">
-                        <option value="desc">ล่าสุดไปเก่า</option>
-                        <option value="asc">เก่าไปล่าสุด</option>
-                    </select>
-                </div>
-            </div>
-
-            <div class="bg-white rounded-[3rem] shadow-xl shadow-emerald-900/5 overflow-hidden border border-emerald-100">
+            <div class="bg-white rounded-[2.5rem] shadow-xl border border-slate-100 overflow-hidden">
                 <div class="overflow-x-auto">
                     <table class="w-full text-left border-collapse">
                         <thead>
-                            <tr class="bg-emerald-50/50 border-b border-emerald-100">
-                                <th class="p-7 text-[10px] font-black text-emerald-800/50 uppercase tracking-widest">ข้อมูลผู้สร้าง</th>
-                                <th class="p-7 text-[10px] font-black text-emerald-800/50 uppercase tracking-widest">หัวข้อปัญหา</th>
-                                <th class="p-7 text-[10px] font-black text-emerald-800/50 uppercase tracking-widest text-center">สถานะ</th>
-                                <th class="p-7 text-[10px] font-black text-emerald-800/50 uppercase tracking-widest">กำหนดเสร็จ (SLA)</th>
-                                <th class="p-7 text-[10px] font-black text-emerald-800/50 uppercase tracking-widest">เวลาปิดงาน</th>
-                                <th class="p-7 text-[10px] font-black text-emerald-800/50 uppercase tracking-widest text-right">แอคชั่น</th>
+                            <tr class="bg-slate-50/50 border-b border-slate-100">
+                                <th class="p-6 text-[10px] font-black text-slate-400 uppercase tracking-widest">1. Internet No.</th>
+                                <th class="p-6 text-[10px] font-black text-slate-400 uppercase tracking-widest">2. Create Date</th>
+                                <th class="p-6 text-[10px] font-black text-slate-400 uppercase tracking-widest">3. Topic</th>
+                                <th class="p-6 text-[10px] font-black text-slate-400 uppercase tracking-widest">4. Status</th>
+                                <th class="p-6 text-[10px] font-black text-slate-400 uppercase tracking-widest">5. Close/Update Date</th>
+                                <th class="p-6 text-[10px] font-black text-slate-400 uppercase tracking-widest">6. User</th>
+                                <th class="p-6 text-right"></th>
                             </tr>
                         </thead>
-                        <tbody id="ticket-list" class="divide-y divide-emerald-50">
-                            <tr><td colspan="6" class="p-20 text-center text-emerald-400 animate-pulse font-medium">กำลังเตรียมข้อมูล...</td></tr>
+                        <tbody id="ticket-list" class="divide-y divide-slate-50 text-sm">
+                            <tr><td colspan="7" class="p-20 text-center text-slate-400 animate-pulse">กำลังโหลดข้อมูล...</td></tr>
                         </tbody>
                     </table>
                 </div>
@@ -78,37 +50,72 @@
         </main>
     </div>
 
-    <div id="detailModal" class="hidden fixed inset-0 z-50 flex items-center justify-center p-4">
-        <div class="absolute inset-0 modal-backdrop-blur" onclick="closeModal()"></div>
-        <div class="relative bg-white w-full max-w-2xl rounded-[3rem] shadow-2xl overflow-hidden modal-animate flex flex-col max-h-[90vh]">
-            <div class="bg-emerald-600 p-8 text-white flex justify-between items-start">
-                <div>
-                    <h3 class="text-xl font-bold">รายละเอียดใบงาน</h3>
-                    <p class="text-emerald-100 text-[10px] uppercase font-black tracking-widest mt-1" id="modal-ticket-id">ID: -</p>
-                </div>
-                <button onclick="closeModal()" class="w-10 h-10 flex items-center justify-center bg-white/10 hover:bg-white/20 rounded-full transition text-white">
-                    <i class="fa-solid fa-xmark text-lg"></i>
-                </button>
+    <div id="detail-modal" class="fixed inset-0 z-[100] hidden flex items-center justify-center p-4">
+        <div class="absolute inset-0 modal-backdrop-blur" onclick="closeDetailModal()"></div>
+        <div class="relative bg-white w-full max-w-2xl rounded-[3rem] shadow-2xl overflow-hidden flex flex-col max-h-[90vh]">
+            <div class="bg-indigo-600 p-8 text-white flex justify-between items-center">
+                <h3 class="text-xl font-bold">รายละเอียด Ticket</h3>
+                <button onclick="closeDetailModal()" class="hover:rotate-90 transition-transform"><i class="fa-solid fa-xmark text-2xl"></i></button>
             </div>
-            
-            <div id="modalBody" class="p-8 space-y-6 overflow-y-auto custom-scroll bg-white">
+            <div class="p-8 overflow-y-auto space-y-6">
+                <div class="grid grid-cols-2 gap-6">
+                    <div>
+                        <p class="text-[10px] font-black text-slate-400 uppercase mb-1">1. Internet No.</p>
+                        <p id="det-id-number" class="font-bold text-slate-800">-</p>
+                    </div>
+                    <div>
+                        <p class="text-[10px] font-black text-slate-400 uppercase mb-1">2. Create Date</p>
+                        <p id="det-create-date" class="text-slate-600">-</p>
+                    </div>
                 </div>
-
-            <div class="p-6 bg-emerald-50/50 text-right border-t border-emerald-100">
-                <button onclick="closeModal()" class="px-10 py-3 bg-white border border-emerald-200 text-emerald-700 rounded-2xl font-bold hover:bg-emerald-50 transition shadow-sm">ปิดหน้าต่าง</button>
+                <div>
+                    <p class="text-[10px] font-black text-slate-400 uppercase mb-1">3. Topic</p>
+                    <p id="det-topic" class="font-bold text-indigo-600">-</p>
+                </div>
+                <div>
+                    <p class="text-[10px] font-black text-slate-400 uppercase mb-1">4. รายละเอียด Ticket</p>
+                    <div id="det-detail" class="bg-slate-50 p-4 rounded-2xl text-slate-700 whitespace-pre-line border border-slate-100 text-xs"></div>
+                </div>
+                <div class="grid grid-cols-2 gap-6">
+                    <div>
+                        <p class="text-[10px] font-black text-slate-400 uppercase mb-1">5. User Create</p>
+                        <p id="det-user-create" class="text-slate-600">-</p>
+                    </div>
+                    <div>
+                        <p class="text-[10px] font-black text-slate-400 uppercase mb-1">6. Status</p>
+                        <span id="det-status" class="status-badge">-</span>
+                    </div>
+                </div>
+                <div class="p-5 bg-amber-50 rounded-[2rem] border border-amber-100">
+                    <p class="text-[10px] font-black text-amber-600 uppercase mb-2 ml-1">7. Remark จาก Admin</p>
+                    <p id="det-admin-remark" class="text-slate-700 font-medium italic">-</p>
+                </div>
+                <div class="grid grid-cols-2 gap-6 pt-4 border-t border-slate-100">
+                    <div>
+                        <p class="text-[10px] font-black text-slate-400 uppercase mb-1">8. Close / Update Date</p>
+                        <p id="det-update-date" class="text-slate-600">-</p>
+                    </div>
+                    <div>
+                        <p class="text-[10px] font-black text-slate-400 uppercase mb-1">9. Admin Update User</p>
+                        <p id="det-admin-user" class="text-slate-800 font-bold">-</p>
+                    </div>
+                </div>
+            </div>
+            <div class="p-6 bg-slate-50 text-right border-t border-slate-100">
+                <button onclick="closeDetailModal()" class="px-8 py-3 bg-white border border-slate-200 text-slate-600 rounded-2xl font-bold hover:bg-slate-100 transition shadow-sm">ปิด</button>
             </div>
         </div>
     </div>
 
-    <div id="logout-modal" class="fixed inset-0 z-[100] hidden flex items-center justify-center p-4">
-        <div class="absolute inset-0 bg-slate-900/40 backdrop-blur-sm opacity-0 transition-opacity duration-300" id="logout-backdrop"></div>
-        <div class="relative bg-white w-full max-w-sm rounded-[3rem] p-10 shadow-2xl scale-90 opacity-0 modal-animate" id="logout-content">
+    <div id="logout-modal" class="fixed inset-0 z-[110] hidden flex items-center justify-center p-4">
+        <div class="absolute inset-0 bg-slate-900/40 backdrop-blur-sm" id="logout-backdrop"></div>
+        <div class="relative bg-white w-full max-w-sm rounded-[3rem] p-10 shadow-2xl">
             <div class="text-center">
                 <div class="w-20 h-20 bg-red-50 rounded-full flex items-center justify-center mx-auto mb-6">
                     <span class="text-3xl">🚪</span>
                 </div>
-                <h3 class="text-2xl font-bold text-slate-800 mb-2">Logout?</h3>
-                <p class="text-slate-500 mb-8 text-sm">ต้องการออกจากระบบใช่หรือไม่?</p>
+                <h3 class="text-2xl font-bold text-slate-800 mb-2">ออกจากระบบ?</h3>
+                <p class="text-slate-500 mb-8 text-sm">คุณต้องการออกจากระบบใช่หรือไม่</p>
                 <div class="flex gap-3">
                     <button id="confirm-logout" class="flex-1 py-4 bg-red-500 text-white rounded-2xl font-bold hover:bg-red-600 transition shadow-lg">ยืนยัน</button>
                     <button id="close-logout" class="flex-1 py-4 bg-slate-100 text-slate-600 rounded-2xl font-bold hover:bg-slate-200">ยกเลิก</button>
@@ -135,207 +142,127 @@
         const db = getFirestore(app);
         const auth = getAuth(app);
 
-        let allTicketsData = [];
-        let unsubscribe = null;
-
         onAuthStateChanged(auth, async (user) => {
             if (user) {
-                await loadLayout();
-                listenToAllTickets();
+                const userDoc = await getDoc(doc(db, "users", user.uid));
+                const adminDoc = await getDoc(doc(db, "admin", user.uid));
+                const userData = adminDoc.exists() ? adminDoc.data() : (userDoc.exists() ? userDoc.data() : {});
+                
+                loadLayout(userData, user.email);
+                fetchAllTickets();
             } else {
-                window.location.replace('login.html');
+                window.location.replace("login.html");
             }
         });
 
-        // --- Core Logic ---
-        function listenToAllTickets() {
-            if (unsubscribe) unsubscribe();
-            const order = document.getElementById('sortOrder').value;
-            const q = query(collection(db, "tickets"), orderBy("createdAt", order));
-            
-            unsubscribe = onSnapshot(q, (snapshot) => {
-                allTicketsData = snapshot.docs.map(doc => ({ ...doc.data(), docId: doc.id }));
-                renderAllTickets(allTicketsData);
+        // ฟังก์ชันดึงข้อมูล Ticket ทั้งหมด (ไม่ใช่แค่ของตนเอง)
+        function fetchAllTickets() {
+            const q = query(collection(db, "tickets"), orderBy("createdAt", "desc"));
+            onSnapshot(q, (snapshot) => {
+                const list = document.getElementById('ticket-list');
+                if (snapshot.empty) {
+                    list.innerHTML = `<tr><td colspan="7" class="p-20 text-center text-slate-400">ยังไม่มีรายการใบงานในระบบ</td></tr>`;
+                    return;
+                }
+
+                list.innerHTML = snapshot.docs.map(doc => {
+                    const ticket = doc.data();
+                    const createDate = ticket.createdAt?.toDate().toLocaleString('th-TH', {dateStyle:'short', timeStyle:'short'}) || '-';
+                    const updateDate = ticket.updatedAt?.toDate().toLocaleString('th-TH', {dateStyle:'short', timeStyle:'short'}) || '-';
+                    
+                    let statusClass = "bg-slate-100 text-slate-600";
+                    if(ticket.status === 'Open') statusClass = "bg-blue-100 text-blue-700";
+                    if(ticket.status === 'On Progress') statusClass = "bg-orange-100 text-orange-700";
+                    if(ticket.status === 'Success') statusClass = "bg-emerald-100 text-emerald-700";
+                    if(ticket.status === 'Reject') statusClass = "bg-red-100 text-red-700";
+
+                    return `
+                        <tr class="hover:bg-slate-50 transition-all border-b border-slate-50 last:border-0">
+                            <td class="p-6 font-bold text-slate-700">${ticket.id_number || '-'}</td>
+                            <td class="p-6 text-slate-500 text-[12px]">${createDate}</td>
+                            <td class="p-6 text-slate-700 font-medium">${ticket.topic}</td>
+                            <td class="p-6">
+                                <span class="status-badge ${statusClass}">${ticket.status || 'Pending'}</span>
+                            </td>
+                            <td class="p-6 text-slate-500 text-[12px]">${updateDate}</td>
+                            <td class="p-6 font-medium text-slate-600">${ticket.owner || '-'}</td>
+                            <td class="p-6 text-right">
+                                <button onclick="viewDetail('${doc.id}')" class="w-10 h-10 rounded-full bg-slate-100 text-slate-400 hover:bg-indigo-600 hover:text-white transition-all">
+                                    <i class="fa-solid fa-eye text-xs"></i>
+                                </button>
+                            </td>
+                        </tr>
+                    `;
+                }).join('');
             });
         }
 
-        function renderAllTickets(data) {
-            const list = document.getElementById('ticket-list');
-            if (data.length === 0) {
-                list.innerHTML = `<tr><td colspan="6" class="p-20 text-center text-emerald-400 italic">ไม่พบใบงานในระบบ</td></tr>`;
-                return;
+        // View Detail Function
+        window.viewDetail = async (id) => {
+            const docRef = doc(db, "tickets", id);
+            const snap = await getDoc(docRef);
+            if (snap.exists()) {
+                const t = snap.data();
+                document.getElementById('det-id-number').innerText = t.id_number || '-';
+                document.getElementById('det-create-date').innerText = t.createdAt?.toDate().toLocaleString('th-TH') || '-';
+                document.getElementById('det-topic').innerText = t.topic;
+                document.getElementById('det-detail').innerText = t.detail;
+                document.getElementById('det-user-create').innerText = t.owner;
+                document.getElementById('det-status').innerText = t.status;
+                document.getElementById('det-admin-remark').innerText = t.adminNote || 'ไม่มีหมายเหตุ';
+                document.getElementById('det-update-date').innerText = t.updatedAt?.toDate().toLocaleString('th-TH') || '-';
+                document.getElementById('det-admin-user').innerText = t.adminName || '-';
+
+                const statusBadge = document.getElementById('det-status');
+                statusBadge.className = "status-badge " + (t.status === 'Open' ? 'bg-blue-100 text-blue-700' : 
+                                       t.status === 'Success' ? 'bg-emerald-100 text-emerald-700' : 'bg-orange-100 text-orange-700');
+
+                document.getElementById('detail-modal').classList.remove('hidden');
+                document.body.classList.add('modal-active');
             }
-
-            list.innerHTML = data.map(t => {
-                const slaDue = t.sla_due ? t.sla_due.toDate().toLocaleString('th-TH', {day:'2-digit', month:'2-digit', year:'2-digit', hour:'2-digit', minute:'2-digit'}) : '-';
-                const isClosed = ["Success", "Completed", "Rejected", "Success (SLA)"].includes(t.status);
-                const closedAt = (isClosed && t.updatedAt) ? t.updatedAt.toDate().toLocaleString('th-TH', {day:'2-digit', month:'2-digit', year:'2-digit', hour:'2-digit', minute:'2-digit'}) : '-';
-                
-                const statusColors = {
-                    'Open': 'bg-blue-100 text-blue-700',
-                    'On Progress': 'bg-orange-100 text-orange-700',
-                    'Success': 'bg-emerald-100 text-emerald-700',
-                    'Reject': 'bg-red-100 text-red-700'
-                };
-                const color = statusColors[t.status] || 'bg-slate-100 text-slate-700';
-
-                return `
-                    <tr class="hover:bg-emerald-50/50 transition-all group border-b border-emerald-50 last:border-0">
-                        <td class="p-6">
-                            <div class="flex flex-col">
-                                <span class="text-sm font-bold text-slate-700">${t.owner || 'Unknown'}</span>
-                                <span class="text-[10px] text-slate-400 font-medium tracking-tight">${t.id_number || '-'}</span>
-                            </div>
-                        </td>
-                        <td class="p-6">
-                            <p class="text-sm text-slate-800 font-semibold line-clamp-1">${t.topic}</p>
-                            <p class="text-[9px] text-emerald-500 font-black uppercase tracking-widest mt-0.5">Global Ticket</p>
-                        </td>
-                        <td class="p-6 text-center">
-                            <span class="status-badge px-4 py-1.5 rounded-full text-[10px] font-black uppercase tracking-widest ${color}">${t.status || 'Pending'}</span>
-                        </td>
-                        <td class="p-6">
-                            <span class="text-xs font-bold text-emerald-600 block">${slaDue}</span>
-                        </td>
-                        <td class="p-6">
-                            <span class="text-xs font-medium text-slate-400 block">${closedAt}</span>
-                        </td>
-                        <td class="p-6 text-right">
-                            <button onclick="viewTicketDetail('${t.docId}')" class="bg-emerald-50 text-emerald-600 hover:bg-emerald-600 hover:text-white px-6 py-2.5 rounded-xl text-xs font-black transition-all active:scale-95 shadow-sm">ดูข้อมูล</button>
-                        </td>
-                    </tr>
-                `;
-            }).join('');
-        }
-
-        window.viewTicketDetail = async (id) => {
-            const modal = document.getElementById('detailModal');
-            const body = document.getElementById('modalBody');
-            document.getElementById('modal-ticket-id').innerText = `ID: ${id}`;
-            
-            modal.classList.remove('hidden');
-            body.innerHTML = `<div class="p-10 text-center animate-pulse text-emerald-400 font-bold">กำลังดึงรายละเอียด...</div>`;
-
-            try {
-                const snap = await getDoc(doc(db, "tickets", id));
-                if (snap.exists()) {
-                    const d = snap.data();
-                    let adminSection = '';
-                    if (d.adminNote || d.adminName) {
-                        adminSection = `
-                            <div class="mt-4 p-6 bg-emerald-50 rounded-[2.5rem] border border-emerald-100 space-y-4">
-                                <div class="flex justify-between items-center">
-                                    <p class="text-[10px] font-black text-emerald-600 uppercase tracking-widest">Admin Resolution</p>
-                                    <span class="text-[9px] bg-emerald-200 text-emerald-800 px-3 py-1 rounded-full font-black">${d.adminName || 'System'}</span>
-                                </div>
-                                <div class="bg-white p-5 rounded-2xl text-slate-700 text-sm border border-emerald-100 shadow-sm leading-relaxed font-medium">
-                                    ${d.adminNote || 'ไม่มีบันทึกเพิ่มเติม'}
-                                </div>
-                                <div class="flex justify-between text-[10px] text-emerald-600 font-bold opacity-70">
-                                    <span>สถานะสุดท้าย: ${d.status}</span>
-                                    <span>อัปเดตเมื่อ: ${d.updatedAt?.toDate().toLocaleString('th-TH') || '-'}</span>
-                                </div>
-                            </div>
-                        `;
-                    }
-
-                    body.innerHTML = `
-                        <div class="space-y-5">
-                            <div class="bg-slate-50 p-7 rounded-[2.5rem] border border-slate-100 grid grid-cols-2 gap-6">
-                                <div>
-                                    <p class="text-[10px] text-slate-400 uppercase font-black mb-1.5 tracking-widest">ข้อมูลผู้แจ้ง</p>
-                                    <p class="text-sm font-bold text-slate-800">${d.owner || '-'}</p>
-                                    <p class="text-xs text-slate-500 font-medium">${d.ownerEmail || '-'}</p>
-                                </div>
-                                <div>
-                                    <p class="text-[10px] text-slate-400 uppercase font-black mb-1.5 tracking-widest">Internet No. / SLA</p>
-                                    <p class="text-sm font-bold text-slate-800">${d.id_number || '-'}</p>
-                                    <p class="text-xs text-emerald-600 font-bold">Due: ${d.sla_due?.toDate().toLocaleString('th-TH') || '-'}</p>
-                                </div>
-                            </div>
-
-                            <div>
-                                <p class="text-[10px] text-slate-400 uppercase font-black mb-2 px-1 tracking-widest">หัวข้อปัญหา</p>
-                                <div class="p-5 bg-white rounded-2xl border border-slate-100 font-bold text-slate-800 shadow-sm">${d.topic}</div>
-                            </div>
-
-                            <div>
-                                <p class="text-[10px] text-slate-400 uppercase font-black mb-2 px-1 tracking-widest">รายละเอียดจากผู้ใช้</p>
-                                <div class="bg-white p-6 rounded-2xl border border-slate-100 text-slate-600 whitespace-pre-wrap text-sm leading-relaxed font-medium">${d.detail || 'ไม่มีรายละเอียด'}</div>
-                            </div>
-
-                            ${adminSection}
-                        </div>
-                    `;
-                }
-            } catch (err) { body.innerHTML = `<div class="p-10 text-center text-red-500">เกิดข้อผิดพลาดในการโหลดข้อมูล</div>`; }
         };
 
-        // --- Layout & Logout ---
-        async function loadLayout() {
+        window.closeDetailModal = () => {
+            document.getElementById('detail-modal').classList.add('hidden');
+            document.body.classList.remove('modal-active');
+        };
+
+        // Layout & Logout Logic
+        async function loadLayout(userData, email) {
             const comps = [
                 { id: 'sidebar-placeholder', url: './components/sidebar.html' },
                 { id: 'topbar-placeholder', url: './components/topbar.html' }
             ];
-
             for (const comp of comps) {
                 const res = await fetch(comp.url);
                 if (res.ok) {
                     const el = document.getElementById(comp.id);
                     el.innerHTML = await res.text();
                     el.classList.remove('hidden');
-                    el.querySelectorAll("script").forEach(s => {
-                        const ns = document.createElement("script");
-                        ns.type = "module";
-                        ns.textContent = s.textContent;
-                        document.head.appendChild(ns);
-                    });
                 }
             }
-            // Hook Global Logout
-            document.addEventListener('click', (e) => {
-                if (e.target.closest('#main-logout-btn')) { e.preventDefault(); openLogoutModal(); }
-            });
+            // ใส่ข้อมูลผู้ใช้ที่ Topbar หลังโหลดเสร็จ
+            setTimeout(() => {
+                const nameEl = document.querySelector('#topbar-user-name');
+                if (nameEl) {
+                    nameEl.innerText = userData.name || "Admin";
+                    document.querySelector('#topbar-user-email').innerText = email;
+                }
+            }, 500);
         }
 
-        window.openLogoutModal = () => {
-            document.getElementById('logout-modal').classList.remove('hidden');
-            document.body.classList.add('modal-active');
-            setTimeout(() => {
-                document.getElementById('logout-backdrop').classList.add('opacity-100');
-                document.getElementById('logout-content').classList.remove('scale-90', 'opacity-0');
-            }, 10);
-        };
+        // Logout Event Listeners
+        document.addEventListener('click', (e) => {
+            if (e.target.closest('#main-logout-btn')) {
+                document.getElementById('logout-modal').classList.remove('hidden');
+            }
+        });
 
-        const closeLogoutModal = () => {
-            document.getElementById('logout-backdrop').classList.remove('opacity-100');
-            document.getElementById('logout-content').classList.add('scale-90', 'opacity-0');
-            setTimeout(() => {
-                document.getElementById('logout-modal').classList.add('hidden');
-                document.body.classList.remove('modal-active');
-            }, 300);
-        };
-
-        document.getElementById('close-logout').onclick = closeLogoutModal;
+        document.getElementById('close-logout').onclick = () => document.getElementById('logout-modal').classList.add('hidden');
         document.getElementById('confirm-logout').onclick = async () => {
             await signOut(auth);
             window.location.replace("login.html");
         };
-
-        window.closeModal = () => document.getElementById('detailModal').classList.add('hidden');
-        
-        // Listeners
-        document.getElementById('sortOrder').addEventListener('change', listenToAllTickets);
-        document.getElementById('searchInput').addEventListener('input', (e) => {
-            const term = e.target.value.toLowerCase();
-            const filtered = allTicketsData.filter(t => 
-                String(t.owner || "").toLowerCase().includes(term) || 
-                String(t.id_number || "").toLowerCase().includes(term) ||
-                String(t.topic || "").toLowerCase().includes(term)
-            );
-            renderAllTickets(filtered);
-        });
-
     </script>
 </body>
 </html>

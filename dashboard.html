@@ -1,244 +1,286 @@
 <!DOCTYPE html>
 <html lang="th">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dashboard - Sale Support System</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Kanit:wght@300;400;600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <style>
+        body { font-family: 'Kanit', sans-serif; background-color: #f8fafc; }
+        .glass-card { background: white; border-radius: 2.5rem; box-shadow: 0 4px 20px rgba(0,0,0,0.02); transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1); border: 1px solid #f1f5f9; }
+        .glass-card:hover { transform: translateY(-5px); box-shadow: 0 15px 35px rgba(0,0,0,0.06); }
+        
+        /* Modal Style - เหมือนหน้า System Log */
+        .modal-active { overflow: hidden; }
+        .modal-backdrop-blur { backdrop-filter: blur(10px); background-color: rgba(15, 23, 42, 0.5); }
+        .modal-animate { transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1); }
 
-<title>Dashboard - Sale Support System</title>
-
-<script src="https://cdn.tailwindcss.com"></script>
-<link href="https://fonts.googleapis.com/css2?family=Kanit:wght@300;400;600&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
-
-<style>
-body{
-    font-family:'Kanit',sans-serif;
-    background:#f8fafc;
-}
-
-/* ===== FIX SIDEBAR SPACE (ตัวแก้จริง) ===== */
-@media (min-width:1024px){
-    .main-wrapper{
-        padding-left:16rem; /* sidebar = w-64 */
-    }
-}
-
-.glass-card{
-    background:white;
-    border-radius:2.5rem;
-    box-shadow:0 4px 20px rgba(0,0,0,.02);
-    border:1px solid #f1f5f9;
-    transition:.3s;
-}
-.glass-card:hover{
-    transform:translateY(-5px);
-    box-shadow:0 15px 35px rgba(0,0,0,.06);
-}
-
-/* modal */
-.modal-active{overflow:hidden;}
-.modal-backdrop-blur{
-    backdrop-filter:blur(10px);
-    background:rgba(15,23,42,.5);
-}
-.modal-animate{transition:.3s;}
-#progress-circle{transition:stroke-dasharray 1s ease;}
-</style>
+        #progress-circle { transition: stroke-dasharray 1s ease-in-out; }
+    </style>
 </head>
+<body class="flex min-h-screen">
 
-<!-- ✅ ไม่ใช้ flex ที่ body -->
-<body class="min-h-screen">
+    <aside id="sidebar-placeholder" class="hidden lg:block w-64 sticky top-0 h-screen bg-white border-r border-slate-200"></aside>
 
-<!-- ================= SIDEBAR ================= -->
-<aside id="sidebar-placeholder" class="hidden lg:block"></aside>
+    <div class="flex-1 flex flex-col min-w-0">
+        <div id="topbar-placeholder"></div>
 
-<!-- ================= MAIN ================= -->
-<div class="main-wrapper min-h-screen flex flex-col">
+        <main class="p-6 md:p-10 max-w-7xl mx-auto w-full space-y-8">
+            
+            <div class="flex flex-col md:flex-row justify-between items-start md:items-center gap-6">
+                <div>
+                    <h2 class="text-3xl font-bold text-slate-800 tracking-tight">แผงควบคุมระบบ</h2>
+                    <p class="text-slate-500 mt-1">สรุปข้อมูลการดำเนินงานประจำวันของคุณ</p>
+                </div>
+                <a href="new-ticket.html" class="bg-[#5c67f2] hover:bg-[#4a54d4] text-white px-8 py-3.5 rounded-2xl font-bold transition-all shadow-lg shadow-indigo-100 flex items-center gap-2 active:scale-95">
+                    <span class="text-xl">+</span> สร้างใบงานใหม่
+                </a>
+            </div>
 
-<div id="topbar-placeholder"></div>
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                <div class="glass-card p-8 bg-white">
+                    <div class="w-12 h-12 rounded-2xl bg-orange-50 text-orange-500 flex items-center justify-center mb-6 text-xl">
+                        <i class="fa-solid fa-ticket"></i>
+                    </div>
+                    <p class="text-[11px] font-black text-slate-400 uppercase tracking-widest mb-1">ใบงานทั้งหมด</p>
+                    <h3 id="stat-total" class="text-5xl font-bold text-slate-800">0</h3>
+                </div>
 
-<main class="p-6 md:p-10 max-w-7xl mx-auto w-full space-y-8">
+                <div class="glass-card p-8 bg-white">
+                    <div class="w-12 h-12 rounded-2xl bg-indigo-50 text-indigo-500 flex items-center justify-center mb-6 text-xl">
+                        <i class="fa-solid fa-spinner"></i>
+                    </div>
+                    <p class="text-[11px] font-black text-slate-400 uppercase tracking-widest mb-1">กำลังดำเนินการ</p>
+                    <h3 id="stat-progress" class="text-5xl font-bold text-slate-800">0</h3>
+                </div>
 
-<!-- HEADER -->
-<div class="flex flex-col md:flex-row justify-between items-start md:items-center gap-6">
-<div>
-<h2 class="text-3xl font-bold text-slate-800">แผงควบคุมระบบ</h2>
-<p class="text-slate-500 mt-1">สรุปข้อมูลการดำเนินงานประจำวันของคุณ</p>
-</div>
+                <div class="glass-card p-8 bg-white">
+                    <div class="w-12 h-12 rounded-2xl bg-emerald-50 text-emerald-500 flex items-center justify-center mb-6 text-xl">
+                        <i class="fa-solid fa-circle-check"></i>
+                    </div>
+                    <p class="text-[11px] font-black text-slate-400 uppercase tracking-widest mb-1">ปิดงานแล้ว</p>
+                    <h3 id="stat-closed" class="text-5xl font-bold text-slate-800">0</h3>
+                </div>
+            </div>
 
-<a href="new-ticket.html"
-class="bg-[#5c67f2] hover:bg-[#4a54d4] text-white px-8 py-3.5 rounded-2xl font-bold shadow-lg">
-+ สร้างใบงานใหม่
-</a>
-</div>
+            <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+                <div class="lg:col-span-2 space-y-6">
+                    <div class="flex items-center justify-between px-2">
+                        <h4 class="font-bold text-slate-800 flex items-center gap-2">
+                            <i class="fa-solid fa-clock-rotate-left text-orange-500"></i>
+                            งานที่ต้องเร่งดำเนินการ (SLA)
+                        </h4>
+                        <a href="my-ticket.html" class="text-xs font-black text-[#5c67f2] hover:underline uppercase tracking-wider">ดูทั้งหมด</a>
+                    </div>
+                    <div id="sla-container" class="space-y-4">
+                        <div class="glass-card p-10 flex items-center justify-center text-slate-400 text-sm italic">กำลังโหลดข้อมูล...</div>
+                    </div>
+                </div>
 
-<!-- STATS -->
-<div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                <div class="space-y-6">
+                    <h4 class="font-bold text-slate-800 px-2 flex items-center gap-2">
+                        <i class="fa-solid fa-chart-line text-[#5c67f2]"></i>
+                        ประสิทธิภาพเดือนนี้
+                    </h4>
+                    <div class="glass-card p-8 flex flex-col items-center">
+                        <div class="relative w-40 h-40">
+                            <svg class="w-full h-full transform -rotate-90" viewBox="0 0 36 36">
+                                <circle cx="18" cy="18" r="16" fill="none" class="stroke-slate-100" stroke-width="3"></circle>
+                                <circle id="progress-circle" cx="18" cy="18" r="16" fill="none" class="stroke-[#5c67f2]" stroke-width="3" stroke-dasharray="0 100" stroke-linecap="round"></circle>
+                            </svg>
+                            <div class="absolute inset-0 flex flex-col items-center justify-center">
+                                <span id="eff-percent" class="text-3xl font-black text-slate-800 tracking-tighter">0%</span>
+                                <span class="text-[9px] font-black text-slate-400 uppercase tracking-widest">Success</span>
+                            </div>
+                        </div>
+                        <div class="mt-8 pt-6 border-t border-slate-50 w-full text-center">
+                            <p class="text-xs text-slate-500 leading-relaxed">สัดส่วนการปิดงานสำเร็จเทียบกับงานทั้งหมดของคุณ</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
 
-<div class="glass-card p-8">
-<p class="text-xs text-slate-400">ใบงานทั้งหมด</p>
-<h3 id="stat-total" class="text-5xl font-bold">0</h3>
-</div>
+    <div id="logout-modal" class="fixed inset-0 z-[100] hidden flex items-center justify-center p-4">
+        <div class="absolute inset-0 modal-backdrop-blur opacity-0 transition-opacity duration-300" id="logout-backdrop"></div>
+        <div class="relative bg-white w-full max-w-sm rounded-[3rem] p-10 shadow-2xl scale-90 opacity-0 modal-animate" id="logout-content">
+            <div class="text-center">
+                <div class="w-20 h-20 bg-red-50 rounded-full flex items-center justify-center mx-auto mb-6">
+                    <span class="text-3xl">🚪</span>
+                </div>
+                <h3 class="text-2xl font-bold text-slate-800 mb-2">Logout?</h3>
+                <p class="text-slate-500 mb-8 text-sm">ต้องการออกจากระบบใช่หรือไม่?</p>
+                <div class="flex gap-3">
+                    <button id="confirm-logout" class="flex-1 py-4 bg-red-500 text-white rounded-2xl font-bold hover:bg-red-600 transition shadow-lg active:scale-95">ยืนยัน</button>
+                    <button id="close-logout" class="flex-1 py-4 bg-slate-100 text-slate-600 rounded-2xl font-bold hover:bg-slate-200">ยกเลิก</button>
+                </div>
+            </div>
+        </div>
+    </div>
 
-<div class="glass-card p-8">
-<p class="text-xs text-slate-400">กำลังดำเนินการ</p>
-<h3 id="stat-progress" class="text-5xl font-bold">0</h3>
-</div>
+    <script type="module">
+        import { initializeApp, getApps } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
+        import { getFirestore, doc, getDoc, collection, getDocs, query, where } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+        import { getAuth, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
 
-<div class="glass-card p-8">
-<p class="text-xs text-slate-400">ปิดงานแล้ว</p>
-<h3 id="stat-closed" class="text-5xl font-bold">0</h3>
-</div>
+        const firebaseConfig = {
+            apiKey: "AIzaSyAa2uSD_tjNqYE2eXnZcn75h_jAVscDG-c",
+            authDomain: "salesupportsystemapp.firebaseapp.com",
+            projectId: "salesupportsystemapp",
+            storageBucket: "salesupportsystemapp.firebasestorage.app",
+            messagingSenderId: "840890441207",
+            appId: "1:840890441207:web:f3a5076d46e963a90de2f2"
+        };
 
-</div>
+        const app = getApps().length === 0 ? initializeApp(firebaseConfig) : getApps()[0];
+        const db = getFirestore(app);
+        const auth = getAuth(app);
 
-<!-- SLA -->
-<div id="sla-container"
-class="glass-card p-10 text-center text-slate-400 italic">
-กำลังโหลดข้อมูล...
-</div>
+        // --- 1. Load Layout (Sidebar & Topbar) ---
+        async function loadLayout(userData, email) {
+            const comps = [
+                { id: 'sidebar-placeholder', url: './components/sidebar.html' },
+                { id: 'topbar-placeholder', url: './components/topbar.html' }
+            ];
 
-</main>
-</div>
+            for (const comp of comps) {
+                try {
+                    const res = await fetch(comp.url);
+                    if (res.ok) {
+                        const el = document.getElementById(comp.id);
+                        el.innerHTML = await res.text();
+                        el.classList.remove('hidden');
+                        
+                        // Execute scripts in components
+                        el.querySelectorAll("script").forEach(oldScript => {
+                            const newScript = document.createElement("script");
+                            newScript.type = "module";
+                            newScript.textContent = oldScript.textContent;
+                            document.head.appendChild(newScript);
+                        });
+                    }
+                } catch (e) { console.error("Layout load error:", e); }
+            }
 
-<!-- ================= LOGOUT MODAL ================= -->
-<div id="logout-modal"
-class="fixed inset-0 z-[100] hidden flex items-center justify-center">
+            // Sync User Data to Topbar
+            const checkExist = setInterval(() => {
+                const nameEl = document.querySelector('#topbar-user-name');
+                if (nameEl) {
+                    nameEl.innerText = userData.name || "User";
+                    document.querySelector('#topbar-user-email').innerText = email;
+                    document.querySelector('#topbar-avatar-text').innerText = (userData.name || "U")[0].toUpperCase();
+                    clearInterval(checkExist);
+                }
+            }, 100);
+        }
 
-<div id="logout-backdrop"
-class="absolute inset-0 modal-backdrop-blur opacity-0"></div>
+        // --- 2. Auth State & Initialize ---
+        onAuthStateChanged(auth, async (user) => {
+            if (user) {
+                const adminDoc = await getDoc(doc(db, "admin", user.uid));
+                if (adminDoc.exists()) {
+                    const userData = adminDoc.data();
+                    await loadLayout(userData, user.email);
+                    loadDashboardData(user.email);
+                }
+            } else {
+                window.location.replace("login.html");
+            }
+        });
 
-<div id="logout-content"
-class="relative bg-white w-full max-w-sm rounded-3xl p-10 shadow-2xl scale-90 opacity-0 modal-animate">
+        // --- 3. Dashboard Data Fetching ---
+        async function loadDashboardData(userEmail) {
+            try {
+                const q = query(collection(db, "tickets"), where("ownerEmail", "==", userEmail));
+                const snap = await getDocs(q);
+                
+                let total = 0, progress = 0, closed = 0;
+                let slaTasks = [];
 
-<h3 class="text-xl font-bold text-center mb-6">Logout ?</h3>
+                snap.forEach(doc => {
+                    const d = doc.data();
+                    total++;
+                    if (["In Progress", "Pending"].includes(d.status)) {
+                        progress++;
+                        if(d.sla_due) slaTasks.push({id: doc.id, ...d});
+                    }
+                    if (["Success", "Success (SLA)", "Closed"].includes(d.status)) closed++;
+                });
 
-<div class="flex gap-3">
-<button id="confirm-logout"
-class="flex-1 py-3 bg-red-500 text-white rounded-xl">
-ยืนยัน
-</button>
+                document.getElementById('stat-total').innerText = total;
+                document.getElementById('stat-progress').innerText = progress;
+                document.getElementById('stat-closed').innerText = closed;
 
-<button id="close-logout"
-class="flex-1 py-3 bg-slate-200 rounded-xl">
-ยกเลิก
-</button>
-</div>
+                const rate = total > 0 ? Math.round((closed / total) * 100) : 0;
+                document.getElementById('eff-percent').innerText = rate + '%';
+                document.getElementById('progress-circle').setAttribute('stroke-dasharray', `${rate} 100`);
 
-</div>
-</div>
+                renderSLATasks(slaTasks);
+            } catch (err) {
+                console.error("Dashboard data error:", err);
+            }
+        }
 
-<!-- ================= FIREBASE SCRIPT ================= -->
-<script type="module">
+        function renderSLATasks(tasks) {
+            const container = document.getElementById('sla-container');
+            if (tasks.length === 0) {
+                container.innerHTML = `<div class="glass-card p-10 text-center text-slate-400 text-sm italic">ไม่มีงานที่ต้องเร่งดำเนินการในขณะนี้ ✨</div>`;
+                return;
+            }
 
-import { initializeApp,getApps }
-from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
+            tasks.sort((a, b) => (a.sla_due?.seconds || 0) - (b.sla_due?.seconds || 0));
 
-import {
-getFirestore,doc,getDoc,
-collection,getDocs,query,where
-}
-from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+            container.innerHTML = tasks.slice(0, 3).map(t => {
+                const dueDate = t.sla_due ? t.sla_due.toDate() : new Date();
+                const isOverdue = dueDate < new Date();
+                return `
+                    <div class="glass-card p-6 flex items-center justify-between border-l-[6px] ${isOverdue ? 'border-red-500' : 'border-orange-400'}">
+                        <div>
+                            <h5 class="font-bold text-slate-800">${t.topic || 'ไม่มีหัวข้อ'}</h5>
+                            <p class="text-[10px] text-slate-400 font-black uppercase tracking-widest mt-1">ID: ${t.id_number || '-'}</p>
+                        </div>
+                        <div class="text-right">
+                            <p class="text-[10px] font-black ${isOverdue ? 'text-red-500 animate-pulse' : 'text-slate-400'} uppercase">
+                                ${isOverdue ? 'เกินกำหนด' : 'ครบกำหนดใน'}
+                            </p>
+                            <p class="text-sm font-bold text-slate-700">${dueDate.toLocaleTimeString('th-TH', {hour:'2-digit', minute:'2-digit'})} น.</p>
+                        </div>
+                    </div>
+                `;
+            }).join('');
+        }
 
-import {
-getAuth,onAuthStateChanged,signOut
-}
-from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
+        // --- 4. Global UI Controls (Logout) ---
+        window.openLogoutModal = () => {
+            const modal = document.getElementById('logout-modal');
+            modal.classList.remove('hidden');
+            document.body.classList.add('modal-active');
+            setTimeout(() => {
+                document.getElementById('logout-backdrop').classList.add('opacity-100');
+                document.getElementById('logout-content').classList.remove('scale-90', 'opacity-0');
+            }, 10);
+        };
 
-const firebaseConfig={
-apiKey:"AIzaSyAa2uSD_tjNqYE2eXnZcn75h_jAVscDG-c",
-authDomain:"salesupportsystemapp.firebaseapp.com",
-projectId:"salesupportsystemapp",
-appId:"1:840890441207:web:f3a5076d46e963a90de2f2"
-};
+        const closeLogoutModal = () => {
+            document.getElementById('logout-backdrop').classList.remove('opacity-100');
+            document.getElementById('logout-content').classList.add('scale-90', 'opacity-0');
+            setTimeout(() => {
+                document.getElementById('logout-modal').classList.add('hidden');
+                document.body.classList.remove('modal-active');
+            }, 300);
+        };
 
-const app=getApps().length?getApps()[0]:initializeApp(firebaseConfig);
-const db=getFirestore(app);
-const auth=getAuth(app);
+        document.getElementById('close-logout').onclick = closeLogoutModal;
+        document.getElementById('confirm-logout').onclick = () => signOut(auth).then(() => window.location.replace("login.html"));
 
-/* ===== LOAD SIDEBAR + TOPBAR ===== */
-async function loadLayout(){
+        // Global Click Listener for Sidebar Buttons
+        document.addEventListener('click', (e) => {
+            if (e.target.closest('#main-logout-btn')) openLogoutModal();
+        });
 
-const comps=[
-{ id:'sidebar-placeholder',url:'./components/sidebar.html'},
-{ id:'topbar-placeholder',url:'./components/topbar.html'}
-];
-
-for(const c of comps){
-
-    const res = await fetch(c.url);
-    const html = await res.text();
-
-    const el = document.getElementById(c.id);
-    el.innerHTML = html;
-    el.classList.remove("hidden");
-
-    /* ===== FIX: EXECUTE SCRIPT INSIDE COMPONENT ===== */
-    el.querySelectorAll("script").forEach(oldScript=>{
-
-        const newScript=document.createElement("script");
-
-        if(oldScript.type)
-            newScript.type=oldScript.type;
-
-        if(oldScript.src)
-            newScript.src=oldScript.src;
-        else
-            newScript.textContent=oldScript.textContent;
-
-        document.body.appendChild(newScript);
-    });
-}
-}
-
-
-/* ===== AUTH ===== */
-onAuthStateChanged(auth,async(user)=>{
-if(!user){
-location.replace("login.html");
-return;
-}
-
-await loadLayout();
-loadDashboardData(user.email);
-});
-
-/* ===== DASHBOARD DATA ===== */
-async function loadDashboardData(email){
-
-const q=query(
-collection(db,"tickets"),
-where("ownerEmail","==",email)
-);
-
-const snap=await getDocs(q);
-
-let total=0,progress=0,closed=0;
-
-snap.forEach(d=>{
-const t=d.data();
-total++;
-if(["In Progress","Pending"].includes(t.status))progress++;
-if(["Success","Closed"].includes(t.status))closed++;
-});
-
-stat-total.innerText=total;
-stat-progress.innerText=progress;
-stat-closed.innerText=closed;
-}
-
-/* ===== LOGOUT ===== */
-window.openLogoutModal=()=>{
-logout-modal.classList.remove('hidden');
-}
-
-close-logout.onclick=()=>logout-modal.classList.add('hidden');
-
-confirm-logout.onclick=()=>{
-signOut(auth).then(()=>location.replace("login.html"));
-};
-
-</script>
-
+    </script>
 </body>
 </html>

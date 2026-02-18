@@ -1,31 +1,38 @@
 <style>
-    /* บังคับซ่อน Admin Section ตามสิทธิ์ (ห้ามลบ) */
+    /* บังคับซ่อน Admin Section ตามสิทธิ์ */
     #admin-menu-section.hidden-secure {
         display: none !important;
     }
 
-    /* โครงสร้าง Sidebar แบบ Full Screen Overlay */
+    /* โครงสร้าง Sidebar สำหรับมือถือและ Desktop */
     #sidebar-wrapper {
         position: fixed;
         inset: 0;
-        width: 100%;
+        width: 100%; /* เต็มจอ Mobile */
         height: 100%;
         background-color: white;
-        z-index: 9999; /* ให้อยู่บนสุด */
-        transform: translateX(-100%); /* ซ่อนไว้ด้านซ้าย */
+        z-index: 9999;
+        transform: translateX(-100%); /* ซ่อนไว้ฝั่งซ้าย */
         transition: transform 0.3s ease-in-out;
         display: flex;
         flex-direction: column;
     }
 
-    /* เมื่อสั่ง Active ให้แสดงเมนู */
+    /* เมื่อกด Hamburger ให้เลื่อนเข้ามา */
     #sidebar-wrapper.active {
         transform: translateX(0);
     }
 
-    /* ซ่อน Scrollbar ของตัวเมนู */
-    #sidebar-wrapper::-webkit-scrollbar {
-        width: 0px;
+    /* ปรับแต่งสำหรับหน้าจอ Desktop (ถ้าต้องการให้แสดงค้างไว้) */
+    @media (min-width: 1024px) {
+        #sidebar-wrapper {
+            position: sticky;
+            width: 260px; /* ขนาดปกติบนคอม */
+            transform: translateX(0);
+            z-index: 50;
+        }
+        /* ซ่อนปุ่ม X ปิดเมนูบน Desktop */
+        #close-sidebar-btn { display: none; }
     }
 </style>
 
@@ -35,7 +42,7 @@
             <span class="w-8 h-8 bg-[#5c56f1] rounded-lg flex items-center justify-center text-white text-xs">S</span>
             Sale Support
         </h1>
-        <button onclick="window.toggleMobileMenu()" class="text-slate-400 text-2xl p-2 hover:bg-slate-50 rounded-full transition">
+        <button id="close-sidebar-btn" onclick="window.toggleMobileMenu()" class="text-slate-400 text-2xl p-2 hover:bg-slate-50 rounded-full transition">
             <i class="fa-solid fa-xmark"></i>
         </button>
     </div>
@@ -84,20 +91,23 @@
 </aside>
 
 <script type="module">
+    // ฟังก์ชันเปิด/ปิดเมนู
     window.toggleMobileMenu = () => {
         const sidebar = document.getElementById('sidebar-wrapper');
         sidebar.classList.toggle('active');
-        document.body.style.overflow = sidebar.classList.contains('active') ? 'hidden' : 'auto';
+        // ป้องกันการไถหน้าจอพื้นหลังเมื่อเปิดเมนูเต็มจอ
+        if (window.innerWidth < 1024) {
+            document.body.style.overflow = sidebar.classList.contains('active') ? 'hidden' : 'auto';
+        }
     };
 
-    // [Firebase Script เดิมของคุณ...]
     import { initializeApp, getApps } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
     import { getAuth, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
     import { getFirestore, doc, getDoc, addDoc, collection, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
 
     const firebaseConfig = {
         apiKey: "AIzaSyAa2uSD_tjNqYE2eXnZcn75h_jAVscDG-c",
-        authDomain: "salesupportsystemapp.firebaseapp.com",
+        authDomain: "salesupportsystemapp.firebaseapp.app",
         projectId: "salesupportsystemapp",
         storageBucket: "salesupportsystemapp.firebasestorage.app",
         messagingSenderId: "840890441207",
@@ -110,6 +120,33 @@
 
     let currentSessionUser = null;
 
+    // --- 1. Global Activity Tracker ---
+    window.saveActivityLog = async (actionType, details, isError = false) => {
+        const user = auth.currentUser;
+        if (!user) return;
+        try {
+            await addDoc(collection(db, "logs"), {
+                userId: user.uid,
+                userName: currentSessionUser?.name || user.email,
+                userEmail: user.email,
+                actionType: actionType,
+                details: details,
+                isError: isError,
+                path: window.location.pathname.split("/").pop() || "index.html",
+                timestamp: serverTimestamp()
+            });
+        } catch (err) { console.error("Logging failed", err); }
+    };
+
+    // --- 2. Active Link Highlight ---
+    const currentPage = window.location.pathname.split("/").pop();
+    document.querySelectorAll('.nav-link').forEach(link => {
+        if (link.getAttribute('href') === currentPage) {
+            link.classList.add('bg-indigo-50', 'text-[#5c56f1]', 'font-bold');
+        }
+    });
+
+    // --- 3. Role Check & Secure Display ---
     onAuthStateChanged(auth, async (user) => {
         const adminSection = document.getElementById('admin-menu-section');
         if (user) {
@@ -120,14 +157,22 @@
                     const userData = userSnap.data();
                     currentSessionUser = userData;
                     const userRole = (userData.role || "").toString().toLowerCase().trim();
-                    if (adminSection && userRole === 'admin') {
-                        adminSection.classList.remove('hidden-secure');
+                    if (adminSection) {
+                        if (userRole === 'admin') {
+                            adminSection.classList.remove('hidden-secure');
+                        } else {
+                            adminSection.classList.add('hidden-secure');
+                        }
                     }
+                    window.saveActivityLog('PAGE_VIEW', `เข้าสู่หน้า: ${currentPage || 'Dashboard'}`);
                 }
-            } catch (err) { console.error(err); }
+            } catch (err) { console.error("Auth Error:", err); }
+        } else {
+            if (!window.location.href.includes("login.html")) window.location.replace("login.html");
         }
     });
 
+    // --- 4. Handle Logout ---
     document.getElementById('sidebar-logout-btn')?.addEventListener('click', () => {
         if (confirm("คุณต้องการออกจากระบบใช่หรือไม่?")) {
             signOut(auth).then(() => window.location.replace("login.html"));

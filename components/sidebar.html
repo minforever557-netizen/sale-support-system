@@ -3,6 +3,28 @@
 #admin-menu-section.hidden-secure{
     display:none !important;
 }
+    html, body{
+    margin:0;
+    padding:0;
+    width:100%;
+    overflow-x:hidden;
+}
+
+/* ===== Desktop ===== */
+@media (min-width:1024px){
+    body{
+        margin-left:16rem; /* 64 = sidebar width */
+        transition: margin-left .3s ease;
+    }
+}
+
+/* ===== Mobile ===== */
+@media (max-width:1023px){
+    body{
+        margin-left:0 !important;
+    }
+}
+
 </style>
 
 <!-- ================= MOBILE TOPBAR ================= -->

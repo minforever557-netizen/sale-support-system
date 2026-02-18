@@ -1,5 +1,6 @@
 <style>
-    #admin-menu-section.force-hide {
+    /* บังคับซ่อนด้วย CSS ที่มี Priority สูงสุดเพื่อไม่ให้เมนูแวบตอนโหลด */
+    #admin-menu-section.hidden-secure {
         display: none !important;
     }
 </style>
@@ -15,7 +16,7 @@
     <nav class="flex-1 px-4 space-y-1">
         <p class="px-4 text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2 mt-4">Main Menu</p>
         
-        <a href="dashboard.html" class="nav-link flex items-center gap-3 p-3.5 text-slate-600 hover:bg-indigo-50 hover:text-[#5c56f1] rounded-2xl transition group">
+        <a href="dashboard.html" class="nav-link flex items-center gap-3 p-3.5 text-slate-600 hover:bg-indigo-50 hover:text-[#5c56f1] rounded-2xl transition">
             <span class="text-lg">🏠</span> <span class="font-medium">Dashboard</span>
         </a>
         <a href="new-ticket.html" class="nav-link flex items-center gap-3 p-3.5 text-slate-600 hover:bg-indigo-50 hover:text-[#5c56f1] rounded-2xl transition">
@@ -31,7 +32,7 @@
             <span class="text-lg">👤</span> <span class="font-medium">ข้อมูลส่วนตัว</span>
         </a>
 
-        <div id="admin-menu-section" class="force-hide pt-6 border-t border-slate-100 mt-4">
+        <div id="admin-menu-section" class="hidden-secure pt-6 border-t border-slate-100 mt-4">
             <p class="px-4 text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2">Admin Control</p>
             <a href="admin-manage.html" class="nav-link flex items-center gap-3 p-3.5 text-slate-600 hover:bg-indigo-50 hover:text-[#5c56f1] rounded-2xl transition font-bold">
                 <span class="text-lg">🛠️</span> จัดการงาน Admin
@@ -107,38 +108,39 @@
         }
     });
 
-    // --- 3. Role Check & Session Manager (ฉบับสมบูรณ์) ---
+    // --- 3. Role Check & Secure Display ---
     onAuthStateChanged(auth, async (user) => {
         const adminSection = document.getElementById('admin-menu-section');
 
         if (user) {
             try {
-                const adminRef = doc(db, "admin", user.uid);
-                const adminSnap = await getDoc(adminRef);
+                // อ้างอิงไปที่คอลเลกชัน admin ตามโครงสร้าง Database ของคุณ
+                const userRef = doc(db, "admin", user.uid);
+                const userSnap = await getDoc(userRef);
                 
-                if (adminSnap.exists()) {
-                    let userData = adminSnap.data();
+                if (userSnap.exists()) {
+                    const userData = userSnap.data();
                     currentSessionUser = userData;
 
-                    // ตรวจสอบ Role อย่างเข้มงวด (แปลงเป็นตัวเล็กและตัดช่องว่าง)
+                    // ตรวจสอบค่าในฟิลด์ role อย่างละเอียด
                     const userRole = (userData.role || "").toString().toLowerCase().trim();
-                    console.log("Verified Role:", userRole);
+                    console.log("Logged in as:", userData.name, "| Role:", userRole);
 
                     if (adminSection) {
+                        // ต้องมีค่าเป็น admin เท่านั้นจึงจะเอาคลาสซ่อนออก
                         if (userRole === 'admin') {
-                            // ปลดล็อกเฉพาะ Admin
-                            adminSection.classList.remove('force-hide');
-                            adminSection.classList.remove('hidden'); 
+                            adminSection.classList.remove('hidden-secure');
+                            console.log("Status: Admin menu unlocked.");
                         } else {
-                            // ถ้าไม่ใช่ admin ให้คงสถานะ force-hide ไว้
-                            adminSection.classList.add('force-hide');
+                            adminSection.classList.add('hidden-secure');
+                            console.log("Status: Access denied, hiding admin menu.");
                         }
                     }
                     
                     window.saveActivityLog('PAGE_VIEW', `เข้าสู่หน้า: ${currentPage || 'Dashboard'}`);
                 }
             } catch (err) { 
-                console.error("Role Check Error:", err); 
+                console.error("Auth Error:", err); 
             }
         } else {
             if (!window.location.href.includes("login.html")) window.location.replace("login.html");

@@ -40,14 +40,15 @@
         }
         .input-readonly { background-color: #f8fafc; color: #94a3b8; cursor: not-allowed; border-style: dashed; }
 
-        /* Animation Classes */
+        /* Animation & Modal */
         .btn-loading { pointer-events: none; opacity: 0.8; }
         .fade-in { animation: fadeIn 0.5s ease-out; }
         @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
         
-        /* Sticky Sidebar & Topbar like Logs */
-        #topbar-placeholder { position: sticky; top: 0; z-index: 50; }
-        
+        .modal-active { overflow: hidden; }
+        .modal-backdrop-blur { backdrop-filter: blur(10px); background-color: rgba(15, 23, 42, 0.5); }
+        .modal-animate { transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1); }
+
         /* Success Overlay */
         #success-overlay {
             display: none; position: fixed; inset: 0; z-index: 200;
@@ -197,7 +198,7 @@
     </div>
 
     <div id="success-overlay">
-        <div class="text-center scale-90" id="success-content">
+        <div class="text-center scale-90 transition-transform duration-500" id="success-content">
             <div class="w-24 h-24 bg-emerald-500 text-white rounded-[2.5rem] flex items-center justify-center text-5xl mx-auto mb-6 shadow-2xl shadow-emerald-200 animate-bounce">
                 <i class="fa-solid fa-check"></i>
             </div>
@@ -206,12 +207,28 @@
         </div>
     </div>
 
+    <div id="logout-modal" class="fixed inset-0 z-[100] hidden flex items-center justify-center p-4">
+        <div class="absolute inset-0 modal-backdrop-blur opacity-0 transition-opacity duration-300" id="logout-backdrop"></div>
+        <div class="relative bg-white w-full max-w-sm rounded-[3rem] p-10 shadow-2xl scale-90 opacity-0 modal-animate" id="logout-content">
+            <div class="text-center">
+                <div class="w-20 h-20 bg-red-50 rounded-full flex items-center justify-center mx-auto mb-6">
+                    <span class="text-3xl">🚪</span>
+                </div>
+                <h3 class="text-2xl font-bold text-slate-800 mb-2">Logout?</h3>
+                <p class="text-slate-500 mb-8 text-sm">ต้องการออกจากระบบใช่หรือไม่?</p>
+                <div class="flex gap-3">
+                    <button id="confirm-logout" class="flex-1 py-4 bg-red-500 text-white rounded-2xl font-bold hover:bg-red-600 transition shadow-lg">ยืนยัน</button>
+                    <button id="close-logout" class="flex-1 py-4 bg-slate-100 text-slate-600 rounded-2xl font-bold hover:bg-slate-200">ยกเลิก</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <script type="module">
         import { initializeApp, getApps } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
         import { getFirestore, doc, getDoc, getDocs, collection, updateDoc, FieldPath } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
         import { getAuth, onAuthStateChanged, updateEmail, updatePassword, signOut } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
 
-        // Firebase Config (คงเดิมตามระบบคุณ)
         const firebaseConfig = {
             apiKey: "AIzaSyAa2uSD_tjNqYE2eXnZcn75h_jAVscDG-c",
             authDomain: "salesupportsystemapp.firebaseapp.com",
@@ -229,7 +246,7 @@
         let adminData = null;
         let allTeams = [];
 
-        // 1. Load Layout (Sidebar/Topbar)
+        // --- 1. Load Layout (Sidebar & Topbar) ---
         async function loadLayout(userData, email) {
             const comps = [
                 { id: 'sidebar-placeholder', url: './components/sidebar.html' },
@@ -242,6 +259,8 @@
                     if (res.ok) {
                         const el = document.getElementById(comp.id);
                         el.innerHTML = await res.text();
+                        el.classList.remove('hidden');
+                        
                         el.querySelectorAll("script").forEach(oldScript => {
                             const newScript = document.createElement("script");
                             newScript.type = "module";
@@ -252,18 +271,18 @@
                 } catch (e) { console.error("Layout load failed", e); }
             }
 
-            // Sync Topbar Info (ต้องรอหน้าจอโหลดเสร็จนิดนึง)
+            // Sync Topbar Info (ใช้ ID เดียวกับหน้า Log)
             setTimeout(() => {
-                const nameEl = document.querySelector('#top-user-name');
-                const emailEl = document.querySelector('#top-user-email');
-                const avatarEl = document.querySelector('#top-avatar');
+                const nameEl = document.querySelector('#topbar-user-name');
+                const emailEl = document.querySelector('#topbar-user-email');
+                const avatarEl = document.querySelector('#topbar-avatar-text');
                 if (nameEl) nameEl.innerText = userData.name || "Admin";
                 if (emailEl) emailEl.innerText = email;
                 if (avatarEl) avatarEl.innerText = (userData.name || "A")[0].toUpperCase();
-            }, 800);
+            }, 600);
         }
 
-        // 2. Auth state
+        // --- 2. Auth State ---
         onAuthStateChanged(auth, async (user) => {
             if (user) {
                 currentUserAuth = user;
@@ -277,7 +296,7 @@
             } else { window.location.replace("login.html"); }
         });
 
-        // 3. Teams Fetch
+        // --- 3. Teams Fetch & Form Fill ---
         async function fetchTeams() {
             const snap = await getDocs(collection(db, "teams"));
             allTeams = snap.docs.map(d => ({ id: d.id, ...d.data() }));
@@ -289,7 +308,7 @@
         }
 
         function fillFormData(data, email) {
-            document.getElementById('avatar-display').innerText = (data.name || "A")[0];
+            document.getElementById('avatar-display').innerText = (data.name || "A")[0].toUpperCase();
             document.getElementById('name-display').innerText = data.name || "Admin";
             document.getElementById('role-display').innerText = data.role || "Admin";
             document.getElementById('side-email').innerText = email;
@@ -328,13 +347,12 @@
             }
         }
 
-        // 4. Save Logic with Animation
+        // --- 4. Save Logic ---
         document.getElementById('profile-form').onsubmit = async (e) => {
             e.preventDefault();
             const btn = document.getElementById('saveBtn');
             const originalBtnHtml = btn.innerHTML;
             
-            // Start Loading Animation
             btn.classList.add('btn-loading');
             btn.innerHTML = `<i class="fa-solid fa-circle-notch animate-spin"></i> กำลังบันทึกข้อมูล...`;
 
@@ -344,7 +362,7 @@
                 const mainTeamName = document.getElementById('prof-main').options[document.getElementById('prof-main').selectedIndex].text;
                 const subTeamName = document.getElementById('prof-sub').value;
 
-                // Update Firestore (ใช้ FieldPath เพื่อความปลอดภัย)
+                // Update Firestore
                 const adminRef = doc(db, "admin", currentUserAuth.uid);
                 await updateDoc(adminRef, 
                     "name", document.getElementById('prof-name').value.trim(),
@@ -357,13 +375,12 @@
                 if (newEmail !== currentUserAuth.email) await updateEmail(currentUserAuth, newEmail);
                 if (newPass) await updatePassword(currentUserAuth, newPass);
 
-                // Show Success Animation
+                // Show Success
                 document.getElementById('success-overlay').style.display = 'flex';
                 setTimeout(() => {
                     document.getElementById('success-content').classList.replace('scale-90', 'scale-100');
                 }, 50);
 
-                // Redirect or Reload
                 setTimeout(() => {
                     if (newEmail !== currentUserAuth.email || newPass) {
                         signOut(auth).then(() => window.location.replace("login.html"));
@@ -378,6 +395,32 @@
                 btn.classList.remove('btn-loading');
                 btn.innerHTML = originalBtnHtml;
             }
+        };
+
+        // --- 5. Logout Modal Logic (มาตรฐานเดียวกับหน้า Log) ---
+        window.openLogoutModal = () => {
+            const modal = document.getElementById('logout-modal');
+            modal.classList.remove('hidden');
+            document.body.classList.add('modal-active');
+            setTimeout(() => {
+                document.getElementById('logout-backdrop').classList.add('opacity-100');
+                document.getElementById('logout-content').classList.remove('scale-90', 'opacity-0');
+            }, 10);
+        };
+
+        const closeLogoutModal = () => {
+            document.getElementById('logout-backdrop').classList.remove('opacity-100');
+            document.getElementById('logout-content').classList.add('scale-90', 'opacity-0');
+            setTimeout(() => {
+                document.getElementById('logout-modal').classList.add('hidden');
+                document.body.classList.remove('modal-active');
+            }, 300);
+        };
+
+        document.getElementById('close-logout').onclick = closeLogoutModal;
+        document.getElementById('confirm-logout').onclick = async () => {
+            await signOut(auth);
+            window.location.replace("login.html");
         };
 
         window.togglePass = () => {

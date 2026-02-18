@@ -8,13 +8,10 @@
     <link href="https://fonts.googleapis.com/css2?family=Kanit:wght@300;400;600&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
     <style>
-        /* ปรับพื้นหลังให้เป็นโทนเดียวกับ System Log (#f0fdf4 หรือสีเขียวอ่อน) */
         body { font-family: 'Kanit', sans-serif; background-color: #f0fdf4; }
         .status-badge { @apply px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-widest; }
         .modal-active { overflow: hidden; }
         .modal-backdrop-blur { backdrop-filter: blur(8px); background-color: rgba(6, 78, 59, 0.4); }
-        
-        /* Custom Scrollbar สำหรับ Modal */
         .custom-scroll::-webkit-scrollbar { width: 6px; }
         .custom-scroll::-webkit-scrollbar-track { background: #f1f1f1; }
         .custom-scroll::-webkit-scrollbar-thumb { background: #10b981; border-radius: 10px; }
@@ -63,7 +60,7 @@
                             </tr>
                         </thead>
                         <tbody id="ticket-list" class="divide-y divide-emerald-50 text-sm">
-                            <tr><td colspan="6" class="p-20 text-center text-emerald-400 animate-pulse font-medium">กำลังโหลดข้อมูลใบงานทั้งหมด...</td></tr>
+                            <tr><td colspan="6" class="p-20 text-center text-emerald-400 animate-pulse font-medium">กำลังโหลดข้อมูล...</td></tr>
                         </tbody>
                     </table>
                 </div>
@@ -75,48 +72,13 @@
         <div class="absolute inset-0 modal-backdrop-blur" onclick="closeDetailModal()"></div>
         <div class="relative bg-white w-full max-w-2xl rounded-[3rem] shadow-2xl overflow-hidden flex flex-col max-h-[90vh]">
             <div class="bg-indigo-600 p-8 text-white flex justify-between items-start">
-                <div>
-                    <h3 class="text-xl font-bold">รายละเอียด Ticket</h3>
-                    <p class="text-indigo-100 text-[10px] uppercase font-black tracking-widest mt-1">Full Ticket Information</p>
-                </div>
+                <h3 class="text-xl font-bold">รายละเอียด Ticket</h3>
                 <button onclick="closeDetailModal()" class="w-10 h-10 flex items-center justify-center bg-white/10 hover:bg-white/20 rounded-full transition text-white">
                     <i class="fa-solid fa-xmark text-lg"></i>
                 </button>
             </div>
-            <div class="p-8 overflow-y-auto custom-scroll space-y-6">
-                <div class="grid grid-cols-2 gap-6 bg-slate-50 p-6 rounded-[2rem] border border-slate-100">
-                    <div>
-                        <p class="text-[10px] font-black text-slate-400 uppercase mb-1 tracking-widest">Internet No.</p>
-                        <p id="det-id-number" class="font-bold text-slate-800">-</p>
-                    </div>
-                    <div>
-                        <p class="text-[10px] font-black text-slate-400 uppercase mb-1 tracking-widest">Create Date</p>
-                        <p id="det-create-date" class="text-slate-600">-</p>
-                    </div>
+            <div class="p-8 overflow-y-auto custom-scroll space-y-6" id="detail-content">
                 </div>
-                <div>
-                    <p class="text-[10px] font-black text-slate-400 uppercase mb-2 px-1 tracking-widest">หัวข้อปัญหา</p>
-                    <div id="det-topic" class="p-5 bg-white rounded-2xl border border-slate-100 font-bold text-indigo-700 shadow-sm">-</div>
-                </div>
-                <div>
-                    <p class="text-[10px] font-black text-slate-400 uppercase mb-2 px-1 tracking-widest">รายละเอียด</p>
-                    <div id="det-detail" class="bg-white p-6 rounded-2xl border border-slate-100 text-slate-600 text-sm leading-relaxed whitespace-pre-line">-</div>
-                </div>
-                <div class="grid grid-cols-2 gap-6 pt-4">
-                    <div>
-                        <p class="text-[10px] font-black text-slate-400 uppercase mb-1 tracking-widest">User Create</p>
-                        <p id="det-user-create" class="font-bold text-slate-700">-</p>
-                    </div>
-                    <div>
-                        <p class="text-[10px] font-black text-slate-400 uppercase mb-1 tracking-widest">Status</p>
-                        <span id="det-status" class="status-badge">-</span>
-                    </div>
-                </div>
-                <div class="p-6 bg-amber-50 rounded-[2rem] border border-amber-100">
-                    <p class="text-[10px] font-black text-amber-600 uppercase mb-2 tracking-widest">Admin Remark</p>
-                    <p id="det-admin-remark" class="text-slate-700 italic font-medium">ไม่มีหมายเหตุ</p>
-                </div>
-            </div>
             <div class="p-6 bg-slate-50 text-right border-t border-slate-100">
                 <button onclick="closeDetailModal()" class="px-10 py-3 bg-white border border-slate-200 text-slate-600 rounded-2xl font-bold hover:bg-slate-100 transition shadow-sm">ปิด</button>
             </div>
@@ -124,12 +86,10 @@
     </div>
 
     <div id="logout-modal" class="fixed inset-0 z-[110] hidden flex items-center justify-center p-4">
-        <div class="absolute inset-0 bg-slate-900/40 backdrop-blur-sm" id="logout-backdrop"></div>
-        <div class="relative bg-white w-full max-w-sm rounded-[3rem] p-10 shadow-2xl">
+        <div class="absolute inset-0 modal-backdrop-blur opacity-0 transition-opacity duration-300 shadow-none" id="logout-backdrop"></div>
+        <div class="relative bg-white w-full max-w-sm rounded-[3rem] p-10 shadow-2xl scale-90 opacity-0 transition-all duration-300" id="logout-content">
             <div class="text-center">
-                <div class="w-20 h-20 bg-red-50 rounded-full flex items-center justify-center mx-auto mb-6">
-                    <span class="text-3xl">🚪</span>
-                </div>
+                <div class="w-20 h-20 bg-red-50 rounded-full flex items-center justify-center mx-auto mb-6"><span class="text-3xl">🚪</span></div>
                 <h3 class="text-2xl font-bold text-slate-800 mb-2">Logout?</h3>
                 <p class="text-slate-500 mb-8 text-sm">ต้องการออกจากระบบใช่หรือไม่?</p>
                 <div class="flex gap-3">
@@ -145,7 +105,6 @@
         import { getFirestore, collection, query, orderBy, onSnapshot, doc, getDoc } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
         import { getAuth, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
 
-        // Firebase Config เดิม
         const firebaseConfig = {
             apiKey: "AIzaSyAa2uSD_tjNqYE2eXnZcn75h_jAVscDG-c",
             authDomain: "salesupportsystemapp.firebaseapp.com",
@@ -161,47 +120,56 @@
 
         let allTickets = [];
 
-        // --- Auth & Initial Load ---
-        onAuthStateChanged(auth, async (user) => {
-            if (user) {
-                const userDoc = await getDoc(doc(db, "users", user.uid));
-                const adminDoc = await getDoc(doc(db, "admin", user.uid));
-                const userData = adminDoc.exists() ? adminDoc.data() : (userDoc.exists() ? userDoc.data() : {});
-                
-                await loadLayout(userData, user.email);
-                initMasterListener();
-            } else {
-                window.location.replace("login.html");
-            }
-        });
-
-        // --- Layout Loader (เพื่อให้ Sidebar/Topbar เหมือนหน้าอื่น) ---
+        // --- 1. Load Layout (ปรับปรุงใหม่ตาม System Log) ---
         async function loadLayout(userData, email) {
             const comps = [
                 { id: 'sidebar-placeholder', url: './components/sidebar.html' },
                 { id: 'topbar-placeholder', url: './components/topbar.html' }
             ];
+
             for (const comp of comps) {
                 const res = await fetch(comp.url);
                 if (res.ok) {
                     const el = document.getElementById(comp.id);
                     el.innerHTML = await res.text();
                     el.classList.remove('hidden');
+                    
+                    // กระตุ้นการทำงานของ Script ภายใน Component
+                    el.querySelectorAll("script").forEach(oldScript => {
+                        const newScript = document.createElement("script");
+                        newScript.type = "module";
+                        newScript.textContent = oldScript.textContent;
+                        document.head.appendChild(newScript);
+                    });
                 }
             }
-            // อัปเดตข้อมูลผู้ใช้ใน Topbar
+
+            // ตั้งค่าข้อมูลผู้ใช้บน Topbar
             setTimeout(() => {
                 const nameEl = document.querySelector('#topbar-user-name');
-                if (nameEl) {
-                    nameEl.innerText = userData.name || "Admin";
-                    const emailEl = document.querySelector('#topbar-user-email');
-                    if(emailEl) emailEl.innerText = email;
-                }
+                const emailEl = document.querySelector('#topbar-user-email');
+                if (nameEl) nameEl.innerText = userData.name || "Admin";
+                if (emailEl) emailEl.innerText = email;
             }, 500);
         }
 
-        // --- Ticket Logic (คงเดิมแต่ปรับปรุง Filter) ---
-        function initMasterListener() {
+        // --- 2. Auth Control ---
+        onAuthStateChanged(auth, async (user) => {
+            if (user) {
+                const adminDoc = await getDoc(doc(db, "admin", user.uid));
+                if (adminDoc.exists()) {
+                    loadLayout(adminDoc.data(), user.email);
+                    initTicketListener();
+                } else {
+                    window.location.replace("dashboard.html");
+                }
+            } else {
+                window.location.replace("login.html");
+            }
+        });
+
+        // --- 3. Ticket Management ---
+        function initTicketListener() {
             const [field, direction] = document.getElementById('sortOrder').value.split('-');
             const q = query(collection(db, "tickets"), orderBy(field, direction));
 
@@ -214,39 +182,29 @@
         function renderTickets(tickets) {
             const list = document.getElementById('ticket-list');
             const searchTerm = document.getElementById('searchInput').value.toLowerCase();
-
             const filtered = tickets.filter(t => 
                 t.id_number?.toLowerCase().includes(searchTerm) || 
                 t.topic?.toLowerCase().includes(searchTerm) ||
                 t.owner?.toLowerCase().includes(searchTerm)
             );
 
-            if (filtered.length === 0) {
-                list.innerHTML = `<tr><td colspan="6" class="p-20 text-center text-slate-400">ไม่พบรายการใบงาน</td></tr>`;
-                return;
-            }
-
             list.innerHTML = filtered.map(t => {
                 const createDate = t.createdAt?.toDate().toLocaleString('th-TH', {dateStyle:'short', timeStyle:'short'}) || '-';
-                
                 let statusClass = "bg-slate-100 text-slate-600";
                 if(t.status === 'Open') statusClass = "bg-blue-100 text-blue-700";
-                if(t.status === 'On Progress') statusClass = "bg-orange-100 text-orange-700";
                 if(t.status === 'Success') statusClass = "bg-emerald-100 text-emerald-700";
                 if(t.status === 'Reject') statusClass = "bg-red-100 text-red-700";
 
                 return `
-                    <tr class="hover:bg-emerald-50/30 transition-all border-b border-emerald-50 last:border-0 group">
-                        <td class="p-7 font-bold text-slate-700 group-hover:text-emerald-700 transition-colors">${t.id_number || '-'}</td>
+                    <tr class="hover:bg-emerald-50/30 transition-all border-b border-emerald-50 last:border-0">
+                        <td class="p-7 font-bold text-slate-700">${t.id_number || '-'}</td>
                         <td class="p-7 text-slate-500 text-[12px]">${createDate}</td>
                         <td class="p-7 text-slate-700 font-medium">${t.topic}</td>
-                        <td class="p-7 text-center">
-                            <span class="status-badge ${statusClass}">${t.status || 'Pending'}</span>
-                        </td>
+                        <td class="p-7 text-center"><span class="status-badge ${statusClass}">${t.status || 'Pending'}</span></td>
                         <td class="p-7 font-bold text-slate-600">${t.owner || '-'}</td>
                         <td class="p-7 text-right">
-                            <button onclick="viewDetail('${t.id}')" class="bg-indigo-50 text-indigo-600 hover:bg-indigo-600 hover:text-white px-5 py-2.5 rounded-xl text-xs font-black transition-all active:scale-95 shadow-sm">
-                                <i class="fa-solid fa-eye mr-2"></i>รายละเอียด
+                            <button onclick="viewDetail('${t.id}')" class="bg-indigo-50 text-indigo-600 hover:bg-indigo-600 hover:text-white px-5 py-2.5 rounded-xl text-xs font-black transition-all">
+                                รายละเอียด
                             </button>
                         </td>
                     </tr>
@@ -254,48 +212,41 @@
             }).join('');
         }
 
-        // --- Detail Logic (คงเดิม) ---
-        window.viewDetail = async (id) => {
-            const docSnap = await getDoc(doc(db, "tickets", id));
-            if (docSnap.exists()) {
-                const t = docSnap.data();
-                document.getElementById('det-id-number').innerText = t.id_number || '-';
-                document.getElementById('det-create-date').innerText = t.createdAt?.toDate().toLocaleString('th-TH') || '-';
-                document.getElementById('det-topic').innerText = t.topic;
-                document.getElementById('det-detail').innerText = t.detail;
-                document.getElementById('det-user-create').innerText = t.owner;
-                document.getElementById('det-status').innerText = t.status || 'Pending';
-                document.getElementById('det-admin-remark').innerText = t.adminNote || 'ไม่มีหมายเหตุ';
-
-                const statusBadge = document.getElementById('det-status');
-                statusBadge.className = "status-badge " + (t.status === 'Open' ? 'bg-blue-100 text-blue-700' : 
-                                       t.status === 'Success' ? 'bg-emerald-100 text-emerald-700' : 'bg-orange-100 text-orange-700');
-
-                document.getElementById('detail-modal').classList.remove('hidden');
-                document.body.classList.add('modal-active');
-            }
+        // --- 4. Logout & Modal Support ---
+        window.openLogoutModal = () => {
+            const modal = document.getElementById('logout-modal');
+            modal.classList.remove('hidden');
+            document.body.classList.add('modal-active');
+            setTimeout(() => {
+                document.getElementById('logout-backdrop').classList.add('opacity-100');
+                document.getElementById('logout-content').classList.remove('scale-90', 'opacity-0');
+            }, 10);
         };
 
-        window.closeDetailModal = () => {
-            document.getElementById('detail-modal').classList.add('hidden');
-            document.body.classList.remove('modal-active');
+        const closeLogoutModal = () => {
+            document.getElementById('logout-backdrop').classList.remove('opacity-100');
+            document.getElementById('logout-content').classList.add('scale-90', 'opacity-0');
+            setTimeout(() => {
+                document.getElementById('logout-modal').classList.add('hidden');
+                document.body.classList.remove('modal-active');
+            }, 300);
         };
 
-        // --- Event Listeners & Logout (เหมือน System Log) ---
-        document.getElementById('searchInput').addEventListener('input', () => renderTickets(allTickets));
-        document.getElementById('sortOrder').addEventListener('change', initMasterListener);
-
+        // ใช้ Event Delegation ดักจับปุ่มจาก Sidebar ที่โหลดมาทีหลัง
         document.addEventListener('click', (e) => {
-            if (e.target.closest('#main-logout-btn')) {
-                document.getElementById('logout-modal').classList.remove('hidden');
-            }
+            if (e.target.closest('#main-logout-btn')) openLogoutModal();
         });
 
-        document.getElementById('close-logout').onclick = () => document.getElementById('logout-modal').classList.add('hidden');
+        document.getElementById('close-logout').onclick = closeLogoutModal;
         document.getElementById('confirm-logout').onclick = async () => {
             await signOut(auth);
             window.location.replace("login.html");
         };
+
+        // Filter Listener
+        document.getElementById('searchInput').oninput = () => renderTickets(allTickets);
+        document.getElementById('sortOrder').onchange = initTicketListener;
+
     </script>
 </body>
 </html>

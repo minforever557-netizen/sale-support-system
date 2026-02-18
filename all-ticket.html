@@ -8,12 +8,13 @@
     <link href="https://fonts.googleapis.com/css2?family=Kanit:wght@300;400;600&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
     <style>
+        /* ปรับพื้นหลังให้เป็นโทนเดียวกับ System Log (#f0fdf4 หรือสีเขียวอ่อน) */
         body { font-family: 'Kanit', sans-serif; background-color: #f0fdf4; }
         .status-badge { @apply px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-widest; }
         .modal-active { overflow: hidden; }
         .modal-backdrop-blur { backdrop-filter: blur(8px); background-color: rgba(6, 78, 59, 0.4); }
         
-        /* Custom Scrollbar */
+        /* Custom Scrollbar สำหรับ Modal */
         .custom-scroll::-webkit-scrollbar { width: 6px; }
         .custom-scroll::-webkit-scrollbar-track { background: #f1f1f1; }
         .custom-scroll::-webkit-scrollbar-thumb { background: #10b981; border-radius: 10px; }
@@ -27,11 +28,9 @@
         <div id="topbar-placeholder"></div>
 
         <main class="p-4 md:p-8 max-w-7xl mx-auto w-full">
-            <div class="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-8">
-                <div>
-                    <h2 class="text-3xl font-bold text-slate-800 tracking-tight">รายการใบงานทั้งหมด</h2>
-                    <p class="text-emerald-600 font-medium text-sm mt-1">Master Ticket Overview (All Users)</p>
-                </div>
+            <div class="mb-8">
+                <h2 class="text-3xl font-bold text-slate-800 tracking-tight">รายการใบงานทั้งหมด</h2>
+                <p class="text-emerald-600 font-medium text-sm mt-1">Master Ticket Overview (All Users)</p>
             </div>
 
             <div class="bg-white p-4 rounded-[2.5rem] shadow-sm border border-emerald-100 mb-8 flex flex-col md:flex-row gap-4 items-center">
@@ -78,10 +77,10 @@
             <div class="bg-indigo-600 p-8 text-white flex justify-between items-start">
                 <div>
                     <h3 class="text-xl font-bold">รายละเอียด Ticket</h3>
-                    <p class="text-indigo-100 text-[10px] uppercase font-black tracking-widest mt-1">Ticket Information</p>
+                    <p class="text-indigo-100 text-[10px] uppercase font-black tracking-widest mt-1">Full Ticket Information</p>
                 </div>
-                <button onclick="closeDetailModal()" class="w-10 h-10 flex items-center justify-center bg-white/10 hover:bg-white/20 rounded-full transition">
-                    <i class="fa-solid fa-xmark text-lg text-white"></i>
+                <button onclick="closeDetailModal()" class="w-10 h-10 flex items-center justify-center bg-white/10 hover:bg-white/20 rounded-full transition text-white">
+                    <i class="fa-solid fa-xmark text-lg"></i>
                 </button>
             </div>
             <div class="p-8 overflow-y-auto custom-scroll space-y-6">
@@ -103,7 +102,7 @@
                     <p class="text-[10px] font-black text-slate-400 uppercase mb-2 px-1 tracking-widest">รายละเอียด</p>
                     <div id="det-detail" class="bg-white p-6 rounded-2xl border border-slate-100 text-slate-600 text-sm leading-relaxed whitespace-pre-line">-</div>
                 </div>
-                <div class="grid grid-cols-2 gap-6">
+                <div class="grid grid-cols-2 gap-6 pt-4">
                     <div>
                         <p class="text-[10px] font-black text-slate-400 uppercase mb-1 tracking-widest">User Create</p>
                         <p id="det-user-create" class="font-bold text-slate-700">-</p>
@@ -117,16 +116,6 @@
                     <p class="text-[10px] font-black text-amber-600 uppercase mb-2 tracking-widest">Admin Remark</p>
                     <p id="det-admin-remark" class="text-slate-700 italic font-medium">ไม่มีหมายเหตุ</p>
                 </div>
-                <div class="grid grid-cols-2 gap-6 pt-4 border-t border-slate-100">
-                    <div>
-                        <p class="text-[10px] font-black text-slate-400 uppercase mb-1 tracking-widest">Last Update</p>
-                        <p id="det-update-date" class="text-slate-600 text-xs">-</p>
-                    </div>
-                    <div>
-                        <p class="text-[10px] font-black text-slate-400 uppercase mb-1 tracking-widest">Admin In Charge</p>
-                        <p id="det-admin-user" class="text-slate-800 font-bold">-</p>
-                    </div>
-                </div>
             </div>
             <div class="p-6 bg-slate-50 text-right border-t border-slate-100">
                 <button onclick="closeDetailModal()" class="px-10 py-3 bg-white border border-slate-200 text-slate-600 rounded-2xl font-bold hover:bg-slate-100 transition shadow-sm">ปิด</button>
@@ -135,7 +124,7 @@
     </div>
 
     <div id="logout-modal" class="fixed inset-0 z-[110] hidden flex items-center justify-center p-4">
-        <div class="absolute inset-0 bg-slate-900/40 backdrop-blur-sm"></div>
+        <div class="absolute inset-0 bg-slate-900/40 backdrop-blur-sm" id="logout-backdrop"></div>
         <div class="relative bg-white w-full max-w-sm rounded-[3rem] p-10 shadow-2xl">
             <div class="text-center">
                 <div class="w-20 h-20 bg-red-50 rounded-full flex items-center justify-center mx-auto mb-6">
@@ -156,6 +145,7 @@
         import { getFirestore, collection, query, orderBy, onSnapshot, doc, getDoc } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
         import { getAuth, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
 
+        // Firebase Config เดิม
         const firebaseConfig = {
             apiKey: "AIzaSyAa2uSD_tjNqYE2eXnZcn75h_jAVscDG-c",
             authDomain: "salesupportsystemapp.firebaseapp.com",
@@ -171,7 +161,7 @@
 
         let allTickets = [];
 
-        // --- Auth & Data Initial ---
+        // --- Auth & Initial Load ---
         onAuthStateChanged(auth, async (user) => {
             if (user) {
                 const userDoc = await getDoc(doc(db, "users", user.uid));
@@ -185,7 +175,7 @@
             }
         });
 
-        // --- Layout Loader ---
+        // --- Layout Loader (เพื่อให้ Sidebar/Topbar เหมือนหน้าอื่น) ---
         async function loadLayout(userData, email) {
             const comps = [
                 { id: 'sidebar-placeholder', url: './components/sidebar.html' },
@@ -199,9 +189,18 @@
                     el.classList.remove('hidden');
                 }
             }
+            // อัปเดตข้อมูลผู้ใช้ใน Topbar
+            setTimeout(() => {
+                const nameEl = document.querySelector('#topbar-user-name');
+                if (nameEl) {
+                    nameEl.innerText = userData.name || "Admin";
+                    const emailEl = document.querySelector('#topbar-user-email');
+                    if(emailEl) emailEl.innerText = email;
+                }
+            }, 500);
         }
 
-        // --- Master Data Listener ---
+        // --- Ticket Logic (คงเดิมแต่ปรับปรุง Filter) ---
         function initMasterListener() {
             const [field, direction] = document.getElementById('sortOrder').value.split('-');
             const q = query(collection(db, "tickets"), orderBy(field, direction));
@@ -223,7 +222,7 @@
             );
 
             if (filtered.length === 0) {
-                list.innerHTML = `<tr><td colspan="6" class="p-20 text-center text-slate-400">ไม่พบรายการที่ค้นหา</td></tr>`;
+                list.innerHTML = `<tr><td colspan="6" class="p-20 text-center text-slate-400">ไม่พบรายการใบงาน</td></tr>`;
                 return;
             }
 
@@ -255,7 +254,7 @@
             }).join('');
         }
 
-        // --- Detail Logic ---
+        // --- Detail Logic (คงเดิม) ---
         window.viewDetail = async (id) => {
             const docSnap = await getDoc(doc(db, "tickets", id));
             if (docSnap.exists()) {
@@ -267,8 +266,6 @@
                 document.getElementById('det-user-create').innerText = t.owner;
                 document.getElementById('det-status').innerText = t.status || 'Pending';
                 document.getElementById('det-admin-remark').innerText = t.adminNote || 'ไม่มีหมายเหตุ';
-                document.getElementById('det-update-date').innerText = t.updatedAt?.toDate().toLocaleString('th-TH') || '-';
-                document.getElementById('det-admin-user').innerText = t.adminName || '-';
 
                 const statusBadge = document.getElementById('det-status');
                 statusBadge.className = "status-badge " + (t.status === 'Open' ? 'bg-blue-100 text-blue-700' : 
@@ -284,7 +281,7 @@
             document.body.classList.remove('modal-active');
         };
 
-        // --- Event Listeners ---
+        // --- Event Listeners & Logout (เหมือน System Log) ---
         document.getElementById('searchInput').addEventListener('input', () => renderTickets(allTickets));
         document.getElementById('sortOrder').addEventListener('change', initMasterListener);
 

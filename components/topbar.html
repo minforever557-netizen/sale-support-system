@@ -1,28 +1,37 @@
-<header class="bg-white/80 backdrop-blur-md sticky top-0 z-40 border-b border-slate-100 px-4 md:px-8 py-4 shadow-sm">
+<header class="bg-white/90 backdrop-blur-md sticky top-0 z-40 border-b border-slate-100 px-4 md:px-8 py-3 shadow-sm">
     <div class="flex items-center justify-between">
         
         <div class="flex items-center gap-3">
-            <button onclick="window.toggleMobileMenu()" class="lg:hidden w-10 h-10 flex items-center justify-center rounded-xl bg-slate-50 text-[#5c56f1] border border-slate-100 active:scale-95 transition-all">
+            <button onclick="window.toggleMobileMenu()" 
+                    class="lg:hidden w-10 h-10 flex items-center justify-center rounded-xl bg-indigo-50 text-[#5c56f1] active:scale-95 transition-all border border-indigo-100">
                 <i class="fa-solid fa-bars-staggered text-lg"></i>
             </button>
 
-            <div id="tp-avatar-circle" class="w-10 h-10 md:w-12 md:h-12 bg-gradient-to-br from-[#5c56f1] to-[#7c77f5] rounded-xl flex items-center justify-center text-white font-bold text-lg shadow-indigo-100 ring-2 ring-white shrink-0">
+            <div id="tp-avatar-circle" class="w-10 h-10 md:w-12 md:h-12 bg-gradient-to-br from-[#5c56f1] to-[#7c77f5] rounded-xl flex items-center justify-center text-white font-bold text-lg shadow-sm shrink-0">
                 ?
             </div>
             
             <div class="flex flex-col min-w-0">
                 <div class="flex items-center gap-2">
-                    <span id="tp-fullname" class="text-slate-800 font-bold leading-tight text-sm md:text-lg truncate max-w-[120px] md:max-w-none">โหลดชื่อ...</span>
-                    <span id="tp-username" class="hidden sm:inline text-[#5c56f1] text-[10px] font-black uppercase tracking-widest bg-indigo-50 px-2 py-0.5 rounded-md">@user</span>
+                    <span id="tp-fullname" class="text-slate-800 font-bold text-sm md:text-base truncate max-w-[100px] md:max-w-none">
+                        Loading...
+                    </span>
+                    <span id="tp-username" class="hidden sm:inline text-[#5c56f1] text-[10px] font-black uppercase tracking-widest bg-indigo-50 px-2 py-0.5 rounded-md">
+                        @user
+                    </span>
                 </div>
-                <span id="tp-email" class="text-slate-400 text-[10px] md:text-xs truncate max-w-[150px] md:max-w-none font-medium mt-0.5">email@loading.com</span>
+                <span id="tp-email" class="text-slate-400 text-[10px] md:text-xs truncate max-w-[150px] md:max-w-none font-medium">
+                    ...
+                </span>
             </div>
         </div>
 
-        <div class="flex items-center bg-slate-50 px-3 md:px-5 py-2 rounded-xl border border-slate-100">
+        <div class="flex items-center bg-slate-50 px-3 md:px-5 py-1.5 md:py-2 rounded-xl border border-slate-100 shadow-inner">
             <div class="flex items-center gap-2">
                 <span class="w-1.5 h-1.5 bg-emerald-500 rounded-full animate-pulse"></span>
-                <div id="tp-clock" class="text-sm md:text-2xl font-black text-slate-700 tracking-tighter min-w-[60px] md:min-w-[100px] text-right">00:00:00</div>
+                <div id="tp-clock" class="text-sm md:text-xl font-black text-slate-700 tracking-tighter min-w-[60px] md:min-w-[100px] text-right">
+                    00:00:00
+                </div>
             </div>
         </div>
     </div>
@@ -35,7 +44,9 @@
 
     // จัดการ Firebase App Instance
     let app;
-    try { app = getApp(); } catch (e) {
+    try { 
+        app = getApp(); 
+    } catch (e) {
         const firebaseConfig = {
             apiKey: "AIzaSyAa2uSD_tjNqYE2eXnZcn75h_jAVscDG-c",
             authDomain: "salesupportsystemapp.firebaseapp.com",
@@ -50,25 +61,47 @@
     const db = getFirestore(app);
     const auth = getAuth(app);
 
-    // --- นาฬิกา ---
-    setInterval(() => {
+    // --- ฟังก์ชันอัปเดตนาฬิกา ---
+    function updateClock() {
         const now = new Date();
         const clockEl = document.getElementById('tp-clock');
-        if(clockEl) clockEl.innerText = now.toLocaleTimeString('th-TH', { hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: false });
-    }, 1000);
+        if(clockEl) {
+            clockEl.innerText = now.toLocaleTimeString('th-TH', { 
+                hour: '2-digit', 
+                minute: '2-digit', 
+                second: '2-digit', 
+                hour12: false 
+            });
+        }
+    }
+    setInterval(updateClock, 1000);
+    updateClock();
 
-    // --- ดึงข้อมูล Profile ---
+    // --- ดึงข้อมูล Profile จาก Firestore ---
     onAuthStateChanged(auth, async (user) => {
         if (user) {
             try {
                 const userDoc = await getDoc(doc(db, "admin", user.uid));
                 const data = userDoc.exists() ? userDoc.data() : {};
                 
-                document.getElementById('tp-fullname').innerText = data.name || 'Sale Support User';
-                document.getElementById('tp-username').innerText = `@${data.username || 'user'}`;
-                document.getElementById('tp-email').innerText = data.email || user.email;
-                document.getElementById('tp-avatar-circle').innerText = (data.name || 'S').charAt(0).toUpperCase();
-            } catch (err) { console.error("Topbar Error:", err); }
+                const fullName = data.name || user.displayName || 'Sale Support User';
+                const userName = data.username || user.email.split('@')[0];
+                const email = data.email || user.email;
+
+                // อัปเดต UI
+                const nameEl = document.getElementById('tp-fullname');
+                const userEl = document.getElementById('tp-username');
+                const mailEl = document.getElementById('tp-email');
+                const iconEl = document.getElementById('tp-avatar-circle');
+
+                if(nameEl) nameEl.innerText = fullName;
+                if(userEl) userEl.innerText = `@${userName}`;
+                if(mailEl) mailEl.innerText = email;
+                if(iconEl) iconEl.innerText = fullName.charAt(0).toUpperCase();
+                
+            } catch (err) {
+                console.error("Topbar Sync Error:", err);
+            }
         }
     });
 </script>

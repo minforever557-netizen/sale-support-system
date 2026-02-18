@@ -98,101 +98,107 @@
     </div>
 
     <script type="module">
-        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
-        import { getFirestore, collection, getDocs, doc, setDoc } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
-        import { getAuth, createUserWithEmailAndPassword } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
+    import { getFirestore, collection, getDocs, doc, setDoc } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+    import { getAuth, createUserWithEmailAndPassword } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
 
-        const firebaseConfig = { 
-            apiKey: "AIzaSyAa2uSD_tjNqYE2eXnZcn75h_jAVscDG-c", 
-            authDomain: "salesupportsystemapp.firebaseapp.com", 
-            projectId: "salesupportsystemapp", 
-            storageBucket: "salesupportsystemapp.firebasestorage.app", 
-            messagingSenderId: "840890441207", 
-            appId: "1:840890441207:web:f3a5076d46e963a90de2f2" 
-        };
+    const firebaseConfig = { 
+        apiKey: "AIzaSyAa2uSD_tjNqYE2eXnZcn75h_jAVscDG-c", 
+        authDomain: "salesupportsystemapp.firebaseapp.com", 
+        projectId: "salesupportsystemapp", 
+        storageBucket: "salesupportsystemapp.firebasestorage.app", 
+        messagingSenderId: "840890441207", 
+        appId: "1:840890441207:web:f3a5076d46e963a90de2f2" 
+    };
 
-        const app = initializeApp(firebaseConfig);
-        const db = getFirestore(app);
-        const auth = getAuth(app);
+    const app = initializeApp(firebaseConfig);
+    const db = getFirestore(app);
+    const auth = getAuth(app);
 
-        // --- 1. โหลดข้อมูลทีมลง Dropdown ---
-        async function fetchTeams() {
-            try {
-                const snap = await getDocs(collection(db, "teams"));
-                const allTeams = snap.docs.map(d => d.data());
-                
-                const mainSelect = document.getElementById('reg-main');
-                const subSelect = document.getElementById('reg-sub');
+    let allTeamsRaw = []; // เก็บข้อมูลทีมทั้งหมดไว้กรอง
 
-                // ล้างค่ารอโหลด
-                mainSelect.innerHTML = '<option value="" disabled selected>เลือกทีมหลัก</option>';
-                subSelect.innerHTML = '<option value="" disabled selected>เลือกทีมย่อย</option>';
+    // --- 1. โหลดข้อมูลทีมทั้งหมดมาเก็บไว้ในตัวแปร ---
+    async function initTeamData() {
+        const mainSelect = document.getElementById('reg-main');
+        try {
+            const snap = await getDocs(collection(db, "teams"));
+            allTeamsRaw = snap.docs.map(d => d.data());
 
-                // แยกประเภทตามฟิลด์ type ใน Firestore
-                allTeams.forEach(t => {
-                    const opt = new Option(t.name, t.name);
-                    if (t.type === "main") {
-                        mainSelect.add(opt);
-                    } else if (t.type === "sub") {
-                        subSelect.add(opt);
-                    }
-                });
-
-                // กรณีไม่มีข้อมูล
-                if (mainSelect.options.length <= 1) mainSelect.innerHTML = '<option value="">ไม่มีข้อมูลทีมหลัก</option>';
-                if (subSelect.options.length <= 1) subSelect.innerHTML = '<option value="">ไม่มีข้อมูลทีมย่อย</option>';
-
-            } catch (err) {
-                console.error("Fetch teams error:", err);
-            }
+            // เติมเฉพาะทีมหลัก (type: "main") ลงใน Dropdown แรก
+            mainSelect.innerHTML = '<option value="" disabled selected>เลือกทีมหลัก</option>';
+            const mainTeams = allTeamsRaw.filter(t => t.type === "main");
+            
+            mainTeams.forEach(t => {
+                mainSelect.add(new Option(t.name, t.name));
+            });
+        } catch (err) {
+            console.error("Load teams error:", err);
+            mainSelect.innerHTML = '<option value="">ไม่สามารถโหลดข้อมูลได้</option>';
         }
+    }
 
-        // --- 2. ขั้นตอนลงทะเบียน ---
-        document.getElementById('reg-form').onsubmit = async (e) => {
-            e.preventDefault();
-            const btn = document.getElementById('submitBtn');
-            btn.disabled = true;
-            btn.innerText = "กำลังประมวลผล...";
+    // --- 2. เงื่อนไขการเปลี่ยนทีมย่อยตามทีมหลัก ---
+    document.getElementById('reg-main').addEventListener('change', function(e) {
+        const selectedMain = e.target.value;
+        const subSelect = document.getElementById('reg-sub');
+        
+        // กรองทีมย่อย (type: "sub") ที่มีฟิลด์ mainTeam ตรงกับที่เลือก
+        // *หมายเหตุ: ใน Database ของคุณ ฟิลด์เชื่อมโยงต้องชื่อ 'mainTeam' ให้ตรงกัน*
+        const filteredSubs = allTeamsRaw.filter(t => t.type === "sub" && t.mainTeam === selectedMain);
 
-            const formData = {
-                user: document.getElementById('reg-username').value.trim(),
-                name: document.getElementById('reg-name').value.trim(),
-                email: document.getElementById('reg-email').value.trim(),
-                phone: document.getElementById('reg-phone').value.trim(),
-                main: document.getElementById('reg-main').value,
-                sub: document.getElementById('reg-sub').value,
-                pass: document.getElementById('reg-pass').value
-            };
+        subSelect.innerHTML = '<option value="" disabled selected>เลือกทีมย่อย</option>';
+        
+        if (filteredSubs.length > 0) {
+            subSelect.disabled = false;
+            filteredSubs.forEach(t => {
+                subSelect.add(new Option(t.name, t.name));
+            });
+        } else {
+            subSelect.disabled = true;
+            subSelect.innerHTML = '<option value="">ไม่มีทีมย่อยในกลุ่มนี้</option>';
+        }
+    });
 
-            try {
-                // สร้าง User ใน Firebase Auth
-                const userCred = await createUserWithEmailAndPassword(auth, formData.email, formData.pass);
-                
-                // บันทึกข้อมูลลง Collection admin
-                await setDoc(doc(db, "admin", userCred.user.uid), {
-                    username: formData.user,
-                    name: formData.name,
-                    email: formData.email,
-                    "Phone No.": formData.phone,
-                    Team: formData.main,
-                    "Sub Team": formData.sub,
-                    role: "user", // สิทธิ์เริ่มต้น
-                    createdAt: new Date().toISOString()
-                });
+    // --- 3. ขั้นตอนลงทะเบียน (เหมือนเดิม) ---
+    document.getElementById('reg-form').onsubmit = async (e) => {
+        e.preventDefault();
+        const btn = document.getElementById('submitBtn');
+        btn.disabled = true;
+        btn.innerHTML = '<i class="fas fa-spinner animate-spin"></i> กำลังลงทะเบียน...';
 
-                alert("ลงทะเบียนพนักงานสำเร็จ!");
-                window.location.href = "login.html";
-
-            } catch (err) {
-                alert("เกิดข้อผิดพลาด: " + err.message);
-                btn.disabled = false;
-                btn.innerText = "ลงทะเบียนเข้าใช้งาน";
-            }
+        const userData = {
+            username: document.getElementById('reg-username').value.trim(),
+            name: document.getElementById('reg-name').value.trim(),
+            email: document.getElementById('reg-email').value.trim(),
+            phone: document.getElementById('reg-phone').value.trim(),
+            mainTeam: document.getElementById('reg-main').value,
+            subTeam: document.getElementById('reg-sub').value,
+            pass: document.getElementById('reg-pass').value
         };
 
-        // เริ่มต้นโหลดข้อมูล
-        fetchTeams();
+        try {
+            const userCred = await createUserWithEmailAndPassword(auth, userData.email, userData.pass);
+            await setDoc(doc(db, "admin", userCred.user.uid), {
+                username: userData.username,
+                name: userData.name,
+                email: userData.email,
+                "Phone No.": userData.phone,
+                Team: userData.mainTeam,
+                "Sub Team": userData.subTeam,
+                role: "user",
+                createdAt: new Date().toISOString()
+            });
 
-    </script>
+            alert("ลงทะเบียนพนักงานสำเร็จ!");
+            window.location.href = "login.html";
+        } catch (err) {
+            alert("ผิดพลาด: " + err.message);
+            btn.disabled = false;
+            btn.innerText = "ลงทะเบียนเข้าใช้งาน";
+        }
+    };
+
+    initTeamData();
+</script>
 </body>
 </html>

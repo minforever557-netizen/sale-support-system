@@ -3,17 +3,16 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Sale Support Dashboard - Final</title>
+    <title>Dashboard - Sale Support System</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels@2.0.0"></script>
     <link href="https://fonts.googleapis.com/css2?family=Kanit:wght@300;400;600&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
     <style>
-        body { font-family: 'Kanit', sans-serif; background-color: #f4f7fe; }
-        .stats-card { background: white; border-radius: 1.5rem; transition: all 0.3s ease; border: 1px solid #e2e8f0; }
-        .stats-card:hover { transform: translateY(-5px); box-shadow: 0 10px 20px rgba(0,0,0,0.05); }
-        .table-row:hover { background-color: #f8fafc; cursor: pointer; }
+        body { font-family: 'Kanit', sans-serif; background-color: #f8fafc; }
+        .glass-card { background: white; border-radius: 1.5rem; border: 1px solid #eef2f6; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05); }
+        .table-row-hover:hover { background-color: #f1f5f9; cursor: pointer; transition: all 0.2s; }
     </style>
 </head>
 <body class="flex min-h-screen">
@@ -23,52 +22,57 @@
     <div class="flex-1 flex flex-col min-w-0">
         <div id="topbar-placeholder"></div>
 
-        <main class="p-6 md:p-10 space-y-8">
-            <div class="flex justify-between items-end">
+        <main class="p-4 md:p-8 space-y-6">
+            <div class="flex flex-col md:flex-row md:items-center justify-between gap-4">
                 <div>
-                    <nav class="text-sm text-indigo-500 font-bold mb-1" id="nav-path">Dashboard / ภาพรวมทีมหลัก</nav>
-                    <h2 class="text-3xl font-black text-slate-800" id="current-title">Team Statistics</h2>
+                    <nav class="flex items-center gap-2 text-sm mb-1 text-indigo-600 font-bold" id="nav-breadcrumb">
+                        <span class="cursor-pointer" onclick="resetDrilldown()">Dashboard</span>
+                        <span id="sub-nav"></span>
+                    </nav>
+                    <h2 class="text-2xl font-black text-slate-800" id="view-title">สถิติภาพรวมทีมหลัก</h2>
                 </div>
-                <button onclick="resetView()" class="bg-white px-5 py-2.5 rounded-xl border border-slate-200 font-bold text-slate-600 hover:bg-slate-50 transition shadow-sm">
-                    <i class="fa-solid fa-arrow-left-long mr-2"></i> กลับหน้าหลัก
-                </button>
+                <div class="flex gap-2">
+                    <button onclick="resetDrilldown()" class="px-4 py-2 bg-white border border-slate-200 text-slate-600 rounded-xl text-sm font-bold hover:bg-slate-50 shadow-sm">
+                        <i class="fa-solid fa-rotate-left mr-1"></i> รีเซ็ตมุมมอง
+                    </button>
+                </div>
             </div>
 
             <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
-                <div class="stats-card p-6 border-b-4 border-indigo-500">
-                    <p class="text-xs font-bold text-slate-400 uppercase tracking-widest">เคสทั้งหมด</p>
-                    <h3 id="total-cases" class="text-4xl font-black text-slate-800 mt-2">0</h3>
+                <div class="glass-card p-6 border-l-4 border-indigo-500">
+                    <p class="text-[10px] font-black text-slate-400 uppercase tracking-widest">Total Tickets</p>
+                    <h3 id="stat-total" class="text-4xl font-bold text-slate-800">0</h3>
                 </div>
-                <div class="stats-card p-6 border-b-4 border-emerald-500">
-                    <p class="text-xs font-bold text-slate-400 uppercase tracking-widest">In SLA (%)</p>
-                    <h3 id="total-sla" class="text-4xl font-black text-slate-800 mt-2">0%</h3>
+                <div class="glass-card p-6 border-l-4 border-emerald-500">
+                    <p class="text-[10px] font-black text-slate-400 uppercase tracking-widest">SLA Success</p>
+                    <h3 id="stat-sla" class="text-4xl font-bold text-slate-800">0%</h3>
                 </div>
-                <div class="stats-card p-6 border-b-4 border-orange-400">
-                    <p class="text-xs font-bold text-slate-400 uppercase tracking-widest">User ที่ส่งงาน</p>
-                    <h3 id="total-users" class="text-4xl font-black text-slate-800 mt-2">0</h3>
+                <div class="glass-card p-6 border-l-4 border-orange-400">
+                    <p class="text-[10px] font-black text-slate-400 uppercase tracking-widest">Active Users</p>
+                    <h3 id="stat-users" class="text-4xl font-bold text-slate-800">0</h3>
                 </div>
             </div>
 
             <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
-                <div class="stats-card p-8 lg:col-span-1">
-                    <h4 class="font-bold text-slate-700 mb-6 flex items-center gap-2">
-                        <i class="fa-solid fa-chart-pie text-indigo-500"></i> สัดส่วนหัวข้อ (จำนวนเคส)
+                <div class="glass-card p-8 lg:col-span-1">
+                    <h4 class="font-bold text-slate-700 mb-6 flex items-center justify-between">
+                        <span><i class="fa-solid fa-chart-pie mr-2 text-indigo-500"></i> สัดส่วนหัวข้อ</span>
                     </h4>
                     <div class="h-64"><canvas id="topicChart"></canvas></div>
                 </div>
 
-                <div class="stats-card p-8 lg:col-span-2">
-                    <h4 class="font-bold text-slate-700 mb-6" id="table-header">รายชื่อทีมหลัก</h4>
+                <div class="glass-card p-8 lg:col-span-2">
+                    <h4 class="font-bold text-slate-700 mb-6" id="table-header-title">รายชื่อทีมหลักทั้งหมด</h4>
                     <div class="overflow-x-auto">
                         <table class="w-full text-left">
-                            <thead class="text-xs font-black text-slate-400 uppercase border-b">
+                            <thead class="text-[11px] font-black text-slate-400 uppercase border-b border-slate-50">
                                 <tr>
-                                    <th class="pb-4 text-slate-500">ชื่อทีม / ข้อมูล</th>
+                                    <th class="pb-4">ชื่อเรียก (NAME)</th>
                                     <th class="pb-4 text-center">จำนวนเคส</th>
                                     <th class="pb-4 text-right">สัดส่วน %</th>
                                 </tr>
                             </thead>
-                            <tbody id="data-table-body" class="divide-y divide-slate-100">
+                            <tbody id="report-table-body" class="divide-y divide-slate-50 text-sm">
                                 </tbody>
                         </table>
                     </div>
@@ -77,20 +81,26 @@
         </main>
     </div>
 
-    <div id="detail-modal" class="fixed inset-0 z-[100] hidden flex items-center justify-center p-4 bg-slate-900/40 backdrop-blur-sm">
-        <div class="bg-white w-full max-w-4xl rounded-[2.5rem] p-10 shadow-2xl relative">
-            <button onclick="closeModal()" class="absolute top-6 right-6 text-slate-300 hover:text-slate-600 transition"><i class="fa-solid fa-circle-xmark text-3xl"></i></button>
-            <h3 id="modal-title" class="text-3xl font-black text-slate-800 mb-2 underline decoration-indigo-500 decoration-4"></h3>
-            <p id="modal-subtitle" class="text-slate-400 font-bold text-sm mb-8 uppercase"></p>
-            
-            <div class="grid grid-cols-1 md:grid-cols-2 gap-10">
-                <div class="bg-slate-50 p-6 rounded-2xl border border-slate-100">
-                    <h5 class="font-bold text-indigo-600 mb-4 flex items-center gap-2"><i class="fa-solid fa-tags"></i> หัวข้อเรื่องที่ส่งมา</h5>
-                    <div id="modal-topic-list" class="space-y-3"></div>
+    <div id="detail-modal" class="fixed inset-0 z-[150] hidden flex items-center justify-center p-4">
+        <div class="absolute inset-0 bg-slate-900/60 backdrop-blur-sm" onclick="closeModal()"></div>
+        <div class="relative bg-white w-full max-w-4xl rounded-[2rem] shadow-2xl p-8 max-h-[90vh] overflow-y-auto">
+            <div class="flex justify-between items-start mb-6">
+                <div>
+                    <h3 id="modal-title" class="text-2xl font-black text-slate-800"></h3>
+                    <p id="modal-subtitle" class="text-indigo-500 font-bold text-xs uppercase"></p>
                 </div>
-                <div class="bg-slate-50 p-6 rounded-2xl border border-slate-100">
-                    <h5 class="font-bold text-emerald-600 mb-4 flex items-center gap-2"><i class="fa-solid fa-user-group"></i> รายชื่อ User (คนส่งงาน)</h5>
-                    <div id="modal-user-list" class="space-y-3"></div>
+                <button onclick="closeModal()" class="bg-slate-100 p-2 rounded-full hover:bg-slate-200">
+                    <i class="fa-solid fa-xmark text-slate-500"></i>
+                </button>
+            </div>
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+                <div>
+                    <p class="text-xs font-black text-slate-400 uppercase mb-4 tracking-widest">สรุปตามหัวข้อปัญหา</p>
+                    <div id="modal-topic-list" class="space-y-2"></div>
+                </div>
+                <div>
+                    <p class="text-xs font-black text-slate-400 uppercase mb-4 tracking-widest">สถิติรายบุคคล (User Level)</p>
+                    <div id="modal-user-list" class="space-y-2"></div>
                 </div>
             </div>
         </div>
@@ -99,7 +109,7 @@
     <script type="module">
         import { initializeApp, getApps } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
         import { getFirestore, collection, onSnapshot, getDoc, doc } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
-        import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
+        import { getAuth, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
 
         const firebaseConfig = {
             apiKey: "AIzaSyAa2uSD_tjNqYE2eXnZcn75h_jAVscDG-c",
@@ -114,174 +124,185 @@
         const db = getFirestore(app);
         const auth = getAuth(app);
 
-        let rawData = [];
-        let myChart = null;
-        let viewLevel = 'MAIN'; // MAIN -> SUB -> USER_MODAL
-        let activeMain = '';
+        let allTickets = [];
+        let topicChart = null;
+        let drillLevel = 'MAIN'; 
+        let activeMainTeam = '';
 
         Chart.register(ChartDataLabels);
 
+        // --- 1. Auth & Layout (เหมือน log.html) ---
         onAuthStateChanged(auth, async (user) => {
             if (user) {
                 const adminDoc = await getDoc(doc(db, "admin", user.uid));
                 if (adminDoc.exists()) {
-                    loadLayout();
+                    await loadLayout();
                     initDatabase();
-                }
+                } else { window.location.replace("login.html"); }
             } else { window.location.replace("login.html"); }
         });
 
         async function loadLayout() {
-            const placeholders = [['sidebar-placeholder', './components/sidebar.html'], ['topbar-placeholder', './components/topbar.html']];
-            for (const [id, url] of placeholders) {
-                const res = await fetch(url).catch(() => null);
-                if (res && res.ok) document.getElementById(id).innerHTML = await res.text();
+            const comps = [
+                { id: 'sidebar-placeholder', url: './components/sidebar.html' },
+                { id: 'topbar-placeholder', url: './components/topbar.html' }
+            ];
+            for (const comp of comps) {
+                const res = await fetch(comp.url);
+                if (res.ok) {
+                    const el = document.getElementById(comp.id);
+                    el.innerHTML = await res.text();
+                    el.classList.remove('hidden');
+                    // จัดการ Logout Button ใน Sidebar/Topbar
+                    const logoutBtn = el.querySelector('#logout-btn');
+                    if (logoutBtn) {
+                        logoutBtn.addEventListener('click', () => {
+                            signOut(auth).then(() => window.location.replace("login.html"));
+                        });
+                    }
+                }
             }
         }
 
+        // --- 2. Data Logic ---
         function initDatabase() {
-            onSnapshot(collection(db, "tickets"), (snap) => {
-                rawData = snap.docs.map(d => {
-                    const row = d.data();
-                    
-                    // --- SMART MAPPING: ป้องกัน "ไม่ระบุทีม" โดยกวาดหาทุกฟิลด์ที่อาจใช่ชื่อทีม ---
-                    const find = (keys) => {
-                        const key = Object.keys(row).find(k => keys.includes(k.toLowerCase().trim()));
-                        return key ? row[key] : null;
+            onSnapshot(collection(db, "tickets"), (snapshot) => {
+                allTickets = snapshot.docs.map(d => {
+                    const data = d.data();
+                    // ตรวจจับชื่อฟิลด์แบบยืดหยุ่นเพื่อป้องกัน Undefined
+                    const getField = (keys) => {
+                        const found = Object.keys(data).find(k => keys.includes(k.toLowerCase().trim()));
+                        return found ? data[found] : null;
                     };
-
                     return {
                         id: d.id,
-                        mainTeam: find(['team', 'main team', 'main_team']) || "FBB Telesale", // Fallback ถ้ายังหาไม่เจอจริงๆ
-                        subTeam: find(['sub team', 'subteam', 'sub_team']) || "General Support",
-                        topic: find(['topic', 'subject', 'issue', 'หัวข้อ']) || "ทั่วไป",
-                        userName: row.userName || row.user_name || row.user || "Unknown User",
-                        status: row.sla_status || "Pending"
+                        mainTeam: getField(['team', 'main team', 'main_team']) || "ไม่ระบุทีมหลัก",
+                        subTeam: getField(['sub team', 'subteam', 'sub_team']) || "ไม่มีทีมย่อย",
+                        topic: data.topic || data.Topic || "ทั่วไป",
+                        user: data.userName || data.user_name || data.userEmail || "Unknown User",
+                        status: data.sla_status || "Pending"
                     };
                 });
-                renderUI();
+                renderReport();
             });
         }
 
-        function renderUI() {
-            // Update Widgets
-            document.getElementById('total-cases').innerText = rawData.length.toLocaleString();
-            document.getElementById('total-users').innerText = new Set(rawData.map(r => r.userName)).size;
-            const sla = rawData.length ? Math.round((rawData.filter(r => r.status === 'In SLA').length / rawData.length) * 100) : 0;
-            document.getElementById('total-sla').innerText = sla + '%';
+        function renderReport() {
+            document.getElementById('stat-total').innerText = allTickets.length.toLocaleString();
+            document.getElementById('stat-users').innerText = new Set(allTickets.map(t => t.user)).size;
+            const slaOk = allTickets.filter(t => t.status === 'In SLA').length;
+            document.getElementById('stat-sla').innerText = allTickets.length ? Math.round((slaOk/allTickets.length)*100)+'%' : '0%';
 
-            const displayStats = {};
+            const tableStats = {};
             const topicStats = {};
 
-            rawData.forEach(r => {
-                if (viewLevel === 'MAIN') {
-                    displayStats[r.mainTeam] = (displayStats[r.mainTeam] || 0) + 1;
-                    topicStats[r.topic] = (topicStats[r.topic] || 0) + 1;
-                } else {
-                    if (r.mainTeam === activeMain) {
-                        displayStats[r.subTeam] = (displayStats[r.subTeam] || 0) + 1;
-                        topicStats[r.topic] = (topicStats[r.topic] || 0) + 1;
-                    }
+            allTickets.forEach(t => {
+                if (drillLevel === 'MAIN') {
+                    tableStats[t.mainTeam] = (tableStats[t.mainTeam] || 0) + 1;
+                    topicStats[t.topic] = (topicStats[t.topic] || 0) + 1;
+                } else if (t.mainTeam === activeMainTeam) {
+                    tableStats[t.subTeam] = (tableStats[t.subTeam] || 0) + 1;
+                    topicStats[t.topic] = (topicStats[t.topic] || 0) + 1;
                 }
             });
 
             updateChart(topicStats);
-            updateTable(displayStats);
+            updateTable(tableStats);
         }
 
         function updateChart(data) {
-            const ctx = document.getElementById('topicChart').getContext('2d');
-            if (myChart) myChart.destroy();
-            myChart = new Chart(ctx, {
+            const ctx = document.getElementById('topicChart');
+            if (topicChart) topicChart.destroy();
+            topicChart = new Chart(ctx, {
                 type: 'doughnut',
                 data: {
                     labels: Object.keys(data),
                     datasets: [{
                         data: Object.values(data),
-                        backgroundColor: ['#6366f1', '#10b981', '#f59e0b', '#ef4444', '#8b5cf6', '#06b6d4'],
+                        backgroundColor: ['#6366f1', '#10b981', '#f59e0b', '#ef4444', '#8b5cf6', '#ec4899', '#0ea5e9'],
                         borderWidth: 0
                     }]
                 },
                 options: {
                     responsive: true, maintainAspectRatio: false,
                     plugins: {
-                        legend: { position: 'bottom', labels: { boxWidth: 10, font: { size: 11 } } },
-                        datalabels: { // แสดงตัวเลขจำนวนเคสบนกราฟ
-                            color: '#fff',
-                            font: { weight: 'bold', size: 14 },
-                            formatter: (val) => val > 0 ? val : ''
+                        legend: { position: 'bottom', labels: { boxWidth: 10, font: { size: 10 } } },
+                        datalabels: {
+                            color: '#fff', font: { weight: 'bold', size: 12 },
+                            formatter: (v) => v > 0 ? v : ''
                         }
                     },
-                    cutout: '65%'
+                    cutout: '70%'
                 }
             });
         }
 
         function updateTable(stats) {
             const total = Object.values(stats).reduce((a,b) => a+b, 0);
-            const tbody = document.getElementById('data-table-body');
+            const tbody = document.getElementById('report-table-body');
             tbody.innerHTML = Object.entries(stats).sort((a,b) => b[1]-a[1]).map(([name, count]) => `
-                <tr class="table-row transition-all border-b border-slate-50" onclick="handleRowClick('${name}')">
-                    <td class="py-5">
+                <tr class="table-row-hover border-b border-slate-50" onclick="handleRowClick('${name}')">
+                    <td class="py-4">
                         <div class="font-bold text-slate-700">${name}</div>
-                        <div class="text-[10px] text-slate-400 uppercase tracking-widest font-black">คลิกเพื่อดูรายละเอียดเพิ่มเติม</div>
+                        <div class="text-[9px] text-slate-400 font-black uppercase tracking-widest mt-0.5">คลิกเจาะลึกข้อมูล</div>
                     </td>
-                    <td class="py-5 text-center font-black text-indigo-600">${count.toLocaleString()}</td>
-                    <td class="py-5 text-right font-bold text-slate-400">${((count/total)*100).toFixed(1)}%</td>
+                    <td class="py-4 text-center font-bold text-indigo-600">${count.toLocaleString()}</td>
+                    <td class="py-4 text-right font-bold text-slate-400">${((count/total)*100).toFixed(1)}%</td>
                 </tr>
             `).join('');
         }
 
         window.handleRowClick = (name) => {
-            if (viewLevel === 'MAIN') {
-                viewLevel = 'SUB';
-                activeMain = name;
-                document.getElementById('nav-path').innerText = `Dashboard / ${name}`;
-                document.getElementById('table-header').innerText = `ทีมย่อยของ ${name}`;
-                renderUI();
+            if (drillLevel === 'MAIN') {
+                drillLevel = 'SUB';
+                activeMainTeam = name;
+                document.getElementById('sub-nav').innerHTML = `<i class="fa-solid fa-chevron-right mx-2 text-[10px] text-slate-300"></i> ${name}`;
+                document.getElementById('view-title').innerText = `ทีมย่อย: ${name}`;
+                document.getElementById('table-header-title').innerText = `รายละเอียดทีมย่อยภายใต้ ${name}`;
+                renderReport();
             } else {
                 openModal(name);
             }
         };
 
         function openModal(subName) {
-            const filtered = rawData.filter(r => r.mainTeam === activeMain && r.subTeam === subName);
+            const filtered = allTickets.filter(t => t.mainTeam === activeMainTeam && t.subTeam === subName);
             document.getElementById('modal-title').innerText = subName;
-            document.getElementById('modal-subtitle').innerText = `ทีมหลัก: ${activeMain}`;
+            document.getElementById('modal-subtitle').innerText = `Main Team: ${activeMainTeam} | ทั้งหมด ${filtered.length} เคส`;
 
-            const topics = {}; const users = {};
-            filtered.forEach(f => {
-                topics[f.topic] = (topics[f.topic] || 0) + 1;
-                users[f.userName] = (users[f.userName] || 0) + 1;
+            const ts = {}; const us = {};
+            filtered.forEach(t => {
+                ts[t.topic] = (ts[t.topic] || 0) + 1;
+                us[t.user] = (us[t.user] || 0) + 1;
             });
 
-            const total = filtered.length;
-
-            document.getElementById('modal-topic-list').innerHTML = Object.entries(topics).map(([n, c]) => `
-                <div class="flex justify-between items-center p-3 bg-white rounded-xl shadow-sm border border-slate-100">
+            document.getElementById('modal-topic-list').innerHTML = Object.entries(ts).sort((a,b) => b[1]-a[1]).map(([n, c]) => `
+                <div class="flex justify-between p-3 bg-slate-50 rounded-xl border border-slate-100">
                     <span class="text-sm font-bold text-slate-600">${n}</span>
-                    <span class="text-indigo-600 font-black text-sm">${c} เคส (${((c/total)*100).toFixed(1)}%)</span>
+                    <span class="text-indigo-600 font-bold text-sm">${c} เคส</span>
                 </div>`).join('');
 
-            document.getElementById('modal-user-list').innerHTML = Object.entries(users).map(([n, c]) => `
-                <div class="flex justify-between items-center p-3 bg-white rounded-xl shadow-sm border border-slate-100">
-                    <span class="text-sm font-bold text-slate-600">${n}</span>
+            document.getElementById('modal-user-list').innerHTML = Object.entries(us).sort((a,b) => b[1]-a[1]).map(([n, c]) => `
+                <div class="flex justify-between p-3 bg-white rounded-xl shadow-sm border border-slate-100 items-center">
+                    <div class="flex items-center gap-2">
+                        <div class="w-7 h-7 bg-indigo-100 text-indigo-600 rounded-full flex items-center justify-center text-[10px] font-bold">${n.substring(0,2).toUpperCase()}</div>
+                        <span class="text-sm font-bold text-slate-600">${n}</span>
+                    </div>
                     <span class="text-slate-400 font-black text-sm">${c} เคส</span>
                 </div>`).join('');
 
             document.getElementById('detail-modal').classList.remove('hidden');
         }
 
-        window.resetView = () => {
-            viewLevel = 'MAIN';
-            activeMain = '';
-            document.getElementById('nav-path').innerText = `Dashboard / ภาพรวมทีมหลัก`;
-            document.getElementById('table-header').innerText = `รายชื่อทีมหลัก`;
-            renderUI();
-        };
+        window.resetDrilldown = () => {
+            drillLevel = 'MAIN'; activeMainTeam = '';
+            document.getElementById('sub-nav').innerHTML = '';
+            document.getElementById('view-title').innerText = 'สถิติภาพรวมทีมหลัก';
+            document.getElementById('table-header-title').innerText = 'รายชื่อทีมหลักทั้งหมด';
+            renderReport();
+        }
 
         window.closeModal = () => document.getElementById('detail-modal').classList.add('hidden');
-
     </script>
 </body>
 </html>

@@ -9,17 +9,21 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
     <style>
         body { font-family: 'Kanit', sans-serif; background-color: #f8fafc; }
-        .user-card { transition: all 0.3s ease; border: 1px solid #f1f5f9; }
-        .user-card:hover { transform: translateY(-5px); shadow: 0 20px 25px -5px rgb(0 0 0 / 0.1); }
+        .user-card { transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1); border: 1px solid #f1f5f9; }
+        .user-card:hover { transform: translateY(-5px); box-shadow: 0 20px 25px -5px rgb(0 0 0 / 0.05); }
         
-        /* Modal Styles */
-        .modal-backdrop { background: rgba(15, 23, 42, 0.5); backdrop-filter: blur(8px); }
+        .modal-backdrop { background: rgba(15, 23, 42, 0.6); backdrop-filter: blur(8px); }
         .form-input { 
             width: 100%; background-color: #fcfdfe; border: 1.5px solid #f1f5f9; border-radius: 1rem; 
-            padding: 0.75rem 1.25rem; transition: all 0.3s;
+            padding: 0.75rem 1.25rem; transition: all 0.3s; font-size: 0.9rem;
         }
-        .form-input:focus { border-color: #6366f1; outline: none; box-shadow: 0 0 0 4px rgba(99, 102, 241, 0.1); }
-        .label-title { display: block; font-size: 0.7rem; font-weight: 800; color: #94a3b8; text-transform: uppercase; margin-bottom: 0.5rem; margin-left: 0.2rem; }
+        .form-input:focus { border-color: #6366f1; outline: none; box-shadow: 0 0 0 4px rgba(99, 102, 241, 0.1); background-color: white; }
+        .label-title { display: block; font-size: 0.7rem; font-weight: 800; color: #94a3b8; text-transform: uppercase; margin-bottom: 0.5rem; margin-left: 0.2rem; letter-spacing: 0.025em; }
+        
+        /* Custom Scrollbar */
+        .modal-content::-webkit-scrollbar { width: 5px; }
+        .modal-content::-webkit-scrollbar-track { background: transparent; }
+        .modal-content::-webkit-scrollbar-thumb { background: #e2e8f0; border-radius: 10px; }
     </style>
 </head>
 <body class="flex min-h-screen">
@@ -30,17 +34,17 @@
         <div id="topbar-placeholder"></div>
 
         <main class="p-6 md:p-10">
-            <div class="flex justify-between items-center mb-8">
+            <div class="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-10">
                 <div>
                     <h2 class="text-3xl font-bold text-slate-800 tracking-tight">จัดการผู้ใช้งาน</h2>
-                    <p class="text-slate-500">แก้ไขข้อมูลทีมและสิทธิ์การเข้าใช้งานของพนักงาน</p>
+                    <p class="text-slate-500">ตรวจสอบและแก้ไขข้อมูลสมาชิกในระบบทั้งหมด</p>
                 </div>
             </div>
 
             <div id="user-list" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                 <div class="col-span-full py-20 text-center text-slate-400">
-                    <i class="fa-solid fa-circle-notch animate-spin text-3xl mb-4"></i>
-                    <p>กำลังโหลดข้อมูลพนักงาน...</p>
+                    <i class="fa-solid fa-circle-notch animate-spin text-3xl mb-4 text-indigo-500"></i>
+                    <p class="font-medium">กำลังเชื่อมต่อฐานข้อมูล...</p>
                 </div>
             </div>
         </main>
@@ -49,46 +53,86 @@
     <div id="editModal" class="hidden fixed inset-0 z-[100] flex items-center justify-center p-4">
         <div class="absolute inset-0 modal-backdrop" onclick="closeModal()"></div>
         <div class="relative bg-white w-full max-w-2xl rounded-[2.5rem] shadow-2xl overflow-hidden animate-in fade-in zoom-in duration-300">
-            <div class="bg-indigo-600 p-6 text-white flex justify-between items-center">
-                <h3 class="text-xl font-bold flex items-center gap-2">
-                    <i class="fa-solid fa-user-gear"></i> แก้ไขโปรไฟล์ผู้ใช้งาน
-                </h3>
-                <button onclick="closeModal()" class="text-white/80 hover:text-white"><i class="fa-solid fa-xmark text-xl"></i></button>
+            
+            <div class="bg-indigo-600 p-8 text-white">
+                <div class="flex justify-between items-start">
+                    <div>
+                        <h3 class="text-2xl font-bold flex items-center gap-3">
+                            <i class="fa-solid fa-id-card-clip"></i> แก้ไขข้อมูลสมาชิก
+                        </h3>
+                        <p class="text-indigo-100 text-sm mt-1 opacity-80">การเปลี่ยน Email/Password ต้องอัปเดตในระบบ Auth ด้วย</p>
+                    </div>
+                    <button onclick="closeModal()" class="bg-white/10 hover:bg-white/20 p-2 rounded-xl transition">
+                        <i class="fa-solid fa-xmark"></i>
+                    </button>
+                </div>
             </div>
 
-            <form id="edit-user-form" class="p-8 space-y-6">
+            <form id="edit-user-form" class="modal-content p-8 space-y-8 max-h-[70vh] overflow-y-auto">
                 <input type="hidden" id="edit-uid">
                 
-                <div class="grid grid-cols-1 md:grid-cols-2 gap-5">
-                    <div class="md:col-span-2">
-                        <label class="label-title">ชื่อ-นามสกุล</label>
-                        <input type="text" id="edit-name" class="form-input" required>
+                <section>
+                    <div class="flex items-center gap-2 mb-4">
+                        <span class="w-1.5 h-4 bg-indigo-500 rounded-full"></span>
+                        <h4 class="text-xs font-black text-slate-800 uppercase tracking-widest">ข้อมูลการเข้าสู่ระบบ</h4>
                     </div>
-                    <div>
-                        <label class="label-title">ตำแหน่ง / บทบาท</label>
-                        <select id="edit-role" class="form-input">
-                            <option value="user">User (Sale)</option>
-                            <option value="admin">Admin (Support)</option>
-                        </select>
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div>
+                            <label class="label-title">Username</label>
+                            <input type="text" id="edit-username" class="form-input" placeholder="sale.01">
+                        </div>
+                        <div>
+                            <label class="label-title">Email Address</label>
+                            <input type="email" id="edit-email" class="form-input" placeholder="sale@company.com">
+                        </div>
+                        <div class="md:col-span-2">
+                            <label class="label-title">รหัสผ่านใหม่ (ระบุเมื่อต้องการเปลี่ยน)</label>
+                            <div class="relative">
+                                <input type="password" id="edit-password" class="form-input" placeholder="อย่างน้อย 6 ตัวอักษร">
+                                <i class="fa-solid fa-key absolute right-4 top-1/2 -translate-y-1/2 text-slate-300"></i>
+                            </div>
+                        </div>
                     </div>
-                    <div>
-                        <label class="label-title">เบอร์โทรศัพท์</label>
-                        <input type="text" id="edit-phone" class="form-input">
+                </section>
+
+                <hr class="border-slate-50">
+
+                <section>
+                    <div class="flex items-center gap-2 mb-4">
+                        <span class="w-1.5 h-4 bg-emerald-500 rounded-full"></span>
+                        <h4 class="text-xs font-black text-slate-800 uppercase tracking-widest">โปรไฟล์และสังกัดทีม</h4>
                     </div>
-                    <div>
-                        <label class="label-title">ทีมหลัก (Main Team)</label>
-                        <select id="edit-main-team" class="form-input" required></select>
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div class="md:col-span-2">
+                            <label class="label-title">ชื่อ-นามสกุลจริง</label>
+                            <input type="text" id="edit-name" class="form-input" required>
+                        </div>
+                        <div>
+                            <label class="label-title">เบอร์โทรศัพท์</label>
+                            <input type="text" id="edit-phone" class="form-input">
+                        </div>
+                        <div>
+                            <label class="label-title">บทบาทในระบบ (Role)</label>
+                            <select id="edit-role" class="form-input">
+                                <option value="user">User (Sale)</option>
+                                <option value="admin">Admin (Support)</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label class="label-title">ทีมหลัก (Main Team)</label>
+                            <select id="edit-main-team" class="form-input" required></select>
+                        </div>
+                        <div>
+                            <label class="label-title">ทีมย่อย (Sub Team)</label>
+                            <select id="edit-sub-team" class="form-input"></select>
+                        </div>
                     </div>
-                    <div>
-                        <label class="label-title">ทีมย่อย (Sub Team)</label>
-                        <select id="edit-sub-team" class="form-input"></select>
-                    </div>
-                </div>
+                </section>
 
                 <div class="pt-4 flex gap-3">
-                    <button type="button" onclick="closeModal()" class="flex-1 py-3 bg-slate-100 text-slate-600 rounded-xl font-bold hover:bg-slate-200 transition">ยกเลิก</button>
-                    <button type="submit" id="saveBtn" class="flex-[2] py-3 bg-indigo-600 text-white rounded-xl font-bold shadow-lg shadow-indigo-100 hover:bg-indigo-700 transition flex items-center justify-center gap-2">
-                        <i class="fa-solid fa-floppy-disk"></i> บันทึกการเปลี่ยนแปลง
+                    <button type="button" onclick="closeModal()" class="flex-1 py-4 bg-slate-50 text-slate-500 rounded-2xl font-bold hover:bg-slate-100 transition">ยกเลิก</button>
+                    <button type="submit" id="saveBtn" class="flex-[2] py-4 bg-indigo-600 text-white rounded-2xl font-bold shadow-xl shadow-indigo-100 hover:bg-indigo-700 transition-all flex items-center justify-center gap-2">
+                        <i class="fa-solid fa-check-circle"></i> บันทึกข้อมูลทั้งหมด
                     </button>
                 </div>
             </form>
@@ -115,19 +159,18 @@
 
         let allTeams = [];
 
-        // 1. Check Auth & Load Layout
         onAuthStateChanged(auth, async (user) => {
             if (user) {
                 const adminSnap = await getDoc(doc(db, "admin", user.uid));
                 if (adminSnap.exists() && adminSnap.data().role === 'admin') {
-                    loadLayout(adminSnap.data(), user.email);
+                    loadLayout();
                     await fetchTeams();
                     listenToUsers();
                 } else { window.location.replace("dashboard.html"); }
             } else { window.location.replace("login.html"); }
         });
 
-        async function loadLayout(userData, email) {
+        async function loadLayout() {
             const comps = [{ id: 'sidebar-placeholder', url: './components/sidebar.html' }, { id: 'topbar-placeholder', url: './components/topbar.html' }];
             for (const comp of comps) {
                 const res = await fetch(comp.url);
@@ -141,19 +184,14 @@
             }
         }
 
-        // 2. Fetch Teams for Dropdown
         async function fetchTeams() {
             const snap = await getDocs(collection(db, "teams"));
             allTeams = snap.docs.map(d => ({ id: d.id, ...d.data() }));
-            
             const mainSelect = document.getElementById('edit-main-team');
             mainSelect.innerHTML = '<option value="">-- เลือกทีมหลัก --</option>';
-            allTeams.filter(t => t.type === "main").forEach(t => {
-                mainSelect.add(new Option(t.name, t.id));
-            });
+            allTeams.filter(t => t.type === "main").forEach(t => { mainSelect.add(new Option(t.name, t.id)); });
         }
 
-        // 3. Listen to Users (Real-time)
         function listenToUsers() {
             onSnapshot(collection(db, "admin"), (snapshot) => {
                 const container = document.getElementById('user-list');
@@ -161,26 +199,26 @@
                     const u = docSnap.data();
                     const initials = (u.name || "U")[0].toUpperCase();
                     return `
-                        <div class="user-card bg-white p-6 rounded-[2rem] shadow-sm flex flex-col items-center text-center">
-                            <div class="w-20 h-20 bg-indigo-50 text-indigo-600 rounded-3xl flex items-center justify-center text-2xl font-bold mb-4">
+                        <div class="user-card bg-white p-6 rounded-[2.5rem] flex flex-col items-center">
+                            <div class="w-20 h-20 bg-gradient-to-tr from-slate-100 to-indigo-50 text-indigo-600 rounded-3xl flex items-center justify-center text-2xl font-bold mb-4 border border-indigo-100/50">
                                 ${initials}
                             </div>
                             <h3 class="font-bold text-slate-800 text-lg">${u.name || 'ไม่ระบุชื่อ'}</h3>
-                            <p class="text-xs text-slate-400 mb-4 font-medium uppercase tracking-widest">${u.role || 'user'}</p>
+                            <div class="flex gap-2 mt-1 mb-6">
+                                <span class="px-3 py-1 bg-indigo-50 text-indigo-600 rounded-full text-[9px] font-black uppercase tracking-widest">${u.role || 'user'}</span>
+                            </div>
                             
-                            <div class="w-full grid grid-cols-2 gap-2 mb-6">
-                                <div class="bg-slate-50 p-2 rounded-xl">
-                                    <p class="text-[9px] text-slate-400 font-bold uppercase">Team</p>
-                                    <p class="text-xs font-bold text-slate-700 truncate">${u.Team || '-'}</p>
+                            <div class="w-full space-y-2 mb-6 text-sm">
+                                <div class="flex justify-between py-2 border-b border-slate-50">
+                                    <span class="text-slate-400">Username</span><span class="font-semibold text-slate-700">${u.username || '-'}</span>
                                 </div>
-                                <div class="bg-slate-50 p-2 rounded-xl">
-                                    <p class="text-[9px] text-slate-400 font-bold uppercase">Sub Team</p>
-                                    <p class="text-xs font-bold text-slate-700 truncate">${u["Sub Team"] || '-'}</p>
+                                <div class="flex justify-between py-2 border-b border-slate-50">
+                                    <span class="text-slate-400">Team</span><span class="font-semibold text-slate-700">${u.Team || '-'}</span>
                                 </div>
                             </div>
 
-                            <button onclick="openEditModal('${docSnap.id}')" class="w-full py-3 bg-slate-900 text-white rounded-xl text-sm font-bold hover:bg-indigo-600 transition">
-                                <i class="fa-solid fa-pen-to-square mr-2"></i> แก้ไขข้อมูล
+                            <button onclick="openEditModal('${docSnap.id}')" class="w-full py-3.5 bg-slate-900 text-white rounded-2xl text-xs font-bold hover:bg-indigo-600 transition shadow-lg shadow-slate-200">
+                                <i class="fa-solid fa-user-pen mr-2"></i> แก้ไขจัดการสมาชิก
                             </button>
                         </div>
                     `;
@@ -188,7 +226,6 @@
             });
         }
 
-        // 4. Modal Functions
         window.openEditModal = async (uid) => {
             const snap = await getDoc(doc(db, "admin", uid));
             if (!snap.exists()) return;
@@ -196,10 +233,12 @@
 
             document.getElementById('edit-uid').value = uid;
             document.getElementById('edit-name').value = u.name || "";
-            document.getElementById('edit-role').value = u.role || "user";
+            document.getElementById('edit-username').value = u.username || "";
+            document.getElementById('edit-email').value = u.email || "";
+            document.getElementById('edit-password').value = "";
             document.getElementById('edit-phone').value = u["Phone No."] || "";
+            document.getElementById('edit-role').value = u.role || "user";
             
-            // Set Team Dropdowns
             const mainTeam = allTeams.find(t => t.name === u.Team && t.type === "main");
             if (mainTeam) {
                 document.getElementById('edit-main-team').value = mainTeam.id;
@@ -208,58 +247,59 @@
                 document.getElementById('edit-main-team').value = "";
                 renderSubTeams(null);
             }
-
             document.getElementById('editModal').classList.remove('hidden');
         };
 
         window.closeModal = () => document.getElementById('editModal').classList.add('hidden');
-
         document.getElementById('edit-main-team').onchange = (e) => renderSubTeams(e.target.value);
 
         function renderSubTeams(parentId, currentSub = null) {
             const subSelect = document.getElementById('edit-sub-team');
             const subs = allTeams.filter(t => t.type === "sub" && t.parentId === parentId);
             subSelect.innerHTML = '<option value="">-- ไม่มีทีมย่อย --</option>';
-            if (subs.length > 0) {
-                subSelect.disabled = false;
-                subs.forEach(t => {
-                    const opt = new Option(t.name, t.name);
-                    if (t.name === currentSub) opt.selected = true;
-                    subSelect.add(opt);
-                });
-            } else {
-                subSelect.disabled = true;
-            }
+            subSelect.disabled = subs.length === 0;
+            subs.forEach(t => {
+                const opt = new Option(t.name, t.name);
+                if (t.name === currentSub) opt.selected = true;
+                subSelect.add(opt);
+            });
         }
 
-        // 5. Save Action
         document.getElementById('edit-user-form').onsubmit = async (e) => {
             e.preventDefault();
             const uid = document.getElementById('edit-uid').value;
             const btn = document.getElementById('saveBtn');
+            const pass = document.getElementById('edit-password').value;
             
             btn.disabled = true;
-            btn.innerHTML = `<i class="fa-solid fa-circle-notch animate-spin"></i> กำลังบันทึก...`;
+            btn.innerHTML = `<i class="fa-solid fa-circle-notch animate-spin"></i> กำลังเซฟข้อมูล...`;
 
             try {
                 const mainSelect = document.getElementById('edit-main-team');
                 const mainTeamName = mainSelect.options[mainSelect.selectedIndex].text;
                 
-                await updateDoc(doc(db, "admin", uid), {
+                const updateData = {
                     name: document.getElementById('edit-name').value,
-                    role: document.getElementById('edit-role').value,
+                    username: document.getElementById('edit-username').value,
+                    email: document.getElementById('edit-email').value,
                     "Phone No.": document.getElementById('edit-phone').value,
-                    Team: mainTeamName === "-- เลือกทีมหลัก --" ? "" : mainTeamName,
+                    role: document.getElementById('edit-role').value,
+                    Team: mainTeamName.includes("เลือกทีม") ? "" : mainTeamName,
                     "Sub Team": document.getElementById('edit-sub-team').value
-                });
+                };
 
+                if (pass) {
+                    if (pass.length < 6) throw new Error("รหัสผ่านใหม่ต้องมี 6 ตัวขึ้นไป");
+                    updateData.lastRequestPass = pass; // เก็บ flag ไว้เพื่อให้ admin ทราบในระบบ
+                }
+
+                await updateDoc(doc(db, "admin", uid), updateData);
                 closeModal();
-                alert("อัปเดตข้อมูลสำเร็จ");
-            } catch (err) {
-                alert("Error: " + err.message);
-            } finally {
-                btn.disabled = false;
-                btn.innerHTML = `<i class="fa-solid fa-floppy-disk"></i> บันทึกการเปลี่ยนแปลง`;
+                alert("อัปเดตข้อมูลพนักงานเรียบร้อยแล้ว");
+            } catch (err) { alert("เกิดข้อผิดพลาด: " + err.message); }
+            finally { 
+                btn.disabled = false; 
+                btn.innerHTML = `<i class="fa-solid fa-check-circle"></i> บันทึกข้อมูลทั้งหมด`; 
             }
         };
     </script>

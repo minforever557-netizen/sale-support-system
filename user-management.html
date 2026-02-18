@@ -3,254 +3,265 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>จัดการผู้ใช้งาน - Sale Support System</title>
+    <title>User Management - Sale Support System</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://fonts.googleapis.com/css2?family=Kanit:wght@300;400;600&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
     <style>
         body { font-family: 'Kanit', sans-serif; background-color: #f8fafc; }
-        .form-input { background-color: #f8fafc; border: 2px solid transparent; border-radius: 1rem; padding: 0.75rem 1.25rem; width: 100%; font-weight: 500; color: #334155; transition: 0.2s; }
-        .form-input:focus { border-color: #5d58f0; background-color: white; outline: none; }
-        .form-input:disabled { opacity: 0.6; cursor: not-allowed; }
-        .modal-animate { animation: fadeIn 0.2s ease-out; }
-        @keyframes fadeIn { from { opacity: 0; transform: scale(0.95); } to { opacity: 1; transform: scale(1); } }
+        .user-card { transition: all 0.3s ease; border: 1px solid #f1f5f9; }
+        .user-card:hover { transform: translateY(-5px); shadow: 0 20px 25px -5px rgb(0 0 0 / 0.1); }
+        
+        /* Modal Styles */
+        .modal-backdrop { background: rgba(15, 23, 42, 0.5); backdrop-filter: blur(8px); }
+        .form-input { 
+            width: 100%; background-color: #fcfdfe; border: 1.5px solid #f1f5f9; border-radius: 1rem; 
+            padding: 0.75rem 1.25rem; transition: all 0.3s;
+        }
+        .form-input:focus { border-color: #6366f1; outline: none; box-shadow: 0 0 0 4px rgba(99, 102, 241, 0.1); }
+        .label-title { display: block; font-size: 0.7rem; font-weight: 800; color: #94a3b8; text-transform: uppercase; margin-bottom: 0.5rem; margin-left: 0.2rem; }
     </style>
 </head>
 <body class="flex min-h-screen">
 
     <aside id="sidebar-placeholder" class="hidden lg:block w-64 sticky top-0 h-screen bg-white border-r border-slate-200"></aside>
 
-    <div class="flex-1 flex flex-col min-w-0 bg-[#f8fafc]">
+    <div class="flex-1 flex flex-col min-w-0">
         <div id="topbar-placeholder"></div>
 
         <main class="p-6 md:p-10">
-            <div class="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-8">
+            <div class="flex justify-between items-center mb-8">
                 <div>
-                    <h2 class="text-3xl font-bold text-slate-800">จัดการผู้ใช้งาน</h2>
-                    <p class="text-slate-500 text-sm">กำหนดสิทธิ์ ทีม และข้อมูลพนักงานในระบบ</p>
+                    <h2 class="text-3xl font-bold text-slate-800 tracking-tight">จัดการผู้ใช้งาน</h2>
+                    <p class="text-slate-500">แก้ไขข้อมูลทีมและสิทธิ์การเข้าใช้งานของพนักงาน</p>
                 </div>
-                <button onclick="openRegisterModal()" class="bg-[#5d58f0] text-white px-8 py-4 rounded-2xl font-bold hover:bg-indigo-700 transition shadow-lg flex items-center gap-2 active:scale-95">
-                    <i class="fa-solid fa-user-plus"></i> เพิ่มผู้ใช้ใหม่
-                </button>
             </div>
 
-            <div class="bg-white rounded-[2.5rem] shadow-sm overflow-hidden border border-slate-100">
-                <table class="w-full text-left">
-                    <thead>
-                        <tr class="bg-slate-50/50 border-b border-slate-100 text-[10px] font-black text-slate-400 uppercase tracking-widest">
-                            <th class="p-6">พนักงาน / ทีม</th>
-                            <th class="p-6">เบอร์โทรศัพท์</th>
-                            <th class="p-6 text-center">บทบาท</th>
-                            <th class="p-6 text-right">จัดการ</th>
-                        </tr>
-                    </thead>
-                    <tbody id="user-list" class="divide-y divide-slate-50 text-sm"></tbody>
-                </table>
+            <div id="user-list" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                <div class="col-span-full py-20 text-center text-slate-400">
+                    <i class="fa-solid fa-circle-notch animate-spin text-3xl mb-4"></i>
+                    <p>กำลังโหลดข้อมูลพนักงาน...</p>
+                </div>
             </div>
         </main>
     </div>
 
-    <div id="registerModal" class="hidden fixed inset-0 z-[60] flex items-center justify-center p-4">
-        <div class="absolute inset-0 bg-slate-900/60 backdrop-blur-sm" onclick="closeRegisterModal()"></div>
-        <div class="relative bg-white w-full max-w-2xl rounded-[3rem] shadow-2xl overflow-hidden modal-animate">
-            <div class="bg-[#5d58f0] p-6 text-white text-center">
-                <h3 id="modal-title" class="text-xl font-bold">ข้อมูลพนักงาน</h3>
+    <div id="editModal" class="hidden fixed inset-0 z-[100] flex items-center justify-center p-4">
+        <div class="absolute inset-0 modal-backdrop" onclick="closeModal()"></div>
+        <div class="relative bg-white w-full max-w-2xl rounded-[2.5rem] shadow-2xl overflow-hidden animate-in fade-in zoom-in duration-300">
+            <div class="bg-indigo-600 p-6 text-white flex justify-between items-center">
+                <h3 class="text-xl font-bold flex items-center gap-2">
+                    <i class="fa-solid fa-user-gear"></i> แก้ไขโปรไฟล์ผู้ใช้งาน
+                </h3>
+                <button onclick="closeModal()" class="text-white/80 hover:text-white"><i class="fa-solid fa-xmark text-xl"></i></button>
             </div>
-            <form id="registerForm" class="p-8 space-y-4 max-h-[75vh] overflow-y-auto">
+
+            <form id="edit-user-form" class="p-8 space-y-6">
                 <input type="hidden" id="edit-uid">
-                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-5">
                     <div class="md:col-span-2">
-                        <label class="text-[10px] font-black text-slate-400 uppercase ml-2 mb-1 block">ชื่อ-นามสกุล</label>
-                        <input type="text" id="reg-name" class="form-input" required>
+                        <label class="label-title">ชื่อ-นามสกุล</label>
+                        <input type="text" id="edit-name" class="form-input" required>
                     </div>
                     <div>
-                        <label class="text-[10px] font-black text-slate-400 uppercase ml-2 mb-1 block">Username</label>
-                        <input type="text" id="reg-username" class="form-input" required>
-                    </div>
-                    <div>
-                        <label class="text-[10px] font-black text-slate-400 uppercase ml-2 mb-1 block">บทบาท (Role)</label>
-                        <select id="reg-role" class="form-input">
-                            <option value="user">User</option>
-                            <option value="admin">Admin</option>
+                        <label class="label-title">ตำแหน่ง / บทบาท</label>
+                        <select id="edit-role" class="form-input">
+                            <option value="user">User (Sale)</option>
+                            <option value="admin">Admin (Support)</option>
                         </select>
                     </div>
                     <div>
-                        <label class="text-[10px] font-black text-slate-400 uppercase ml-2 mb-1 block">อีเมล</label>
-                        <input type="email" id="reg-email" class="form-input" required>
+                        <label class="label-title">เบอร์โทรศัพท์</label>
+                        <input type="text" id="edit-phone" class="form-input">
                     </div>
                     <div>
-                        <label class="text-[10px] font-black text-slate-400 uppercase ml-2 mb-1 block">เบอร์โทรศัพท์</label>
-                        <input type="text" id="reg-phone" class="form-input" required>
-                    </div>
-                </div>
-
-                <div class="grid grid-cols-1 md:grid-cols-2 gap-4 pt-4 border-t">
-                    <div>
-                        <label class="text-xs font-bold text-[#5d58f0] uppercase mb-1 block ml-2">ทีมหลัก</label>
-                        <select id="reg-main" class="form-input" required>
-                            <option value="">กำลังโหลดทีม...</option>
-                        </select>
+                        <label class="label-title">ทีมหลัก (Main Team)</label>
+                        <select id="edit-main-team" class="form-input" required></select>
                     </div>
                     <div>
-                        <label class="text-xs font-bold text-[#5d58f0] uppercase mb-1 block ml-2">ทีมย่อย</label>
-                        <select id="reg-sub" class="form-input" required disabled>
-                            <option value="">เลือกทีมหลักก่อน</option>
-                        </select>
+                        <label class="label-title">ทีมย่อย (Sub Team)</label>
+                        <select id="edit-sub-team" class="form-input"></select>
                     </div>
-                </div>
-
-                <div id="pass-area" class="pt-4 border-t">
-                    <label class="text-[10px] font-black text-slate-400 uppercase ml-2 mb-1 block">รหัสผ่าน</label>
-                    <input type="password" id="reg-password" class="form-input" placeholder="ระบุเพื่อตั้งค่าใหม่">
                 </div>
 
                 <div class="pt-4 flex gap-3">
-                    <button type="button" onclick="closeRegisterModal()" class="flex-1 py-4 bg-slate-100 text-slate-600 rounded-2xl font-bold">ยกเลิก</button>
-                    <button type="submit" id="saveBtn" class="flex-1 py-4 bg-[#5d58f0] text-white rounded-2xl font-bold shadow-lg">บันทึกข้อมูล</button>
+                    <button type="button" onclick="closeModal()" class="flex-1 py-3 bg-slate-100 text-slate-600 rounded-xl font-bold hover:bg-slate-200 transition">ยกเลิก</button>
+                    <button type="submit" id="saveBtn" class="flex-[2] py-3 bg-indigo-600 text-white rounded-xl font-bold shadow-lg shadow-indigo-100 hover:bg-indigo-700 transition flex items-center justify-center gap-2">
+                        <i class="fa-solid fa-floppy-disk"></i> บันทึกการเปลี่ยนแปลง
+                    </button>
                 </div>
             </form>
         </div>
     </div>
 
-    <div id="logout-modal" class="fixed inset-0 z-[100] hidden">
-        <div class="absolute inset-0 bg-slate-900/40 backdrop-blur-sm"></div>
-        <div class="absolute inset-0 flex items-center justify-center p-4">
-            <div class="bg-white w-full max-w-sm rounded-[2.5rem] p-8 shadow-2xl">
-                <div class="w-20 h-20 bg-red-50 rounded-full flex items-center justify-center mx-auto mb-6"><span class="text-4xl">🚪</span></div>
-                <h3 class="text-2xl font-bold text-slate-800 text-center mb-2">ออกจากระบบ?</h3>
-                <div class="flex gap-3 mt-8">
-                    <button onclick="document.getElementById('logout-modal').classList.add('hidden')" class="flex-1 py-4 bg-slate-100 text-slate-600 rounded-2xl font-bold">ยกเลิก</button>
-                    <button id="confirm-logout" class="flex-1 py-4 bg-red-500 text-white rounded-2xl font-bold shadow-lg">ออกเลย</button>
-                </div>
-            </div>
-        </div>
-    </div>
-
     <script type="module">
-        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
-        import { getFirestore, collection, getDocs, doc, getDoc, updateDoc, setDoc, onSnapshot, query, orderBy, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
-        import { getAuth, onAuthStateChanged, createUserWithEmailAndPassword, signOut } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
+        import { initializeApp, getApps } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
+        import { getFirestore, collection, getDocs, doc, getDoc, updateDoc, onSnapshot } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+        import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
 
-        const firebaseConfig = { apiKey: "AIzaSyAa2uSD_tjNqYE2eXnZcn75h_jAVscDG-c", authDomain: "salesupportsystemapp.firebaseapp.com", projectId: "salesupportsystemapp", storageBucket: "salesupportsystemapp.firebasestorage.app", messagingSenderId: "840890441207", appId: "1:840890441207:web:f3a5076d46e963a90de2f2" };
-        const app = initializeApp(firebaseConfig);
+        const firebaseConfig = {
+            apiKey: "AIzaSyAa2uSD_tjNqYE2eXnZcn75h_jAVscDG-c",
+            authDomain: "salesupportsystemapp.firebaseapp.com",
+            projectId: "salesupportsystemapp",
+            storageBucket: "salesupportsystemapp.firebasestorage.app",
+            messagingSenderId: "840890441207",
+            appId: "1:840890441207:web:f3a5076d46e963a90de2f2"
+        };
+
+        const app = getApps().length === 0 ? initializeApp(firebaseConfig) : getApps()[0];
         const db = getFirestore(app);
         const auth = getAuth(app);
 
-        let allTeamsRaw = [];
+        let allTeams = [];
 
-        // --- ฟังก์ชันโหลด Layout เหมือนหน้า System Log ---
-        async function loadLayout() {
-            try {
-                // โหลด Sidebar
-                const sidebarRes = await fetch('components/sidebar.html');
-                if (sidebarRes.ok) {
-                    const sidebarHtml = await sidebarRes.text();
-                    const sidebarContainer = document.getElementById('sidebar-placeholder');
-                    sidebarContainer.innerHTML = sidebarHtml;
-                    
-                    // บังคับให้ Script ใน Sidebar ทำงาน (สำคัญมากสำหรับปุ่มเมนูและไฮไลท์)
-                    sidebarContainer.querySelectorAll("script").forEach(oldScript => {
-                        const newScript = document.createElement("script");
-                        newScript.type = oldScript.type || "text/javascript";
-                        if (oldScript.src) {
-                            newScript.src = oldScript.src;
-                        } else {
-                            newScript.textContent = oldScript.textContent;
-                        }
-                        document.head.appendChild(newScript).parentNode.removeChild(newScript);
-                    });
-                }
-
-                // โหลด Topbar
-                const topbarRes = await fetch('components/topbar.html');
-                if (topbarRes.ok) {
-                    document.getElementById('topbar-placeholder').innerHTML = await topbarRes.text();
-                }
-
-                // ตั้งค่าปุ่ม Logout ใน Topbar/Sidebar
-                setTimeout(() => {
-                    const logoutBtn = document.getElementById('main-logout-btn');
-                    if (logoutBtn) {
-                        logoutBtn.onclick = (e) => {
-                            e.preventDefault();
-                            document.getElementById('logout-modal').classList.remove('hidden');
-                        };
-                    }
-                }, 500);
-
-            } catch (error) {
-                console.error("Error loading layout:", error);
-            }
-        }
-
-        // จัดการ Logout
-        document.getElementById('confirm-logout').onclick = () => {
-            signOut(auth).then(() => window.location.href="login.html");
-        };
-
-        // --- ส่วนการจัดการข้อมูลผู้ใช้ (คงเดิมและอัปเดต List) ---
-        async function fetchTeams() {
-            const snap = await getDocs(collection(db, "teams"));
-            allTeamsRaw = snap.docs.map(d => ({ id: d.id, ...d.data() }));
-            const mainSelect = document.getElementById('reg-main');
-            const mainTeams = allTeamsRaw.filter(t => t.type === "main");
-            mainSelect.innerHTML = '<option value="" disabled selected>เลือกทีมหลัก</option>';
-            mainTeams.forEach(t => mainSelect.add(new Option(t.name, t.id)));
-        }
-
-        // Dropdown ทีมย่อย
-        document.getElementById('reg-main').onchange = (e) => {
-            const subSelect = document.getElementById('reg-sub');
-            const filtered = allTeamsRaw.filter(t => t.type === "sub" && t.parentId === e.target.value);
-            subSelect.innerHTML = '<option value="" disabled selected>เลือกทีมย่อย</option>';
-            if(filtered.length > 0) {
-                subSelect.disabled = false;
-                filtered.forEach(t => subSelect.add(new Option(t.name, t.name)));
-            } else {
-                subSelect.disabled = true;
-                subSelect.innerHTML = '<option value="">ไม่มีทีมย่อย</option>';
-            }
-        };
-
-        // ตรวจสอบ Auth และรันฟังก์ชันหลัก
+        // 1. Check Auth & Load Layout
         onAuthStateChanged(auth, async (user) => {
             if (user) {
-                await loadLayout(); // โหลด Sidebar/Topbar
-                await fetchTeams();  // โหลดข้อมูลทีม
-                
-                // ดึงรายชื่อผู้ใช้แบบ Real-time
-                onSnapshot(query(collection(db, "admin"), orderBy("name", "asc")), (snap) => {
-                    document.getElementById('user-list').innerHTML = snap.docs.map(docSnap => {
-                        const u = docSnap.data();
-                        return `
-                        <tr class="hover:bg-slate-50 border-b border-slate-50 transition">
-                            <td class="p-6">
-                                <div class="flex items-center gap-4">
-                                    <div class="w-10 h-10 rounded-full bg-indigo-50 flex items-center justify-center text-[#5d58f0] font-bold">${(u.name||"?")[0]}</div>
-                                    <div><p class="font-bold text-slate-700">${u.name}</p><p class="text-[10px] text-slate-400 font-bold uppercase">${u.Team||'-'} / ${u['Sub Team']||'-'}</p></div>
-                                </div>
-                            </td>
-                            <td class="p-6 text-slate-500 font-medium">${u['Phone No.']||'-'}</td>
-                            <td class="p-6 text-center"><span class="px-3 py-1 rounded-full text-[10px] font-black uppercase ${u.role==='admin'?'bg-amber-100 text-amber-700':'bg-indigo-100 text-indigo-700'}">${u.role||'user'}</span></td>
-                            <td class="p-6 text-right"><button onclick="editUser('${docSnap.id}')" class="text-[#5d58f0] font-bold hover:underline">แก้ไข</button></td>
-                        </tr>`;
-                    }).join('');
-                });
-            } else {
-                window.location.href="login.html";
-            }
+                const adminSnap = await getDoc(doc(db, "admin", user.uid));
+                if (adminSnap.exists() && adminSnap.data().role === 'admin') {
+                    loadLayout(adminSnap.data(), user.email);
+                    await fetchTeams();
+                    listenToUsers();
+                } else { window.location.replace("dashboard.html"); }
+            } else { window.location.replace("login.html"); }
         });
 
-        // เปิด Modal เพิ่ม/แก้ไข (Expose functions to window)
-        window.openRegisterModal = () => {
-            document.getElementById('registerForm').reset();
-            document.getElementById('edit-uid').value = '';
-            document.getElementById('modal-title').innerText = "เพิ่มพนักงานใหม่";
-            document.getElementById('registerModal').classList.remove('hidden');
+        async function loadLayout(userData, email) {
+            const comps = [{ id: 'sidebar-placeholder', url: './components/sidebar.html' }, { id: 'topbar-placeholder', url: './components/topbar.html' }];
+            for (const comp of comps) {
+                const res = await fetch(comp.url);
+                if (res.ok) {
+                    const el = document.getElementById(comp.id);
+                    el.innerHTML = await res.text();
+                    el.querySelectorAll("script").forEach(s => {
+                        const ns = document.createElement("script"); ns.type = "module"; ns.textContent = s.textContent; document.head.appendChild(ns);
+                    });
+                }
+            }
+        }
+
+        // 2. Fetch Teams for Dropdown
+        async function fetchTeams() {
+            const snap = await getDocs(collection(db, "teams"));
+            allTeams = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+            
+            const mainSelect = document.getElementById('edit-main-team');
+            mainSelect.innerHTML = '<option value="">-- เลือกทีมหลัก --</option>';
+            allTeams.filter(t => t.type === "main").forEach(t => {
+                mainSelect.add(new Option(t.name, t.id));
+            });
+        }
+
+        // 3. Listen to Users (Real-time)
+        function listenToUsers() {
+            onSnapshot(collection(db, "admin"), (snapshot) => {
+                const container = document.getElementById('user-list');
+                container.innerHTML = snapshot.docs.map(docSnap => {
+                    const u = docSnap.data();
+                    const initials = (u.name || "U")[0].toUpperCase();
+                    return `
+                        <div class="user-card bg-white p-6 rounded-[2rem] shadow-sm flex flex-col items-center text-center">
+                            <div class="w-20 h-20 bg-indigo-50 text-indigo-600 rounded-3xl flex items-center justify-center text-2xl font-bold mb-4">
+                                ${initials}
+                            </div>
+                            <h3 class="font-bold text-slate-800 text-lg">${u.name || 'ไม่ระบุชื่อ'}</h3>
+                            <p class="text-xs text-slate-400 mb-4 font-medium uppercase tracking-widest">${u.role || 'user'}</p>
+                            
+                            <div class="w-full grid grid-cols-2 gap-2 mb-6">
+                                <div class="bg-slate-50 p-2 rounded-xl">
+                                    <p class="text-[9px] text-slate-400 font-bold uppercase">Team</p>
+                                    <p class="text-xs font-bold text-slate-700 truncate">${u.Team || '-'}</p>
+                                </div>
+                                <div class="bg-slate-50 p-2 rounded-xl">
+                                    <p class="text-[9px] text-slate-400 font-bold uppercase">Sub Team</p>
+                                    <p class="text-xs font-bold text-slate-700 truncate">${u["Sub Team"] || '-'}</p>
+                                </div>
+                            </div>
+
+                            <button onclick="openEditModal('${docSnap.id}')" class="w-full py-3 bg-slate-900 text-white rounded-xl text-sm font-bold hover:bg-indigo-600 transition">
+                                <i class="fa-solid fa-pen-to-square mr-2"></i> แก้ไขข้อมูล
+                            </button>
+                        </div>
+                    `;
+                }).join('');
+            });
+        }
+
+        // 4. Modal Functions
+        window.openEditModal = async (uid) => {
+            const snap = await getDoc(doc(db, "admin", uid));
+            if (!snap.exists()) return;
+            const u = snap.data();
+
+            document.getElementById('edit-uid').value = uid;
+            document.getElementById('edit-name').value = u.name || "";
+            document.getElementById('edit-role').value = u.role || "user";
+            document.getElementById('edit-phone').value = u["Phone No."] || "";
+            
+            // Set Team Dropdowns
+            const mainTeam = allTeams.find(t => t.name === u.Team && t.type === "main");
+            if (mainTeam) {
+                document.getElementById('edit-main-team').value = mainTeam.id;
+                renderSubTeams(mainTeam.id, u["Sub Team"]);
+            } else {
+                document.getElementById('edit-main-team').value = "";
+                renderSubTeams(null);
+            }
+
+            document.getElementById('editModal').classList.remove('hidden');
         };
-        window.closeRegisterModal = () => document.getElementById('registerModal').classList.add('hidden');
-        
-        // [ฟังก์ชัน editUser และ Submit คงเดิม...]
+
+        window.closeModal = () => document.getElementById('editModal').classList.add('hidden');
+
+        document.getElementById('edit-main-team').onchange = (e) => renderSubTeams(e.target.value);
+
+        function renderSubTeams(parentId, currentSub = null) {
+            const subSelect = document.getElementById('edit-sub-team');
+            const subs = allTeams.filter(t => t.type === "sub" && t.parentId === parentId);
+            subSelect.innerHTML = '<option value="">-- ไม่มีทีมย่อย --</option>';
+            if (subs.length > 0) {
+                subSelect.disabled = false;
+                subs.forEach(t => {
+                    const opt = new Option(t.name, t.name);
+                    if (t.name === currentSub) opt.selected = true;
+                    subSelect.add(opt);
+                });
+            } else {
+                subSelect.disabled = true;
+            }
+        }
+
+        // 5. Save Action
+        document.getElementById('edit-user-form').onsubmit = async (e) => {
+            e.preventDefault();
+            const uid = document.getElementById('edit-uid').value;
+            const btn = document.getElementById('saveBtn');
+            
+            btn.disabled = true;
+            btn.innerHTML = `<i class="fa-solid fa-circle-notch animate-spin"></i> กำลังบันทึก...`;
+
+            try {
+                const mainSelect = document.getElementById('edit-main-team');
+                const mainTeamName = mainSelect.options[mainSelect.selectedIndex].text;
+                
+                await updateDoc(doc(db, "admin", uid), {
+                    name: document.getElementById('edit-name').value,
+                    role: document.getElementById('edit-role').value,
+                    "Phone No.": document.getElementById('edit-phone').value,
+                    Team: mainTeamName === "-- เลือกทีมหลัก --" ? "" : mainTeamName,
+                    "Sub Team": document.getElementById('edit-sub-team').value
+                });
+
+                closeModal();
+                alert("อัปเดตข้อมูลสำเร็จ");
+            } catch (err) {
+                alert("Error: " + err.message);
+            } finally {
+                btn.disabled = false;
+                btn.innerHTML = `<i class="fa-solid fa-floppy-disk"></i> บันทึกการเปลี่ยนแปลง`;
+            }
+        };
     </script>
 </body>
 </html>

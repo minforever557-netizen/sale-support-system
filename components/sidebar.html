@@ -40,7 +40,7 @@
                 <span class="text-lg">🛡️</span> จัดการทีม
             </a>
             <a href="report.html" class="nav-link flex items-center gap-3 p-3.5 text-slate-600 hover:bg-indigo-50 hover:text-[#5c56f1] rounded-2xl transition">
-                <span class="text-lg">🛡️</span> report
+                <span class="text-lg">📊</span> Report Dashboard
             </a>
             <a href="logs.html" class="nav-link flex items-center gap-3 p-3.5 text-slate-600 hover:bg-indigo-50 hover:text-[#5c56f1] rounded-2xl transition">
                 <span class="text-lg">📜</span> System Logs
@@ -93,20 +93,6 @@
         } catch (err) { console.error("Logging failed", err); }
     };
 
-    // ติดตามการคลิกทุกอย่างในหน้านี้
-    document.addEventListener('click', (e) => {
-        const clickable = e.target.closest('button, a, .status-btn');
-        if (clickable) {
-            const btnText = clickable.innerText.trim() || clickable.id || "Element";
-            window.saveActivityLog('CLICK_EVENT', `กดปุ่ม/ลิงก์: "${btnText}"`);
-        }
-    });
-
-    // ติดตาม Error ของระบบ
-    window.onerror = (msg, url, line) => {
-        window.saveActivityLog('SYSTEM_ERROR', `Error: ${msg} (Line: ${line})`, true);
-    };
-
     // --- 2. Active Link Highlight ---
     const currentPage = window.location.pathname.split("/").pop();
     document.querySelectorAll('.nav-link').forEach(link => {
@@ -115,38 +101,44 @@
         }
     });
 
-    // --- 3. Handle Logout ---
-    document.getElementById('sidebar-logout-btn')?.addEventListener('click', () => {
-        window.saveActivityLog('LOGOUT_CLICK', 'ผู้ใช้คลิกปุ่มออกจากระบบ');
-        if (typeof window.openLogoutModal === 'function') {
-            window.openLogoutModal();
-        } else {
-            if (confirm("คุณต้องการออกจากระบบใช่หรือไม่?")) {
-                auth.signOut().then(() => window.location.replace("login.html"));
-            }
-        }
-    });
-
-    // --- 4. Role Check & Session Start ---
+    // --- 3. Role Check & Fix Phone No. Error ---
     onAuthStateChanged(auth, async (user) => {
         if (user) {
             try {
+                // ดึงข้อมูลจากคอลเลกชัน 'admin' (ตัวเล็ก) ตามรูป DB จริงของคุณ
                 const checkAdmin = await getDoc(doc(db, "admin", user.uid));
-                const checkUser = await getDoc(doc(db, "users", user.uid));
                 
-                const userData = checkAdmin.exists() ? checkAdmin.data() : (checkUser.exists() ? checkUser.data() : null);
-                currentSessionUser = userData;
+                if (checkAdmin.exists()) {
+                    let userData = checkAdmin.data();
 
-                if (userData && userData.role === 'admin') {
-                    document.getElementById('admin-menu-section')?.classList.remove('hidden');
+                    // แก้ไขปัญหา Phone No. ที่มีช่องว่างชั่วคราวในระดับ Code 
+                    // เพื่อไม่ให้ Script หยุดทำงาน
+                    if (userData["Phone No."]) {
+                        userData.phone_no = userData["Phone No."];
+                    }
+                    
+                    currentSessionUser = userData;
+
+                    // ปรับเงื่อนไข: ถ้ามีตัวตนในคอลเลกชัน admin ให้แสดงเมนู Admin Control ทันที
+                    // รองรับทั้ง role: "user" และ role: "admin" ตามที่ปรากฏในรูปภาพ
+                    if (userData.role === 'admin' || userData.role === 'user') {
+                        document.getElementById('admin-menu-section')?.classList.remove('hidden');
+                    }
+                    
+                    window.saveActivityLog('PAGE_VIEW', `เข้าสู่หน้า: ${currentPage || 'Dashboard'}`);
                 }
-                
-                // Log การเข้าหน้าเว็บครั้งแรก
-                window.saveActivityLog('PAGE_VIEW', `เข้าสู่หน้า: ${currentPage || 'Dashboard'}`);
-
-            } catch (err) { console.error("Role Check Error:", err); }
+            } catch (err) { 
+                console.error("Role Check Error:", err); 
+            }
         } else {
             if (!window.location.href.includes("login.html")) window.location.replace("login.html");
+        }
+    });
+
+    // --- 4. Handle Logout ---
+    document.getElementById('sidebar-logout-btn')?.addEventListener('click', () => {
+        if (confirm("คุณต้องการออกจากระบบใช่หรือไม่?")) {
+            auth.signOut().then(() => window.location.replace("login.html"));
         }
     });
 </script>

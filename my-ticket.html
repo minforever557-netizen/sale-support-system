@@ -9,10 +9,12 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
     <style>
         body { font-family: 'Kanit', sans-serif; background-color: #f8fafc; }
+        
+        /* Modal Animation - Consistency with other pages */
         .modal-animate { animation: fadeIn 0.3s cubic-bezier(0.34, 1.56, 0.64, 1); }
         @keyframes fadeIn { from { opacity: 0; transform: translateY(20px) scale(0.95); } to { opacity: 1; transform: translateY(0) scale(1); } }
         
-        .ticket-row { transition: all 0.2s; border-radius: 1rem; }
+        .ticket-row { transition: all 0.2s; border-radius: 1.25rem; }
         .ticket-row:hover { background-color: #f1f5f9; transform: scale(1.002); }
         
         .status-tab { transition: all 0.3s; cursor: pointer; position: relative; }
@@ -21,6 +23,12 @@
         
         #modalBody::-webkit-scrollbar { width: 5px; }
         #modalBody::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 10px; }
+
+        /* Logout Modal Styles */
+        .modal-active { overflow: hidden; }
+        #logout-modal { transition: visibility 0.3s; }
+        #modal-backdrop { transition: opacity 0.3s ease-out; }
+        #logout-modal-content { transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1); }
     </style>
 </head>
 <body class="flex min-h-screen items-start">
@@ -37,7 +45,7 @@
                     <h2 class="text-3xl font-bold text-slate-800 tracking-tight">ใบงานของฉัน</h2>
                     <p class="text-slate-500 mt-1">รายการ Ticket ทั้งหมดที่คุณเป็นเจ้าของ</p>
                 </div>
-                <a href="new-ticket.html" class="bg-[#5c67f2] hover:bg-[#4a54d4] text-white px-8 py-4 rounded-2xl font-bold transition-all shadow-lg shadow-indigo-200 flex items-center gap-3 active:scale-95">
+                <a href="new-ticket.html" class="bg-[#5c67f2] hover:bg-[#4a54d4] text-white px-8 py-4 rounded-2xl font-bold transition-all shadow-lg shadow-indigo-100 flex items-center gap-3 active:scale-95">
                     <i class="fa-solid fa-plus"></i>
                     สร้าง Ticket ใหม่
                 </a>
@@ -97,10 +105,7 @@
                 </div>
                 <button onclick="closeModal()" class="w-10 h-10 flex items-center justify-center bg-white/10 hover:bg-white/20 rounded-2xl transition text-white">✕</button>
             </div>
-            
-            <div id="modalBody" class="p-8 space-y-6 overflow-y-auto bg-slate-50/30 flex-1">
-                </div>
-
+            <div id="modalBody" class="p-8 space-y-6 overflow-y-auto bg-slate-50/30 flex-1"></div>
             <div class="p-6 bg-white text-center border-t border-slate-100">
                 <button onclick="closeModal()" class="w-full py-4 bg-slate-100 text-slate-600 rounded-2xl font-bold hover:bg-slate-200 transition active:scale-[0.98]">ปิดหน้าต่าง</button>
             </div>
@@ -110,13 +115,13 @@
     <div id="logout-modal" class="fixed inset-0 z-[100] hidden">
         <div class="absolute inset-0 bg-slate-900/40 backdrop-blur-sm opacity-0" id="modal-backdrop"></div>
         <div class="absolute inset-0 flex items-center justify-center p-4">
-            <div class="bg-white w-full max-w-sm rounded-[2.5rem] p-8 shadow-2xl scale-90 opacity-0 transition-all" id="logout-modal-content">
+            <div class="bg-white w-full max-w-sm rounded-[2.5rem] p-8 shadow-2xl scale-90 opacity-0" id="logout-modal-content">
                 <div class="w-20 h-20 bg-red-50 rounded-full flex items-center justify-center mx-auto mb-6 text-4xl">🚪</div>
                 <h3 class="text-2xl font-bold text-slate-800 text-center mb-2">ออกจากระบบ?</h3>
-                <p class="text-slate-500 text-center mb-8 text-sm px-4">คุณต้องการปิดเซสชันและออกจากระบบใช่หรือไม่?</p>
+                <p class="text-slate-500 text-center mb-8 text-sm px-4">คุณต้องการออกจากระบบ Sale Support System ใช่หรือไม่?</p>
                 <div class="flex gap-3">
                     <button id="close-logout" class="flex-1 py-4 bg-slate-100 text-slate-600 rounded-2xl font-bold hover:bg-slate-200 transition-colors">ยกเลิก</button>
-                    <button id="confirm-logout" class="flex-1 py-4 bg-red-500 text-white rounded-2xl font-bold hover:bg-red-600 shadow-lg shadow-red-200 transition-all">ยืนยัน</button>
+                    <button id="confirm-logout" class="flex-1 py-4 bg-red-500 text-white rounded-2xl font-bold hover:bg-red-600 shadow-lg shadow-red-100 transition-all active:scale-95">ยืนยัน</button>
                 </div>
             </div>
         </div>
@@ -143,6 +148,7 @@
         let allTickets = [];
         let currentFilter = 'all';
 
+        // --- Layout & Auth ---
         onAuthStateChanged(auth, async (user) => {
             if (user) {
                 await loadLayout();
@@ -153,16 +159,21 @@
         });
 
         const loadLayout = async () => {
+            // Sidebar
             const sidebar = await fetch('./components/sidebar.html').then(r => r.text());
             document.getElementById('sidebar-placeholder').innerHTML = sidebar;
+            
+            // Topbar
             const topbarRes = await fetch('./components/topbar.html');
             if (topbarRes.ok) document.getElementById('topbar-placeholder').innerHTML = await topbarRes.text();
 
+            // Bind Global Logout Event (For Sidebar Button)
             document.addEventListener('click', (e) => {
                 if (e.target.closest('#main-logout-btn')) openLogoutModal();
             });
         };
 
+        // --- Ticket Logic ---
         function listenToMyTickets() {
             const user = auth.currentUser;
             const sort = document.getElementById('sortOrder').value;
@@ -177,7 +188,7 @@
                 applyFilters();
             }, (err) => {
                 console.error(err);
-                document.getElementById('ticket-list').innerHTML = `<tr><td colspan="5" class="p-10 text-center text-red-500 font-bold italic">กรุณาตรวจสอบการตั้งค่า Firebase Index</td></tr>`;
+                document.getElementById('ticket-list').innerHTML = `<tr><td colspan="5" class="p-10 text-center text-red-500 font-bold italic">เกิดข้อผิดพลาดในการโหลดข้อมูล</td></tr>`;
             });
         }
 
@@ -206,7 +217,7 @@
                 list.innerHTML = `<tr><td colspan="5" class="p-32 text-center text-slate-400">
                     <div class="flex flex-col items-center gap-3">
                         <span class="text-5xl opacity-20">📁</span>
-                        <p class="font-medium">ไม่พบข้อมูลใบงานในหน้านี้</p>
+                        <p class="font-medium">ไม่พบข้อมูลใบงาน</p>
                     </div>
                 </td></tr>`;
                 return;
@@ -243,11 +254,11 @@
                                     </span>
                                     <span class="text-[9px] text-slate-400">${slaDate ? slaDate.toLocaleDateString('th-TH') : ''}</span>
                                 </div>
-                                ${isOverdue ? '<span class="animate-ping w-2 h-2 rounded-full bg-red-500"></span>' : ''}
+                                ${isOverdue ? '<span class="relative flex h-2 w-2"><span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-red-400 opacity-75"></span><span class="relative inline-flex rounded-full h-2 w-2 bg-red-500"></span></span>' : ''}
                             </div>
                         </td>
                         <td class="p-6 text-right">
-                            <button onclick="viewTicket('${t.id}')" class="bg-indigo-50 hover:bg-indigo-600 text-indigo-600 hover:text-white px-6 py-2.5 rounded-xl text-[11px] font-black transition-all active:scale-90">
+                            <button onclick="viewTicket('${t.id}')" class="bg-indigo-50 hover:bg-[#5c67f2] text-[#5c67f2] hover:text-white px-6 py-2.5 rounded-xl text-[11px] font-black transition-all active:scale-90">
                                 รายละเอียด
                             </button>
                         </td>
@@ -261,20 +272,18 @@
             const body = document.getElementById('modalBody');
             document.getElementById('modal-ticket-id').innerText = `TICKET ID: ${id}`;
             modal.classList.remove('hidden');
-            body.innerHTML = '<div class="p-20 text-center text-slate-400 italic">กำลังดึงข้อมูลจาก Server...</div>';
+            body.innerHTML = '<div class="p-20 text-center"><div class="inline-block animate-spin rounded-full h-8 w-8 border-4 border-indigo-500 border-t-transparent"></div></div>';
             
             try {
                 const docSnap = await getDoc(doc(db, "tickets", id));
                 if (docSnap.exists()) {
                     const d = docSnap.data();
-                    const isClosed = ["Success", "Completed", "Rejected"].includes(d.status);
-                    
                     let adminSection = d.adminComment ? `
                         <div class="mt-4 p-6 bg-indigo-50/50 rounded-[2rem] border border-indigo-100/50">
                             <div class="flex items-center gap-2 mb-4">
-                                <div class="w-8 h-8 bg-indigo-600 rounded-lg flex items-center justify-center text-white text-[10px]"><i class="fa-solid fa-user-tie"></i></div>
+                                <div class="w-8 h-8 bg-[#5c67f2] rounded-lg flex items-center justify-center text-white text-[10px]"><i class="fa-solid fa-user-tie"></i></div>
                                 <div>
-                                    <p class="text-[10px] font-black text-indigo-600 uppercase">เจ้าหน้าที่ผู้รับผิดชอบ</p>
+                                    <p class="text-[10px] font-black text-[#5c67f2] uppercase">เจ้าหน้าที่ผู้รับผิดชอบ</p>
                                     <p class="text-xs font-bold text-slate-700">${d.adminName || 'Admin'}</p>
                                 </div>
                             </div>
@@ -313,10 +322,11 @@
 
         window.closeModal = () => document.getElementById('detailModal').classList.add('hidden');
 
-        // Logout Modal Controls
+        // --- Logout Modal Controls ---
         const openLogoutModal = () => {
             const m = document.getElementById('logout-modal');
             m.classList.remove('hidden');
+            document.body.classList.add('modal-active');
             setTimeout(() => {
                 document.getElementById('modal-backdrop').classList.add('opacity-100');
                 document.getElementById('logout-modal-content').classList.add('opacity-100', 'scale-100');
@@ -326,7 +336,10 @@
         const closeLogoutModal = () => {
             document.getElementById('modal-backdrop').classList.remove('opacity-100');
             document.getElementById('logout-modal-content').classList.remove('opacity-100', 'scale-100');
-            setTimeout(() => document.getElementById('logout-modal').classList.add('hidden'), 300);
+            setTimeout(() => {
+                document.getElementById('logout-modal').classList.add('hidden');
+                document.body.classList.remove('modal-active');
+            }, 300);
         };
 
         document.getElementById('close-logout').onclick = closeLogoutModal;

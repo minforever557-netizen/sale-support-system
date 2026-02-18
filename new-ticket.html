@@ -9,14 +9,25 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
     <style>
         body { font-family: 'Kanit', sans-serif; background-color: #f8fafc; }
+        
+        /* 1. แก้ไข Topbar ให้ติดอยู่กับที่ */
+        #topbar-placeholder {
+            position: sticky;
+            top: 0;
+            z-index: 50;
+            width: 100%;
+            background-color: rgba(248, 250, 252, 0.8);
+            backdrop-filter: blur(8px);
+        }
+
         .glass-card { background: white; border-radius: 2.5rem; border: 1px solid #f1f5f9; box-shadow: 0 10px 50px rgba(0,0,0,0.04); }
         textarea { resize: none; line-height: 2; scrollbar-width: none; }
         textarea::-webkit-scrollbar { display: none; }
         
+        /* Modal Styles */
         .modal-active { overflow: hidden; }
-        #logout-modal { transition: visibility 0.3s; }
-        #modal-backdrop { transition: opacity 0.3s ease-out; }
-        #modal-content { transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1); }
+        .modal-backdrop-blur { backdrop-filter: blur(10px); background-color: rgba(15, 23, 42, 0.5); }
+        .modal-animate { transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1); }
     </style>
 </head>
 <body class="flex min-h-screen items-start">
@@ -80,15 +91,16 @@
         </main>
     </div>
 
-    <div id="logout-modal" class="fixed inset-0 z-[100] hidden">
-        <div class="absolute inset-0 bg-slate-900/40 backdrop-blur-sm opacity-0" id="modal-backdrop"></div>
-        <div class="absolute inset-0 flex items-center justify-center p-4">
-            <div class="bg-white w-full max-w-sm rounded-[2.5rem] p-8 shadow-2xl scale-90 opacity-0" id="modal-content">
-                <div class="w-20 h-20 bg-red-50 rounded-full flex items-center justify-center mx-auto mb-6"><span class="text-4xl">🚪</span></div>
-                <h3 class="text-2xl font-bold text-slate-800 text-center mb-2">ออกจากระบบ?</h3>
-                <div class="flex gap-3 mt-6">
+    <div id="logout-modal" class="fixed inset-0 z-[100] hidden flex items-center justify-center p-4">
+        <div class="absolute inset-0 modal-backdrop-blur opacity-0 transition-opacity duration-300" id="logout-backdrop"></div>
+        <div class="relative bg-white w-full max-w-sm rounded-[3rem] p-10 shadow-2xl scale-90 opacity-0 modal-animate" id="logout-content">
+            <div class="text-center">
+                <div class="w-20 h-20 bg-red-50 rounded-full flex items-center justify-center mx-auto mb-6"><span class="text-3xl">🚪</span></div>
+                <h3 class="text-2xl font-bold text-slate-800 mb-2">Logout?</h3>
+                <p class="text-slate-500 mb-8 text-sm">ต้องการออกจากระบบใช่หรือไม่?</p>
+                <div class="flex gap-3">
+                    <button id="confirm-logout" class="flex-1 py-4 bg-red-500 text-white rounded-2xl font-bold hover:bg-red-600 transition shadow-lg">ยืนยัน</button>
                     <button id="close-logout" class="flex-1 py-4 bg-slate-100 text-slate-600 rounded-2xl font-bold hover:bg-slate-200">ยกเลิก</button>
-                    <button id="confirm-logout" class="flex-1 py-4 bg-red-500 text-white rounded-2xl font-bold hover:bg-red-600">ยืนยัน</button>
                 </div>
             </div>
         </div>
@@ -122,127 +134,100 @@
         let currentUserData = { name: "", email: "" };
         let currentChecklist = "";
 
-        // --- ฟังก์ชันคำนวณเวลาสิ้นสุด SLA (เฉพาะเวลาทำการ) ---
+        // --- SLA Calculation Logic ---
         function calculateSLADueDate(hours) {
             let date = new Date();
             let remainingMinutes = hours * 60;
-            
-            // ตั้งค่าเวลาทำการ 08:30 - 17:30
-            const startHour = 8, startMin = 30;
-            const endHour = 17, endMin = 30;
+            const startHour = 8, startMin = 30, endHour = 17, endMin = 30;
 
             while (remainingMinutes > 0) {
                 date.setMinutes(date.getMinutes() + 1);
-                
                 const day = date.getDay();
-                const isWeekend = (day === 0 || day === 6); // 0=Sun, 6=Sat
-                
-                const currentTotalMin = date.getHours() * 60 + date.getMinutes();
-                const startTotalMin = startHour * 60 + startMin;
-                const endTotalMin = endHour * 60 + endMin;
-                const isWorkingHour = (currentTotalMin > startTotalMin && currentTotalMin <= endTotalMin);
+                const isWorkingDay = (day !== 0 && day !== 6);
+                const currentMin = date.getHours() * 60 + date.getMinutes();
+                const isWorkingHour = (currentMin > (startHour * 60 + startMin) && currentMin <= (endHour * 60 + endMin));
 
-                if (!isWeekend && isWorkingHour) {
-                    remainingMinutes--;
-                }
+                if (isWorkingDay && isWorkingHour) remainingMinutes--;
             }
             return date;
         }
 
-        // 1. Fetch Dynamic Topics
-        onSnapshot(collection(db, "topics"), (snapshot) => {
-            topicSelect.innerHTML = '<option value="">เลือกหัวข้อปัญหา</option>';
-            snapshot.forEach(doc => {
-                const data = doc.data();
-                topicsData[doc.id] = data;
-                const opt = document.createElement('option');
-                opt.value = doc.id;
-                opt.textContent = data.name;
-                topicSelect.appendChild(opt);
-            });
-        });
-
-        // 2. Change Topic & Calculate SLA
-        topicSelect.addEventListener('change', (e) => {
-            const selectedId = e.target.value;
-            if (selectedId && topicsData[selectedId]) {
-                const topic = topicsData[selectedId];
-                currentChecklist = topic.checklist || "";
-                detailInput.value = currentChecklist;
-                
-                // คำนวณวันครบกำหนด
-                const slaHours = parseInt(topic.sla) || 0;
-                const dueDate = calculateSLADueDate(slaHours);
-                
-                slaHoursText.innerText = `🕒 SLA: ${slaHours} ชม. (เวลาทำการ)`;
-                slaDueText.innerText = `คาดว่าเสร็จสิ้น: ${dueDate.toLocaleString('th-TH', { day:'2-digit', month:'short', year:'2-digit', hour:'2-digit', minute:'2-digit' })} น.`;
-                
-                slaBadge.classList.remove('hidden');
-                detailInput.focus();
-                detailInput.setSelectionRange(detailInput.value.length, detailInput.value.length);
-            } else {
-                detailInput.value = "";
-                currentChecklist = "";
-                slaBadge.classList.add('hidden');
-            }
-        });
-
-        // 3. Core Protection for Textarea (เหมือนเดิม)
-        detailInput.addEventListener('keydown', (e) => {
-            const start = detailInput.selectionStart;
-            if (e.key === 'Backspace' && start <= currentChecklist.length) {
-                if (detailInput.selectionStart === detailInput.selectionEnd) e.preventDefault();
-            }
-            if (e.key === 'Delete' && start < currentChecklist.length) e.preventDefault();
-        });
-
-        detailInput.addEventListener('input', () => {
-            if (!detailInput.value.startsWith(currentChecklist)) {
-                detailInput.value = currentChecklist + detailInput.value.substring(currentChecklist.length);
-            }
-        });
-
-        const lockCursor = () => {
-            if (detailInput.selectionStart < currentChecklist.length) {
-                detailInput.setSelectionRange(currentChecklist.length, currentChecklist.length);
-            }
-        };
-        detailInput.addEventListener('click', lockCursor);
-        detailInput.addEventListener('keyup', lockCursor);
-
-        // 4. Auth & Components Load
+        // --- Auth & Components & Topbar Sync ---
         onAuthStateChanged(auth, async (user) => {
             if (user) {
+                // Load Sidebar
                 const sRes = await fetch('./components/sidebar.html');
                 if (sRes.ok) {
-                    const sidebarPlaceholder = document.getElementById('sidebar-placeholder');
-                    sidebarPlaceholder.innerHTML = await sRes.text();
-                    sidebarPlaceholder.classList.remove('hidden');
-                    // Re-run script in sidebar if needed
-                    sidebarPlaceholder.querySelectorAll("script").forEach(s => {
-                        const newScript = document.createElement("script");
-                        newScript.type = "module";
-                        newScript.textContent = s.textContent;
-                        document.head.appendChild(newScript);
+                    const sb = document.getElementById('sidebar-placeholder');
+                    sb.innerHTML = await sRes.text();
+                    sb.classList.remove('hidden');
+                    sb.querySelectorAll("script").forEach(s => {
+                        const ns = document.createElement("script");
+                        ns.type = "module"; ns.textContent = s.textContent; document.head.appendChild(ns);
                     });
                 }
+
+                // Load Topbar
                 const tRes = await fetch('./components/topbar.html');
                 if (tRes.ok) document.getElementById('topbar-placeholder').innerHTML = await tRes.text();
 
-                const userDoc = await getDoc(doc(db, "users", user.uid));
+                // Get User Data
                 const adminDoc = await getDoc(doc(db, "admin", user.uid));
+                const userDoc = await getDoc(doc(db, "users", user.uid));
                 const data = adminDoc.exists() ? adminDoc.data() : (userDoc.exists() ? userDoc.data() : {});
                 
-                currentUserData.name = data.name || data.displayName || user.email.split('@')[0];
+                currentUserData.name = data.name || user.email.split('@')[0];
                 currentUserData.email = user.email;
+
+                // Sync UI
                 document.getElementById('form-user-name').innerText = currentUserData.name;
                 document.getElementById('form-user-avatar').innerText = currentUserData.name[0].toUpperCase();
+
+                // Critical: Sync Topbar Information
+                const checkTopbar = setInterval(() => {
+                    const topName = document.querySelector('#topbar-user-name');
+                    if (topName) {
+                        topName.innerText = currentUserData.name;
+                        document.querySelector('#topbar-user-email').innerText = currentUserData.email;
+                        document.querySelector('#topbar-avatar-text').innerText = currentUserData.name[0].toUpperCase();
+                        clearInterval(checkTopbar);
+                    }
+                }, 100);
+
             } else {
                 window.location.replace('login.html');
             }
         });
 
-        // 5. Submit Form with SLA Data
+        // --- Fetch Topics ---
+        onSnapshot(collection(db, "topics"), (snapshot) => {
+            topicSelect.innerHTML = '<option value="">เลือกหัวข้อปัญหา</option>';
+            snapshot.forEach(doc => {
+                topicsData[doc.id] = doc.data();
+                const opt = document.createElement('option');
+                opt.value = doc.id; opt.textContent = doc.data().name;
+                topicSelect.appendChild(opt);
+            });
+        });
+
+        // --- Change Topic Logic ---
+        topicSelect.addEventListener('change', (e) => {
+            const topic = topicsData[e.target.value];
+            if (topic) {
+                currentChecklist = topic.checklist || "";
+                detailInput.value = currentChecklist;
+                const dueDate = calculateSLADueDate(parseInt(topic.sla) || 0);
+                slaHoursText.innerText = `🕒 SLA: ${topic.sla} ชม.`;
+                slaDueText.innerText = `เสร็จสิ้นประมาณ: ${dueDate.toLocaleString('th-TH', {day:'2-digit', month:'short', hour:'2-digit', minute:'2-digit'})} น.`;
+                slaBadge.classList.remove('hidden');
+                detailInput.focus();
+            } else {
+                slaBadge.classList.add('hidden');
+                detailInput.value = "";
+            }
+        });
+
+        // --- Form Submission ---
         document.getElementById('ticketForm').addEventListener('submit', async (e) => {
             e.preventDefault();
             const btn = document.getElementById('submitBtn');
@@ -250,30 +235,21 @@
             btn.innerHTML = `<i class="fa-solid fa-circle-notch animate-spin"></i> กำลังส่ง...`;
 
             try {
-                const selectedTopic = topicsData[topicSelect.value];
-                const slaHours = parseInt(selectedTopic.sla) || 0;
-                const slaExpiration = calculateSLADueDate(slaHours);
+                const topic = topicsData[topicSelect.value];
+                const dueDate = calculateSLADueDate(parseInt(topic.sla) || 0);
 
                 await addDoc(collection(db, "tickets"), {
-                    topicId: topicSelect.value,
-                    topic: selectedTopic.name,
-                    sla_hours: slaHours,
-                    sla_due: slaExpiration, // เก็บเวลาที่จะหมด SLA จริงๆ
+                    topic: topic.name,
+                    sla_due: dueDate,
                     id_number: document.getElementById('id_number').value,
                     detail: detailInput.value,
                     status: "Open",
                     owner: currentUserData.name,
                     ownerEmail: currentUserData.email,
-                    createdAt: serverTimestamp(),
-                    updatedAt: serverTimestamp()
+                    createdAt: serverTimestamp()
                 });
 
-                // บันทึก Log อัตโนมัติ (ถ้ามีฟังก์ชัน Global)
-                if (window.saveActivityLog) {
-                    await window.saveActivityLog('CREATE_TICKET', `สร้างใบงาน: ${selectedTopic.name} (SLA ${slaHours}h)`);
-                }
-
-                alert('ส่งใบงานสำเร็จ! กำหนดเสร็จคือ ' + slaExpiration.toLocaleString('th-TH'));
+                alert('สร้างใบงานสำเร็จ!');
                 window.location.href = 'my-ticket.html';
             } catch (err) {
                 alert('Error: ' + err.message);
@@ -282,22 +258,33 @@
             }
         });
 
-        // Logout Modal Logic (เหมือนเดิม)
+        // --- Logout Modal Handlers ---
+        window.openLogoutModal = () => {
+            const m = document.getElementById('logout-modal');
+            m.classList.remove('hidden');
+            document.body.classList.add('modal-active');
+            setTimeout(() => {
+                document.getElementById('logout-backdrop').classList.add('opacity-100');
+                document.getElementById('logout-content').classList.remove('scale-90', 'opacity-0');
+            }, 10);
+        };
+
+        document.getElementById('close-logout').onclick = () => {
+            document.getElementById('logout-backdrop').classList.remove('opacity-100');
+            document.getElementById('logout-content').classList.add('scale-90', 'opacity-0');
+            setTimeout(() => {
+                document.getElementById('logout-modal').classList.add('hidden');
+                document.body.classList.remove('modal-active');
+            }, 300);
+        };
+
+        document.getElementById('confirm-logout').onclick = () => signOut(auth).then(() => window.location.replace("login.html"));
+
         document.addEventListener('click', (e) => {
-            if (e.target.closest('#sidebar-logout-btn')) {
-                document.getElementById('logout-modal').classList.remove('hidden');
-                setTimeout(() => {
-                    document.getElementById('modal-backdrop').classList.add('opacity-100');
-                    document.getElementById('modal-content').classList.add('opacity-100', 'scale-100');
-                }, 10);
+            if (e.target.closest('#sidebar-logout-btn') || e.target.closest('#main-logout-btn')) {
+                openLogoutModal();
             }
         });
-        document.getElementById('close-logout').onclick = () => {
-            document.getElementById('modal-backdrop').classList.remove('opacity-100');
-            document.getElementById('modal-content').classList.remove('opacity-100', 'scale-100');
-            setTimeout(() => document.getElementById('logout-modal').classList.add('hidden'), 300);
-        };
-        document.getElementById('confirm-logout').onclick = () => signOut(auth).then(() => window.location.replace("login.html"));
     </script>
 </body>
 </html>

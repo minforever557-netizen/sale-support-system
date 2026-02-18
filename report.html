@@ -6,71 +6,70 @@
     <title>Report Dashboard - Sale Support</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Kanit:wght@300;400;600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
     <style>
-        body { font-family: 'Plus Jakarta Sans', sans-serif; background-color: #F8FAFC; }
-        .glass-card { background: white; border: 1px solid #F1F5F9; border-radius: 1.5rem; box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1); }
+        body { font-family: 'Kanit', sans-serif; background-color: #f8fafc; }
+        .glass-card { background: white; border-radius: 2rem; box-shadow: 0 4px 20px -2px rgba(0,0,0,0.05); }
+        .modal-active { overflow: hidden; }
+        .modal-backdrop-blur { backdrop-filter: blur(10px); background-color: rgba(15, 23, 42, 0.5); }
     </style>
 </head>
-<body class="min-h-screen flex">
+<body class="flex min-h-screen">
 
-    <aside id="sidebar-placeholder" class="shrink-0"></aside>
+    <aside id="sidebar-placeholder" class="hidden lg:block w-64 sticky top-0 h-screen bg-white border-r border-slate-200"></aside>
 
-    <div class="flex-1 flex flex-col">
+    <div class="flex-1 flex flex-col min-w-0">
         <div id="topbar-placeholder"></div>
 
-        <main class="p-8">
-            <header class="flex justify-between items-center mb-8">
+        <main class="p-4 md:p-8 space-y-8">
+            <header class="flex justify-between items-end">
                 <div>
-                    <h1 class="text-2xl font-bold text-slate-800">Report Dashboard</h1>
-                    <p class="text-slate-500 text-sm">สรุปผลการดำเนินงานและสถิติตามทีม</p>
+                    <h2 class="text-2xl font-bold text-slate-800 tracking-tight">Report Dashboard</h2>
+                    <p class="text-sm text-slate-500">สรุปผลการทำงานรายทีมและรายหัวข้อ</p>
                 </div>
-                
-                <div class="bg-white px-4 py-2 rounded-xl border border-slate-200 shadow-sm">
-                    <select id="teamFilter" class="outline-none text-sm font-semibold text-slate-600 cursor-pointer bg-transparent">
-                        <option value="all">--- ทุกทีม (ภาพรวมทั้งหมด) ---</option>
+                <div class="bg-white px-4 py-2 rounded-xl border border-slate-200">
+                    <select id="subTeamFilter" class="outline-none text-sm font-semibold text-slate-600 bg-transparent cursor-pointer">
+                        <option value="all">--- ทุกทีมย่อย (ภาพรวมทั้งหมด) ---</option>
                     </select>
                 </div>
             </header>
 
-            <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
-                <div class="glass-card p-6 border-l-4 border-l-indigo-500">
-                    <p class="text-slate-500 text-sm font-medium">ใบงานทั้งหมดในระบบ</p>
-                    <h2 id="totalTickets" class="text-4xl font-bold text-slate-800 mt-2">0</h2>
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div class="glass-card p-8 border-l-4 border-l-indigo-500">
+                    <p class="text-slate-400 text-xs font-black uppercase tracking-widest">ใบงานทั้งหมด</p>
+                    <h3 id="stat-total" class="text-5xl font-bold text-slate-800 mt-2">0</h3>
                 </div>
-                <div class="glass-card p-6 border-l-4 border-l-emerald-500">
-                    <p class="text-slate-500 text-sm font-medium">ปิดงานสำเร็จ (ทันเวลา)</p>
-                    <h2 id="successTickets" class="text-4xl font-bold text-slate-800 mt-2">0</h2>
+                <div class="glass-card p-8 border-l-4 border-l-emerald-500">
+                    <p class="text-emerald-500 text-xs font-black uppercase tracking-widest">ดำเนินการสำเร็จ (In SLA)</p>
+                    <h3 id="stat-inSla" class="text-5xl font-bold text-slate-800 mt-2">0</h3>
                 </div>
             </div>
 
             <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
-                <div class="glass-card p-6">
-                    <h3 class="font-bold text-slate-800 mb-6 flex items-center gap-2">
-                        <div class="w-1.5 h-5 bg-indigo-500 rounded-full"></div>
-                        สัดส่วนหัวข้อปัญหา (%)
-                    </h3>
-                    <div class="h-[300px]">
-                        <canvas id="topicChart"></canvas>
-                    </div>
+                <div class="glass-card p-8">
+                    <h4 class="font-bold text-slate-700 mb-6 flex items-center gap-2">
+                        <i class="fa-solid fa-chart-pie text-indigo-500"></i> สัดส่วนหัวข้อปัญหา
+                    </h4>
+                    <div class="h-80"><canvas id="topicChart"></canvas></div>
                 </div>
 
-                <div class="glass-card p-6">
-                    <h3 class="font-bold text-slate-800 mb-6 flex items-center gap-2">
-                        <div class="w-1.5 h-5 bg-indigo-500 rounded-full"></div>
-                        ตารางสรุปจำนวน Ticket รายทีม
-                    </h3>
-                    <div class="overflow-hidden rounded-xl border border-slate-100">
-                        <table class="w-full text-left text-sm">
-                            <thead class="bg-slate-50">
-                                <tr>
-                                    <th class="px-4 py-3 font-bold text-slate-500">ชื่อทีม (MAIN TEAM)</th>
-                                    <th class="px-4 py-3 font-bold text-slate-500 text-center">จำนวนงาน</th>
-                                    <th class="px-4 py-3 font-bold text-slate-500 text-right">สัดส่วน (%)</th>
+                <div class="glass-card p-8">
+                    <h4 class="font-bold text-slate-700 mb-6 flex items-center gap-2">
+                        <i class="fa-solid fa-users text-emerald-500"></i> สถิติรายทีม (Main Team)
+                    </h4>
+                    <div class="overflow-x-auto">
+                        <table class="w-full text-left">
+                            <thead>
+                                <tr class="text-[10px] font-black text-slate-400 uppercase tracking-widest border-b">
+                                    <th class="pb-4">ชื่อทีม</th>
+                                    <th class="pb-4 text-center">จำนวน</th>
+                                    <th class="pb-4 text-right">สัดส่วน</th>
                                 </tr>
                             </thead>
                             <tbody id="teamTableBody" class="divide-y divide-slate-50">
-                                </tbody>
+                                <tr><td colspan="3" class="py-10 text-center text-slate-400 italic">กำลังโหลดข้อมูล...</td></tr>
+                            </tbody>
                         </table>
                     </div>
                 </div>
@@ -78,118 +77,208 @@
         </main>
     </div>
 
-    <div id="subTeamModal" class="fixed inset-0 z-[999] hidden flex items-center justify-center p-4">
-        <div class="absolute inset-0 bg-slate-900/40 backdrop-blur-sm" onclick="closeModal()"></div>
-        <div class="relative bg-white w-full max-w-sm rounded-[2rem] p-8 shadow-2xl">
-            <h4 id="modalMainTeam" class="text-xl font-bold text-slate-800"></h4>
-            <p class="text-indigo-500 text-xs font-bold uppercase mt-1 mb-4">รายชื่อทีมย่อย (Sub Team)</p>
-            <div id="subTeamList" class="space-y-2"></div>
-            <button onclick="closeModal()" class="w-full mt-6 py-3 bg-slate-100 text-slate-600 rounded-xl font-bold hover:bg-slate-200">ปิด</button>
+    <div id="subteam-modal" class="fixed inset-0 z-[100] hidden flex items-center justify-center p-4">
+        <div class="absolute inset-0 modal-backdrop-blur" onclick="closeSubTeamModal()"></div>
+        <div class="relative bg-white w-full max-w-sm rounded-[2.5rem] p-8 shadow-2xl scale-100 transition-all">
+            <h3 id="modal-team-name" class="text-xl font-bold text-slate-800 mb-2 text-indigo-600"></h3>
+            <p class="text-xs text-slate-400 font-bold uppercase tracking-widest mb-4">รายชื่อทีมย่อยที่พบในระบบ</p>
+            <div id="subteam-list" class="space-y-2 max-h-60 overflow-y-auto pr-2"></div>
+            <button onclick="closeSubTeamModal()" class="w-full mt-6 py-4 bg-slate-100 text-slate-600 rounded-2xl font-bold hover:bg-slate-200 transition">ปิด</button>
+        </div>
+    </div>
+
+    <div id="logout-modal" class="fixed inset-0 z-[110] hidden flex items-center justify-center p-4">
+        <div class="absolute inset-0 modal-backdrop-blur opacity-0 transition-opacity duration-300" id="logout-backdrop"></div>
+        <div class="relative bg-white w-full max-w-sm rounded-[3rem] p-10 shadow-2xl scale-90 opacity-0" id="logout-content">
+            <div class="text-center">
+                <div class="w-20 h-20 bg-red-50 rounded-full flex items-center justify-center mx-auto mb-6"><span class="text-3xl">🚪</span></div>
+                <h3 class="text-2xl font-bold text-slate-800 mb-2">Logout?</h3>
+                <p class="text-slate-500 mb-8 text-sm">ต้องการออกจากระบบใช่หรือไม่?</p>
+                <div class="flex gap-3">
+                    <button id="confirm-logout" class="flex-1 py-4 bg-red-500 text-white rounded-2xl font-bold hover:bg-red-600 transition shadow-lg">ยืนยัน</button>
+                    <button id="close-logout" class="flex-1 py-4 bg-slate-100 text-slate-600 rounded-2xl font-bold hover:bg-slate-200">ยกเลิก</button>
+                </div>
+            </div>
         </div>
     </div>
 
     <script type="module">
-        import { db } from "./js/firebase-config.js";
-        import { collection, onSnapshot } from "https://www.gstatic.com/firebasejs/11.3.0/firebase-firestore.js";
+        import { initializeApp, getApps } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
+        import { getFirestore, collection, onSnapshot, getDoc, doc } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+        import { getAuth, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
 
-        // --- ส่วนที่ 1: โหลด Sidebar และ Topbar ---
-        async function loadComponents() {
-            try {
-                const sidebarRes = await fetch('components/sidebar.html');
-                if(sidebarRes.ok) document.getElementById('sidebar-placeholder').innerHTML = await sidebarRes.text();
+        const firebaseConfig = {
+            apiKey: "AIzaSyAa2uSD_tjNqYE2eXnZcn75h_jAVscDG-c",
+            authDomain: "salesupportsystemapp.firebaseapp.com",
+            projectId: "salesupportsystemapp",
+            storageBucket: "salesupportsystemapp.firebasestorage.app",
+            messagingSenderId: "840890441207",
+            appId: "1:840890441207:web:f3a5076d46e963a90de2f2"
+        };
 
-                const topbarRes = await fetch('components/topbar.html');
-                if(topbarRes.ok) document.getElementById('topbar-placeholder').innerHTML = await topbarRes.text();
-            } catch (err) {
-                console.error("Error loading components:", err);
-            }
-        }
-        loadComponents();
+        const app = getApps().length === 0 ? initializeApp(firebaseConfig) : getApps()[0];
+        const db = getFirestore(app);
+        const auth = getAuth(app);
 
-        // --- ส่วนที่ 2: ดึงข้อมูลและประมวลผล ---
         let allTickets = [];
         let topicChart = null;
 
-        onSnapshot(collection(db, "tickets"), (snapshot) => {
-            allTickets = snapshot.docs.map(doc => doc.data());
-            
-            // อัปเดตรายชื่อใน Dropdown
-            const filter = document.getElementById('teamFilter');
-            const teams = [...new Set(allTickets.map(t => t.Team).filter(Boolean))];
-            filter.innerHTML = `<option value="all">--- ทุกทีม (ภาพรวมทั้งหมด) ---</option>` +
-                teams.map(t => `<option value="${t}">${t}</option>`).join('');
+        // --- 1. Load Layout (Sidebar & Topbar) ---
+        async function loadLayout(userData, email) {
+            const comps = [
+                { id: 'sidebar-placeholder', url: './components/sidebar.html' },
+                { id: 'topbar-placeholder', url: './components/topbar.html' }
+            ];
 
-            renderDashboard();
+            for (const comp of comps) {
+                try {
+                    const res = await fetch(comp.url);
+                    if (res.ok) {
+                        const el = document.getElementById(comp.id);
+                        el.innerHTML = await res.text();
+                        el.classList.remove('hidden');
+                        
+                        el.querySelectorAll("script").forEach(oldScript => {
+                            const newScript = document.createElement("script");
+                            newScript.type = "module";
+                            newScript.textContent = oldScript.textContent;
+                            document.head.appendChild(newScript);
+                        });
+                    }
+                } catch (e) { console.error("Error loading component:", e); }
+            }
+
+            // Set Topbar Info
+            setTimeout(() => {
+                const nameEl = document.querySelector('#topbar-user-name');
+                const emailEl = document.querySelector('#topbar-user-email');
+                if (nameEl) nameEl.innerText = userData.name || "Admin";
+                if (emailEl) emailEl.innerText = email;
+            }, 600);
+        }
+
+        // --- 2. Auth Check ---
+        onAuthStateChanged(auth, async (user) => {
+            if (user) {
+                const adminDoc = await getDoc(doc(db, "admin", user.uid));
+                if (adminDoc.exists()) {
+                    loadLayout(adminDoc.data(), user.email);
+                    initDataListener();
+                } else { window.location.replace("login.html"); }
+            } else { window.location.replace("login.html"); }
         });
 
-        function renderDashboard() {
-            const selectedTeam = document.getElementById('teamFilter').value;
-            const filtered = selectedTeam === 'all' ? allTickets : allTickets.filter(t => t.Team === selectedTeam);
+        // --- 3. Dashboard Logic ---
+        function initDataListener() {
+            onSnapshot(collection(db, "tickets"), (snapshot) => {
+                allTickets = snapshot.docs.map(d => d.data());
+                
+                // Build Sub Team Filter
+                const subTeams = [...new Set(allTickets.map(t => t["Sub Team"]).filter(Boolean))];
+                const filter = document.getElementById('subTeamFilter');
+                filter.innerHTML = `<option value="all">--- ทุกทีมย่อย (ภาพรวมทั้งหมด) ---</option>` + 
+                    subTeams.map(st => `<option value="${st}">${st}</option>`).join('');
 
-            document.getElementById('totalTickets').innerText = filtered.length;
-            document.getElementById('successTickets').innerText = filtered.filter(t => t.status === 'Completed').length;
+                renderDashboard();
+            });
+        }
+
+        function renderDashboard() {
+            const selectedSubTeam = document.getElementById('subTeamFilter').value;
+            const filtered = selectedSubTeam === 'all' ? allTickets : allTickets.filter(t => t["Sub Team"] === selectedSubTeam);
+            
+            const total = filtered.length;
+            const inSla = filtered.filter(t => t.sla_status === 'In SLA').length;
+            
+            document.getElementById('stat-total').innerText = total;
+            document.getElementById('stat-inSla').innerText = inSla;
 
             const topicStats = {};
             const teamStats = {};
 
             filtered.forEach(t => {
-                // ดึงค่าตามชื่อ Field ใน Firebase ของคุณ
-                const teamName = t.Team || "ไม่ระบุทีม";
-                const subTeamName = t["Sub Team"] || "ไม่ระบุทีมย่อย";
-                const topic = t.topic || "ทั่วไป";
+                const topic = t.topic || "ไม่ระบุหัวข้อ";
+                const team = t["Team"] || "ไม่ระบุทีม";
+                const subTeam = t["Sub Team"] || "ไม่ระบุทีมย่อย";
 
                 topicStats[topic] = (topicStats[topic] || 0) + 1;
-
-                if (!teamStats[teamName]) {
-                    teamStats[teamName] = { count: 0, subTeams: new Set() };
-                }
-                teamStats[teamName].count++;
-                teamStats[teamName].subTeams.add(subTeamName);
+                
+                if (!teamStats[team]) teamStats[team] = { count: 0, subTeams: new Set() };
+                teamStats[team].count++;
+                teamStats[team].subTeams.add(subTeam);
             });
 
-            updateChart(topicStats);
-            updateTable(teamStats, filtered.length);
-        }
-
-        function updateChart(stats) {
-            const ctx = document.getElementById('topicChart');
-            if (topicChart) topicChart.destroy();
-            topicChart = new Chart(ctx, {
+            // Render Chart
+            if(topicChart) topicChart.destroy();
+            topicChart = new Chart(document.getElementById('topicChart'), {
                 type: 'doughnut',
                 data: {
-                    labels: Object.keys(stats),
-                    datasets: [{ data: Object.values(stats), backgroundColor: ['#6366F1', '#818CF8', '#C7D2FE', '#E0E7FF'] }]
+                    labels: Object.keys(topicStats),
+                    datasets: [{
+                        data: Object.values(topicStats),
+                        backgroundColor: ['#5c56f1', '#818cf8', '#a5b4fc', '#c7d2fe', '#e0e7ff'],
+                        borderWidth: 0
+                    }]
                 },
-                options: { maintainAspectRatio: false, plugins: { legend: { position: 'bottom' } } }
+                options: { plugins: { legend: { position: 'bottom' } }, cutout: '70%' }
             });
-        }
 
-        function updateTable(stats, total) {
+            // Render Table
             const tbody = document.getElementById('teamTableBody');
-            tbody.innerHTML = Object.entries(stats).map(([name, data]) => {
-                const subTeamsArray = JSON.stringify(Array.from(data.subTeams));
-                return `
-                    <tr class="hover:bg-slate-50 cursor-pointer" onclick='openSubTeamModal("${name}", ${subTeamsArray})'>
-                        <td class="px-4 py-4 font-semibold text-slate-700">${name}</td>
-                        <td class="px-4 py-4 text-center font-bold text-indigo-600">${data.count}</td>
-                        <td class="px-4 py-4 text-right text-slate-400">${((data.count/total)*100).toFixed(1)}%</td>
-                    </tr>
-                `;
-            }).join('');
+            tbody.innerHTML = Object.entries(teamStats).map(([name, data]) => `
+                <tr class="hover:bg-slate-50 transition cursor-pointer group" onclick='showSubTeams("${name}", ${JSON.stringify(Array.from(data.subTeams))})'>
+                    <td class="py-4">
+                        <div class="font-bold text-slate-700 group-hover:text-indigo-600">${name}</div>
+                        <div class="text-[9px] text-slate-400 uppercase">คลิกเพื่อดูรายละเอียดทีมย่อย</div>
+                    </td>
+                    <td class="py-4 text-center font-bold text-indigo-600">${data.count}</td>
+                    <td class="py-4 text-right text-slate-400 text-xs">${((data.count/total)*100).toFixed(1)}%</td>
+                </tr>
+            `).join('');
         }
 
-        // ทำให้ฟังก์ชันเปิด/ปิด Modal ใช้งานได้ทั่วโลก
-        window.openSubTeamModal = (name, subTeams) => {
-            document.getElementById('modalMainTeam').innerText = name;
-            document.getElementById('subTeamList').innerHTML = subTeams.map(st => `
-                <div class="p-3 bg-slate-50 rounded-xl text-sm font-medium text-slate-700 border border-slate-100">${st}</div>
+        // --- 4. Modals & Actions ---
+        window.showSubTeams = (name, list) => {
+            document.getElementById('modal-team-name').innerText = name;
+            document.getElementById('subteam-list').innerHTML = list.map(item => `
+                <div class="flex items-center gap-3 p-3 bg-slate-50 rounded-xl border border-slate-100">
+                    <div class="w-2 h-2 bg-indigo-400 rounded-full"></div>
+                    <span class="text-sm font-medium text-slate-600">${item}</span>
+                </div>
             `).join('');
-            document.getElementById('subTeamModal').classList.remove('hidden');
+            document.getElementById('subteam-modal').classList.remove('hidden');
         };
 
-        window.closeModal = () => document.getElementById('subTeamModal').classList.add('hidden');
+        window.closeSubTeamModal = () => document.getElementById('subteam-modal').classList.add('hidden');
 
-        document.getElementById('teamFilter').addEventListener('change', renderDashboard);
+        // Logout Functions (Matching Audit Log Code)
+        window.openLogoutModal = () => {
+            const modal = document.getElementById('logout-modal');
+            modal.classList.remove('hidden');
+            document.body.classList.add('modal-active');
+            setTimeout(() => {
+                document.getElementById('logout-backdrop').classList.add('opacity-100');
+                document.getElementById('logout-content').classList.remove('scale-90', 'opacity-0');
+            }, 10);
+        };
+
+        const closeLogoutModal = () => {
+            document.getElementById('logout-backdrop').classList.remove('opacity-100');
+            document.getElementById('logout-content').classList.add('scale-90', 'opacity-0');
+            setTimeout(() => {
+                document.getElementById('logout-modal').classList.add('hidden');
+                document.body.classList.remove('modal-active');
+            }, 300);
+        };
+
+        document.getElementById('close-logout').onclick = closeLogoutModal;
+        document.getElementById('confirm-logout').onclick = async () => {
+            await signOut(auth);
+            window.location.replace("login.html");
+        };
+
+        document.getElementById('subTeamFilter').onchange = renderDashboard;
+
     </script>
 </body>
 </html>

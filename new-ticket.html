@@ -10,24 +10,21 @@
     <style>
         body { font-family: 'Kanit', sans-serif; background-color: #f8fafc; }
         
-        /* 1. แก้ไข Topbar ให้ติดอยู่กับที่ */
+        /* 1. Fix Topbar ให้ติดอยู่กับที่ */
         #topbar-placeholder {
             position: sticky;
             top: 0;
             z-index: 50;
             width: 100%;
-            background-color: rgba(248, 250, 252, 0.8);
-            backdrop-filter: blur(8px);
+            background-color: white;
+            border-bottom: 1px solid #f1f5f9;
         }
 
         .glass-card { background: white; border-radius: 2.5rem; border: 1px solid #f1f5f9; box-shadow: 0 10px 50px rgba(0,0,0,0.04); }
-        textarea { resize: none; line-height: 2; scrollbar-width: none; }
-        textarea::-webkit-scrollbar { display: none; }
+        textarea { resize: none; line-height: 2; scrollbar-width: thin; }
         
-        /* Modal Styles */
         .modal-active { overflow: hidden; }
         .modal-backdrop-blur { backdrop-filter: blur(10px); background-color: rgba(15, 23, 42, 0.5); }
-        .modal-animate { transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1); }
     </style>
 </head>
 <body class="flex min-h-screen items-start">
@@ -71,7 +68,7 @@
 
                     <div class="space-y-4">
                         <div class="flex justify-between items-start px-2">
-                            <label class="text-[11px] font-black text-slate-400 uppercase tracking-widest mt-2">3. รายละเอียดปัญหา</label>
+                            <label class="text-[11px] font-black text-slate-400 uppercase tracking-widest mt-2">3. รายละเอียดปัญหา (พิมพ์ต่อท้ายหัวข้อ)</label>
                             <div id="sla-badge" class="hidden bg-emerald-50 border border-emerald-100 p-3 rounded-2xl text-right">
                                 <p class="text-[11px] font-black text-emerald-700 uppercase tracking-tighter" id="sla-hours-text"></p>
                                 <p class="text-[10px] text-slate-500 font-medium" id="sla-due-text"></p>
@@ -92,15 +89,14 @@
     </div>
 
     <div id="logout-modal" class="fixed inset-0 z-[100] hidden flex items-center justify-center p-4">
-        <div class="absolute inset-0 modal-backdrop-blur opacity-0 transition-opacity duration-300" id="logout-backdrop"></div>
-        <div class="relative bg-white w-full max-w-sm rounded-[3rem] p-10 shadow-2xl scale-90 opacity-0 modal-animate" id="logout-content">
+        <div class="absolute inset-0 modal-backdrop-blur" id="modal-backdrop"></div>
+        <div class="relative bg-white w-full max-w-sm rounded-[2.5rem] p-8 shadow-2xl scale-90 transition-all" id="modal-content">
             <div class="text-center">
-                <div class="w-20 h-20 bg-red-50 rounded-full flex items-center justify-center mx-auto mb-6"><span class="text-3xl">🚪</span></div>
-                <h3 class="text-2xl font-bold text-slate-800 mb-2">Logout?</h3>
-                <p class="text-slate-500 mb-8 text-sm">ต้องการออกจากระบบใช่หรือไม่?</p>
-                <div class="flex gap-3">
-                    <button id="confirm-logout" class="flex-1 py-4 bg-red-500 text-white rounded-2xl font-bold hover:bg-red-600 transition shadow-lg">ยืนยัน</button>
-                    <button id="close-logout" class="flex-1 py-4 bg-slate-100 text-slate-600 rounded-2xl font-bold hover:bg-slate-200">ยกเลิก</button>
+                <div class="w-20 h-20 bg-red-50 rounded-full flex items-center justify-center mx-auto mb-6"><span class="text-4xl">🚪</span></div>
+                <h3 class="text-2xl font-bold text-slate-800 mb-2">ออกจากระบบ?</h3>
+                <div class="flex gap-3 mt-6">
+                    <button id="close-logout" class="flex-1 py-4 bg-slate-100 text-slate-600 rounded-2xl font-bold">ยกเลิก</button>
+                    <button id="confirm-logout" class="flex-1 py-4 bg-red-500 text-white rounded-2xl font-bold">ยืนยัน</button>
                 </div>
             </div>
         </div>
@@ -127,69 +123,73 @@
         const topicSelect = document.getElementById('topic');
         const detailInput = document.getElementById('detail-input');
         const slaBadge = document.getElementById('sla-badge');
-        const slaHoursText = document.getElementById('sla-hours-text');
-        const slaDueText = document.getElementById('sla-due-text');
         
         let topicsData = {};
-        let currentUserData = { name: "", email: "" };
-        let currentChecklist = "";
+        let originalLines = []; // เก็บหัวข้อต้นฉบับแยกบรรทัด
 
-        // --- SLA Calculation Logic ---
-        function calculateSLADueDate(hours) {
-            let date = new Date();
-            let remainingMinutes = hours * 60;
-            const startHour = 8, startMin = 30, endHour = 17, endMin = 30;
+        // 1. ล็อคหัวข้อ Checklist ไม่ให้ลบ
+        detailInput.addEventListener('keydown', (e) => {
+            const cursorPosition = detailInput.selectionStart;
+            const text = detailInput.value;
+            const lineIndex = text.substr(0, cursorPosition).split("\n").length - 1;
+            const currentLineText = text.split("\n")[lineIndex];
+            const originalLineText = originalLines[lineIndex] || "";
 
-            while (remainingMinutes > 0) {
-                date.setMinutes(date.getMinutes() + 1);
-                const day = date.getDay();
-                const isWorkingDay = (day !== 0 && day !== 6);
-                const currentMin = date.getHours() * 60 + date.getMinutes();
-                const isWorkingHour = (currentMin > (startHour * 60 + startMin) && currentMin <= (endHour * 60 + endMin));
-
-                if (isWorkingDay && isWorkingHour) remainingMinutes--;
+            // ถ้ากด Backspace หรือ Delete ในส่วนที่เป็นหัวข้อต้นฉบับ
+            if ((e.key === 'Backspace' || e.key === 'Delete')) {
+                const lineStartPos = text.split("\n").slice(0, lineIndex).join("\n").length + (lineIndex > 0 ? 1 : 0);
+                if (cursorPosition <= lineStartPos + originalLineText.length) {
+                    e.preventDefault();
+                }
             }
-            return date;
-        }
+        });
 
-        // --- Auth & Components & Topbar Sync ---
+        // 2. ป้องกันการลบผ่านการเลือกข้อความทับ (Selection)
+        detailInput.addEventListener('input', (e) => {
+            const lines = detailInput.value.split("\n");
+            let isModified = false;
+
+            const restoredLines = lines.map((line, i) => {
+                const original = originalLines[i] || "";
+                if (!line.startsWith(original)) {
+                    isModified = true;
+                    return original + line; // บังคับให้หัวข้อกลับมา
+                }
+                return line;
+            });
+
+            if (isModified) {
+                detailInput.value = restoredLines.join("\n");
+            }
+        });
+
+        // 3. จัดการข้อมูล Topbar และ Auth
         onAuthStateChanged(auth, async (user) => {
             if (user) {
-                // Load Sidebar
-                const sRes = await fetch('./components/sidebar.html');
-                if (sRes.ok) {
-                    const sb = document.getElementById('sidebar-placeholder');
-                    sb.innerHTML = await sRes.text();
-                    sb.classList.remove('hidden');
-                    sb.querySelectorAll("script").forEach(s => {
-                        const ns = document.createElement("script");
-                        ns.type = "module"; ns.textContent = s.textContent; document.head.appendChild(ns);
-                    });
-                }
-
-                // Load Topbar
-                const tRes = await fetch('./components/topbar.html');
+                // โหลด Sidebar/Topbar
+                const [sRes, tRes] = await Promise.all([
+                    fetch('./components/sidebar.html'),
+                    fetch('./components/topbar.html')
+                ]);
+                
+                if (sRes.ok) document.getElementById('sidebar-placeholder').innerHTML = await sRes.text();
                 if (tRes.ok) document.getElementById('topbar-placeholder').innerHTML = await tRes.text();
 
-                // Get User Data
+                // ดึงข้อมูล User
                 const adminDoc = await getDoc(doc(db, "admin", user.uid));
-                const userDoc = await getDoc(doc(db, "users", user.uid));
-                const data = adminDoc.exists() ? adminDoc.data() : (userDoc.exists() ? userDoc.data() : {});
-                
-                currentUserData.name = data.name || user.email.split('@')[0];
-                currentUserData.email = user.email;
+                const userData = adminDoc.exists() ? adminDoc.data() : { name: user.email.split('@')[0] };
 
-                // Sync UI
-                document.getElementById('form-user-name').innerText = currentUserData.name;
-                document.getElementById('form-user-avatar').innerText = currentUserData.name[0].toUpperCase();
+                // อัปเดตข้อมูลหน้าเว็บ
+                document.getElementById('form-user-name').innerText = userData.name;
+                document.getElementById('form-user-avatar').innerText = userData.name[0].toUpperCase();
 
-                // Critical: Sync Topbar Information
+                // **ส่วนสำคัญ: อัปเดต Topbar ข้อมูล Systemlog**
                 const checkTopbar = setInterval(() => {
                     const topName = document.querySelector('#topbar-user-name');
                     if (topName) {
-                        topName.innerText = currentUserData.name;
-                        document.querySelector('#topbar-user-email').innerText = currentUserData.email;
-                        document.querySelector('#topbar-avatar-text').innerText = currentUserData.name[0].toUpperCase();
+                        topName.innerText = userData.name;
+                        document.querySelector('#topbar-user-email').innerText = user.email;
+                        document.querySelector('#topbar-avatar-text').innerText = userData.name[0].toUpperCase();
                         clearInterval(checkTopbar);
                     }
                 }, 100);
@@ -199,10 +199,10 @@
             }
         });
 
-        // --- Fetch Topics ---
-        onSnapshot(collection(db, "topics"), (snapshot) => {
+        // 4. โหลดหัวข้อปัญหา
+        onSnapshot(collection(db, "topics"), (snap) => {
             topicSelect.innerHTML = '<option value="">เลือกหัวข้อปัญหา</option>';
-            snapshot.forEach(doc => {
+            snap.forEach(doc => {
                 topicsData[doc.id] = doc.data();
                 const opt = document.createElement('option');
                 opt.value = doc.id; opt.textContent = doc.data().name;
@@ -210,80 +210,28 @@
             });
         });
 
-        // --- Change Topic Logic ---
         topicSelect.addEventListener('change', (e) => {
             const topic = topicsData[e.target.value];
             if (topic) {
-                currentChecklist = topic.checklist || "";
-                detailInput.value = currentChecklist;
-                const dueDate = calculateSLADueDate(parseInt(topic.sla) || 0);
-                slaHoursText.innerText = `🕒 SLA: ${topic.sla} ชม.`;
-                slaDueText.innerText = `เสร็จสิ้นประมาณ: ${dueDate.toLocaleString('th-TH', {day:'2-digit', month:'short', hour:'2-digit', minute:'2-digit'})} น.`;
+                const checklistText = topic.checklist || "";
+                originalLines = checklistText.split("\n"); // เก็บหัวข้อไว้เช็ค
+                detailInput.value = checklistText;
+                
+                document.getElementById('sla-hours-text').innerText = `🕒 SLA: ${topic.sla} ชม.`;
                 slaBadge.classList.remove('hidden');
-                detailInput.focus();
-            } else {
-                slaBadge.classList.add('hidden');
-                detailInput.value = "";
             }
         });
 
-        // --- Form Submission ---
-        document.getElementById('ticketForm').addEventListener('submit', async (e) => {
-            e.preventDefault();
-            const btn = document.getElementById('submitBtn');
-            btn.disabled = true;
-            btn.innerHTML = `<i class="fa-solid fa-circle-notch animate-spin"></i> กำลังส่ง...`;
-
-            try {
-                const topic = topicsData[topicSelect.value];
-                const dueDate = calculateSLADueDate(parseInt(topic.sla) || 0);
-
-                await addDoc(collection(db, "tickets"), {
-                    topic: topic.name,
-                    sla_due: dueDate,
-                    id_number: document.getElementById('id_number').value,
-                    detail: detailInput.value,
-                    status: "Open",
-                    owner: currentUserData.name,
-                    ownerEmail: currentUserData.email,
-                    createdAt: serverTimestamp()
-                });
-
-                alert('สร้างใบงานสำเร็จ!');
-                window.location.href = 'my-ticket.html';
-            } catch (err) {
-                alert('Error: ' + err.message);
-                btn.disabled = false;
-                btn.innerHTML = "ยืนยันการส่งข้อมูล";
-            }
-        });
-
-        // --- Logout Modal Handlers ---
+        // 5. ระบบ Logout
         window.openLogoutModal = () => {
-            const m = document.getElementById('logout-modal');
-            m.classList.remove('hidden');
-            document.body.classList.add('modal-active');
-            setTimeout(() => {
-                document.getElementById('logout-backdrop').classList.add('opacity-100');
-                document.getElementById('logout-content').classList.remove('scale-90', 'opacity-0');
-            }, 10);
+            document.getElementById('logout-modal').classList.remove('hidden');
         };
 
-        document.getElementById('close-logout').onclick = () => {
-            document.getElementById('logout-backdrop').classList.remove('opacity-100');
-            document.getElementById('logout-content').classList.add('scale-90', 'opacity-0');
-            setTimeout(() => {
-                document.getElementById('logout-modal').classList.add('hidden');
-                document.body.classList.remove('modal-active');
-            }, 300);
-        };
-
+        document.getElementById('close-logout').onclick = () => document.getElementById('logout-modal').classList.add('hidden');
         document.getElementById('confirm-logout').onclick = () => signOut(auth).then(() => window.location.replace("login.html"));
 
         document.addEventListener('click', (e) => {
-            if (e.target.closest('#sidebar-logout-btn') || e.target.closest('#main-logout-btn')) {
-                openLogoutModal();
-            }
+            if (e.target.closest('#sidebar-logout-btn') || e.target.closest('#main-logout-btn')) openLogoutModal();
         });
     </script>
 </body>

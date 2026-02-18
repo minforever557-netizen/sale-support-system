@@ -9,14 +9,10 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
     <style>
         body { font-family: 'Kanit', sans-serif; background-color: #f8fafc; }
+        #topbar-placeholder { position: sticky; top: 0; z-index: 50; width: 100%; }
+        .status-badge { @apply px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-widest; }
         .modal-active { overflow: hidden; }
         .modal-backdrop-blur { backdrop-filter: blur(10px); background-color: rgba(15, 23, 42, 0.5); }
-        .modal-animate { transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1); }
-        .ticket-row { transition: all 0.2s; cursor: pointer; }
-        .ticket-row:hover { background-color: #f8fafc; transform: translateY(-1px); }
-        .status-tab { transition: all 0.3s; cursor: pointer; position: relative; }
-        .status-tab.active { color: #5c67f2; }
-        .status-tab.active::after { content: ''; position: absolute; bottom: -12px; left: 0; width: 100%; height: 3px; background: #5c67f2; border-radius: 10px; }
     </style>
 </head>
 <body class="flex min-h-screen">
@@ -26,42 +22,28 @@
     <div class="flex-1 flex flex-col min-w-0">
         <div id="topbar-placeholder"></div>
 
-        <main class="p-6 md:p-10 max-w-7xl mx-auto w-full space-y-8">
-            <div class="flex flex-col md:flex-row justify-between items-start md:items-center gap-6">
-                <div>
-                    <h2 class="text-3xl font-bold text-slate-800 tracking-tight">ใบงานของฉัน</h2>
-                    <p class="text-slate-500 mt-1">รายการ Ticket ทั้งหมดที่คุณเป็นเจ้าของ</p>
-                </div>
-                <a href="new-ticket.html" class="bg-[#5c67f2] hover:bg-[#4a54d4] text-white px-8 py-4 rounded-2xl font-bold transition-all shadow-lg shadow-indigo-100 flex items-center gap-3 active:scale-95">
-                    <i class="fa-solid fa-plus"></i> สร้าง Ticket ใหม่
-                </a>
+        <main class="p-4 md:p-8">
+            <div class="mb-8">
+                <h2 class="text-2xl font-bold text-slate-800 tracking-tight">ใบงานของฉัน</h2>
+                <p class="text-sm text-slate-500">ติดตามสถานะและตรวจสอบรายละเอียดใบงานที่คุณแจ้ง</p>
             </div>
 
-            <div class="bg-white p-6 rounded-[2.5rem] shadow-sm border border-slate-100 space-y-6">
-                <div class="flex flex-col lg:flex-row gap-4 justify-between items-center">
-                    <div class="flex gap-8 px-4 border-b border-slate-100 w-full lg:w-auto overflow-x-auto">
-                        <div onclick="filterByStatus('all')" class="status-tab active pb-3 font-bold text-slate-400 text-sm whitespace-nowrap" id="tab-all">ทั้งหมด</div>
-                        <div onclick="filterByStatus('Pending')" class="status-tab pb-3 font-bold text-slate-400 text-sm whitespace-nowrap" id="tab-Pending">รอดำเนินการ</div>
-                        <div onclick="filterByStatus('Success')" class="status-tab pb-3 font-bold text-slate-400 text-sm whitespace-nowrap" id="tab-Success">สำเร็จแล้ว</div>
-                    </div>
-                    <div class="flex flex-col md:flex-row gap-4 w-full lg:w-auto">
-                        <input type="text" id="searchInput" placeholder="ค้นหา Internet No. หรือหัวข้อ..." class="px-6 py-3.5 bg-slate-50 border border-transparent rounded-2xl outline-none focus:bg-white focus:border-indigo-500 text-sm w-full md:w-80">
-                    </div>
-                </div>
-
-                <div class="overflow-x-auto rounded-[2rem] border border-slate-50">
+            <div class="bg-white rounded-[2.5rem] shadow-xl border border-slate-100 overflow-hidden">
+                <div class="overflow-x-auto">
                     <table class="w-full text-left border-collapse">
-                        <thead class="bg-slate-50/50">
-                            <tr>
-                                <th class="p-6 text-[10px] font-black text-slate-400 uppercase tracking-widest">Internet No. / ID</th>
-                                <th class="p-6 text-[10px] font-black text-slate-400 uppercase tracking-widest">รายละเอียดงาน</th>
-                                <th class="p-6 text-[10px] font-black text-slate-400 uppercase tracking-widest text-center">สถานะ</th>
-                                <th class="p-6 text-[10px] font-black text-slate-400 uppercase tracking-widest text-right">การจัดการ</th>
+                        <thead>
+                            <tr class="bg-slate-50/50 border-b border-slate-100">
+                                <th class="p-6 text-[10px] font-black text-slate-400 uppercase tracking-widest">1. Internet No.</th>
+                                <th class="p-6 text-[10px] font-black text-slate-400 uppercase tracking-widest">2. Create Date</th>
+                                <th class="p-6 text-[10px] font-black text-slate-400 uppercase tracking-widest">3. Topic</th>
+                                <th class="p-6 text-[10px] font-black text-slate-400 uppercase tracking-widest">4. Status</th>
+                                <th class="p-6 text-[10px] font-black text-slate-400 uppercase tracking-widest">5. Close/Update Date</th>
+                                <th class="p-6 text-[10px] font-black text-slate-400 uppercase tracking-widest text-center">6. User</th>
+                                <th class="p-6 text-center"></th>
                             </tr>
                         </thead>
-                        <tbody id="ticket-list" class="divide-y divide-slate-50">
-                            <tr><td colspan="4" class="p-20 text-center text-slate-400 italic">กำลังโหลดข้อมูล...</td></tr>
-                        </tbody>
+                        <tbody id="ticket-list" class="divide-y divide-slate-50 text-sm">
+                            </tbody>
                     </table>
                 </div>
             </div>
@@ -69,57 +51,54 @@
     </div>
 
     <div id="detail-modal" class="fixed inset-0 z-[100] hidden flex items-center justify-center p-4">
-        <div class="absolute inset-0 modal-backdrop-blur opacity-0 transition-opacity duration-300" id="detail-backdrop"></div>
-        <div class="relative bg-white w-full max-w-2xl rounded-[3rem] p-8 md:p-12 shadow-2xl scale-90 opacity-0 modal-animate overflow-y-auto max-h-[90vh]" id="detail-content">
-            <div class="flex justify-between items-start mb-8">
+        <div class="absolute inset-0 modal-backdrop-blur transition-opacity" onclick="closeDetailModal()"></div>
+        <div class="relative bg-white w-full max-w-2xl rounded-[3rem] shadow-2xl overflow-hidden">
+            <div class="bg-indigo-600 p-8 text-white flex justify-between items-center">
+                <h3 class="text-xl font-bold">รายละเอียด Ticket</h3>
+                <button onclick="closeDetailModal()" class="hover:rotate-90 transition-transform"><i class="fa-solid fa-xmark text-2xl"></i></button>
+            </div>
+            <div class="p-8 max-h-[70vh] overflow-y-auto space-y-6">
+                <div class="grid grid-cols-2 gap-6">
+                    <div>
+                        <p class="text-[10px] font-black text-slate-400 uppercase mb-1">1. Internet No.</p>
+                        <p id="det-id-number" class="font-bold text-slate-800">-</p>
+                    </div>
+                    <div>
+                        <p class="text-[10px] font-black text-slate-400 uppercase mb-1">2. Create Date</p>
+                        <p id="det-create-date" class="text-slate-600">-</p>
+                    </div>
+                </div>
                 <div>
-                    <span id="dt-status" class="px-4 py-1.5 rounded-full text-[10px] font-black uppercase tracking-widest mb-3 inline-block"></span>
-                    <h3 id="dt-topic" class="text-2xl font-bold text-slate-800 leading-tight"></h3>
-                    <p id="dt-internet-no" class="text-[#5c67f2] font-bold text-sm mt-1"></p>
+                    <p class="text-[10px] font-black text-slate-400 uppercase mb-1">3. Topic</p>
+                    <p id="det-topic" class="font-bold text-indigo-600">-</p>
                 </div>
-                <button onclick="closeDetailModal()" class="w-10 h-10 bg-slate-50 rounded-full flex items-center justify-center text-slate-400 hover:bg-slate-100 transition">
-                    <i class="fa-solid fa-xmark"></i>
-                </button>
-            </div>
-
-            <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
-                <div class="p-5 bg-slate-50 rounded-2xl">
-                    <p class="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">วันเวลาเปิด Ticket</p>
-                    <p id="dt-created" class="text-slate-700 font-semibold text-sm"></p>
+                <div>
+                    <p class="text-[10px] font-black text-slate-400 uppercase mb-1">4. รายละเอียด Ticket</p>
+                    <div id="det-detail" class="bg-slate-50 p-4 rounded-2xl text-slate-700 whitespace-pre-line border border-slate-100 text-xs"></div>
                 </div>
-                <div class="p-5 bg-slate-50 rounded-2xl">
-                    <p class="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">วันเวลาปิด Ticket</p>
-                    <p id="dt-closed" class="text-slate-700 font-semibold text-sm">-</p>
+                <div class="grid grid-cols-2 gap-6">
+                    <div>
+                        <p class="text-[10px] font-black text-slate-400 uppercase mb-1">5. User Create</p>
+                        <p id="det-user-create" class="text-slate-600">-</p>
+                    </div>
+                    <div>
+                        <p class="text-[10px] font-black text-slate-400 uppercase mb-1">6. Status</p>
+                        <span id="det-status" class="status-badge">-</span>
+                    </div>
                 </div>
-                <div class="p-5 bg-slate-50 rounded-2xl">
-                    <p class="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">ปิดโดย</p>
-                    <p id="dt-closed-by" class="text-slate-700 font-semibold text-sm">-</p>
+                <div class="p-5 bg-amber-50 rounded-[2rem] border border-amber-100">
+                    <p class="text-[10px] font-black text-amber-600 uppercase mb-2 ml-1">7. Remark จาก Admin</p>
+                    <p id="det-admin-remark" class="text-slate-700 font-medium italic">-</p>
                 </div>
-                <div class="p-5 bg-slate-50 rounded-2xl">
-                    <p class="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">ปิดด้วยหมายเลข/รหัส</p>
-                    <p id="dt-ref" class="text-slate-700 font-semibold text-sm">-</p>
-                </div>
-            </div>
-
-            <div class="space-y-4 mb-8">
-                <p class="text-[10px] font-black text-slate-400 uppercase tracking-widest px-2">รายละเอียดใบงาน</p>
-                <div class="bg-slate-50 rounded-[2rem] p-6 text-slate-600 text-sm leading-relaxed whitespace-pre-line" id="dt-desc"></div>
-            </div>
-
-            <button onclick="closeDetailModal()" class="w-full py-4 bg-slate-800 text-white rounded-2xl font-bold hover:bg-slate-900 transition-all shadow-lg">ปิดหน้าต่าง</button>
-        </div>
-    </div>
-
-    <div id="logout-modal" class="fixed inset-0 z-[100] hidden flex items-center justify-center p-4">
-        <div class="absolute inset-0 modal-backdrop-blur opacity-0 transition-opacity duration-300" id="logout-backdrop"></div>
-        <div class="relative bg-white w-full max-w-sm rounded-[3rem] p-10 shadow-2xl scale-90 opacity-0 modal-animate" id="logout-content">
-            <div class="text-center">
-                <div class="w-20 h-20 bg-red-50 rounded-full flex items-center justify-center mx-auto mb-6"><span class="text-3xl">🚪</span></div>
-                <h3 class="text-2xl font-bold text-slate-800 mb-2">Logout?</h3>
-                <p class="text-slate-500 mb-8 text-sm">ต้องการออกจากระบบใช่หรือไม่?</p>
-                <div class="flex gap-3">
-                    <button id="confirm-logout" class="flex-1 py-4 bg-red-500 text-white rounded-2xl font-bold hover:bg-red-600 transition shadow-lg">ยืนยัน</button>
-                    <button id="close-logout" class="flex-1 py-4 bg-slate-100 text-slate-600 rounded-2xl font-bold hover:bg-slate-200">ยกเลิก</button>
+                <div class="grid grid-cols-2 gap-6 pt-4 border-t border-slate-100">
+                    <div>
+                        <p class="text-[10px] font-black text-slate-400 uppercase mb-1">8. Close / Update Date</p>
+                        <p id="det-update-date" class="text-slate-600">-</p>
+                    </div>
+                    <div>
+                        <p class="text-[10px] font-black text-slate-400 uppercase mb-1">9. Admin Update User</p>
+                        <p id="det-admin-user" class="text-slate-800 font-bold">-</p>
+                    </div>
                 </div>
             </div>
         </div>
@@ -128,7 +107,7 @@
     <script type="module">
         import { initializeApp, getApps } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
         import { getFirestore, collection, query, where, orderBy, onSnapshot, doc, getDoc } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
-        import { getAuth, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
+        import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
 
         const firebaseConfig = {
             apiKey: "AIzaSyAa2uSD_tjNqYE2eXnZcn75h_jAVscDG-c",
@@ -143,112 +122,80 @@
         const db = getFirestore(app);
         const auth = getAuth(app);
 
-        let allTickets = [];
-        let currentFilter = 'all';
-
-        // --- Auth & Layout ---
-        onAuthStateChanged(auth, async (user) => {
-            if (user) {
-                const adminDoc = await getDoc(doc(db, "admin", user.uid));
-                if (adminDoc.exists()) {
-                    loadLayout(adminDoc.data(), user.email);
-                    initTicketListener(user.email);
-                }
-            } else { window.location.replace("login.html"); }
-        });
-
+        // --- Load Layout (Sidebar/Topbar) ---
         async function loadLayout(userData, email) {
-            const comps = [{ id: 'sidebar-placeholder', url: './components/sidebar.html' }, { id: 'topbar-placeholder', url: './components/topbar.html' }];
+            const comps = [
+                { id: 'sidebar-placeholder', url: './components/sidebar.html' },
+                { id: 'topbar-placeholder', url: './components/topbar.html' }
+            ];
             for (const comp of comps) {
                 const res = await fetch(comp.url);
                 if (res.ok) {
                     const el = document.getElementById(comp.id);
                     el.innerHTML = await res.text();
                     el.classList.remove('hidden');
-                    el.querySelectorAll("script").forEach(oldScript => {
-                        const newScript = document.createElement("script");
-                        newScript.type = "module";
-                        newScript.textContent = oldScript.textContent;
-                        document.head.appendChild(newScript);
-                    });
                 }
             }
             setTimeout(() => {
-                document.querySelector('#topbar-user-name').innerText = userData.name || "User";
-                document.querySelector('#topbar-user-email').innerText = email;
-                document.querySelector('#topbar-avatar-text').innerText = (userData.name || "U")[0].toUpperCase();
+                const nameEl = document.querySelector('#topbar-user-name');
+                if (nameEl) {
+                    nameEl.innerText = userData.name || "User";
+                    document.querySelector('#topbar-user-email').innerText = email;
+                    document.querySelector('#topbar-avatar-text').innerText = (userData.name || "U")[0].toUpperCase();
+                }
             }, 500);
         }
 
-        // --- Ticket Logic ---
-        function initTicketListener(userEmail) {
-            const q = query(collection(db, "tickets"), where("ownerEmail", "==", userEmail), orderBy("createdAt", "desc"));
-            onSnapshot(q, (snapshot) => {
-                allTickets = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
-                applyFilters();
-            });
-        }
-
-        window.filterByStatus = (status) => {
-            currentFilter = status;
-            document.querySelectorAll('.status-tab').forEach(t => t.classList.remove('active'));
-            document.getElementById(`tab-${status}`).classList.add('active');
-            applyFilters();
-        };
-
-        document.getElementById('searchInput').addEventListener('input', applyFilters);
-
-        function applyFilters() {
-            const searchTerm = document.getElementById('searchInput').value.toLowerCase();
-            let filtered = allTickets;
-
-            if (currentFilter !== 'all') {
-                filtered = filtered.filter(t => t.status === currentFilter || (currentFilter === 'Success' && t.status.includes('Success')));
-            }
-
-            if (searchTerm) {
-                filtered = filtered.filter(t => 
-                    (t.internetNo && t.internetNo.toLowerCase().includes(searchTerm)) || 
-                    (t.topic && t.topic.toLowerCase().includes(searchTerm))
-                );
-            }
-            renderTable(filtered);
-        }
-
-        function renderTable(tickets) {
-            const list = document.getElementById('ticket-list');
-            if (tickets.length === 0) {
-                list.innerHTML = `<tr><td colspan="4" class="p-20 text-center text-slate-400 italic">ไม่พบรายการ Ticket</td></tr>`;
-                return;
-            }
-
-            list.innerHTML = tickets.map(t => {
-                const created = t.createdAt?.toDate().toLocaleString('th-TH', { dateStyle: 'medium', timeStyle: 'short' }) || '-';
-                const closed = (t.status === 'Success' || t.status === 'Success (SLA)') && t.closedAt 
-                    ? t.closedAt.toDate().toLocaleString('th-TH', { dateStyle: 'medium', timeStyle: 'short' }) 
-                    : 'รอดำเนินการ';
+        // --- Auth & Data Fetching ---
+        onAuthStateChanged(auth, async (user) => {
+            if (user) {
+                const userDoc = await getDoc(doc(db, "users", user.uid));
+                const adminDoc = await getDoc(doc(db, "admin", user.uid));
+                const userData = adminDoc.exists() ? adminDoc.data() : (userDoc.exists() ? userDoc.data() : {});
                 
-                const statusColor = t.status === 'Pending' ? 'bg-orange-50 text-orange-500' : 'bg-emerald-50 text-emerald-500';
+                loadLayout(userData, user.email);
+                
+                // Query Tickets เฉพาะของตัวเอง (อ้างอิงตาม ownerEmail)
+                const q = query(
+                    collection(db, "tickets"),
+                    where("ownerEmail", "==", user.email),
+                    orderBy("createdAt", "desc")
+                );
+
+                onSnapshot(q, (snapshot) => {
+                    renderTickets(snapshot.docs);
+                });
+            } else {
+                window.location.replace("login.html");
+            }
+        });
+
+        function renderTickets(docs) {
+            const list = document.getElementById('ticket-list');
+            list.innerHTML = docs.map(d => {
+                const ticket = d.data();
+                const createDate = ticket.createdAt?.toDate().toLocaleString('th-TH', {dateStyle:'short', timeStyle:'short'}) || '-';
+                const updateDate = ticket.updatedAt?.toDate().toLocaleString('th-TH', {dateStyle:'short', timeStyle:'short'}) || 
+                                 (ticket.status === 'Closed' ? ticket.closedAt?.toDate().toLocaleString('th-TH') : '-');
+                
+                let statusClass = "bg-slate-100 text-slate-600";
+                if(ticket.status === 'Open') statusClass = "bg-indigo-100 text-indigo-600";
+                if(ticket.status === 'In Progress') statusClass = "bg-amber-100 text-amber-600";
+                if(ticket.status === 'Closed') statusClass = "bg-emerald-100 text-emerald-600";
 
                 return `
-                    <tr class="ticket-row group" onclick="viewTicketDetail('${t.id}')">
+                    <tr class="hover:bg-slate-50 transition-all">
+                        <td class="p-6 font-bold text-slate-700">${ticket.id_number || '-'}</td>
+                        <td class="p-6 text-slate-500 text-[12px]">${createDate}</td>
+                        <td class="p-6 text-slate-700 font-medium">${ticket.topic}</td>
                         <td class="p-6">
-                            <p class="font-bold text-[#5c67f2] font-mono text-xs">${t.internetNo || '-'}</p>
-                            <p class="text-[9px] text-slate-400 font-black tracking-tighter mt-1">ID: ${t.id_number || '-'}</p>
+                            <span class="status-badge ${statusClass}">${ticket.status}</span>
                         </td>
-                        <td class="p-6">
-                            <p class="font-bold text-slate-700 text-sm mb-1">${t.topic || 'ไม่มีหัวข้อ'}</p>
-                            <div class="flex gap-4 text-[10px] font-medium text-slate-400">
-                                <span><i class="fa-regular fa-clock mr-1"></i>เปิด: ${created}</span>
-                                ${t.status.includes('Success') ? `<span><i class="fa-solid fa-check-double mr-1 text-emerald-500"></i>ปิด: ${closed}</span>` : ''}
-                            </div>
-                        </td>
-                        <td class="p-6 text-center">
-                            <span class="px-3 py-1.5 rounded-full text-[9px] font-black uppercase tracking-widest ${statusColor}">${t.status}</span>
-                        </td>
+                        <td class="p-6 text-slate-500 text-[12px]">${updateDate}</td>
+                        <td class="p-6 text-center font-bold text-slate-600">${ticket.owner}</td>
                         <td class="p-6 text-right">
-                            <button class="w-8 h-8 rounded-full bg-slate-50 text-slate-400 flex items-center justify-center mx-auto hover:bg-[#5c67f2] hover:text-white transition-all">
-                                <i class="fa-solid fa-chevron-right text-[10px]"></i>
+                            <button onclick="viewDetail('${d.id}')" class="w-10 h-10 rounded-full bg-slate-100 text-slate-400 hover:bg-indigo-600 hover:text-white transition-all">
+                                <i class="fa-solid fa-eye"></i>
                             </button>
                         </td>
                     </tr>
@@ -256,66 +203,35 @@
             }).join('');
         }
 
-        // --- Modal Control ---
-        window.viewTicketDetail = (id) => {
-            const t = allTickets.find(ticket => ticket.id === id);
-            if (!t) return;
+        // --- Detail Logic ---
+        window.viewDetail = async (id) => {
+            const docSnap = await getDoc(doc(db, "tickets", id));
+            if (docSnap.exists()) {
+                const t = docSnap.data();
+                document.getElementById('det-id-number').innerText = t.id_number || '-';
+                document.getElementById('det-create-date').innerText = t.createdAt?.toDate().toLocaleString('th-TH') || '-';
+                document.getElementById('det-topic').innerText = t.topic;
+                document.getElementById('det-detail').innerText = t.detail;
+                document.getElementById('det-user-create').innerText = t.owner;
+                document.getElementById('det-status').innerText = t.status;
+                document.getElementById('det-admin-remark').innerText = t.adminRemark || 'ไม่มีหมายเหตุ';
+                document.getElementById('det-update-date').innerText = t.updatedAt?.toDate().toLocaleString('th-TH') || '-';
+                document.getElementById('det-admin-user').innerText = t.adminName || '-';
 
-            document.getElementById('dt-topic').innerText = t.topic || 'ไม่มีหัวข้อ';
-            document.getElementById('dt-internet-no').innerText = `Internet No. ${t.internetNo || '-'}`;
-            document.getElementById('dt-created').innerText = t.createdAt?.toDate().toLocaleString('th-TH') || '-';
-            document.getElementById('dt-closed').innerText = t.closedAt?.toDate().toLocaleString('th-TH') || 'กำลังดำเนินการ';
-            document.getElementById('dt-closed-by').innerText = t.closedBy || 'ยังไม่ระบุ';
-            document.getElementById('dt-ref').innerText = t.closeRefNo || '-';
-            document.getElementById('dt-desc').innerText = t.description || 'ไม่มีคำอธิบายเพิ่มเติม';
-            
-            const badge = document.getElementById('dt-status');
-            badge.innerText = t.status;
-            badge.className = `px-4 py-1.5 rounded-full text-[10px] font-black uppercase tracking-widest mb-3 inline-block ${t.status === 'Pending' ? 'bg-orange-50 text-orange-500' : 'bg-emerald-50 text-emerald-500'}`;
+                // Set status color
+                const statusBadge = document.getElementById('det-status');
+                statusBadge.className = "status-badge " + (t.status === 'Open' ? 'bg-indigo-100 text-indigo-600' : 
+                                       t.status === 'Closed' ? 'bg-emerald-100 text-emerald-600' : 'bg-amber-100 text-amber-600');
 
-            const modal = document.getElementById('detail-modal');
-            modal.classList.remove('hidden');
-            document.body.classList.add('modal-active');
-            setTimeout(() => {
-                document.getElementById('detail-backdrop').classList.add('opacity-100');
-                document.getElementById('detail-content').classList.remove('scale-90', 'opacity-0');
-            }, 10);
+                document.getElementById('detail-modal').classList.remove('hidden');
+                document.body.classList.add('modal-active');
+            }
         };
 
         window.closeDetailModal = () => {
-            document.getElementById('detail-backdrop').classList.remove('opacity-100');
-            document.getElementById('detail-content').classList.add('scale-90', 'opacity-0');
-            setTimeout(() => {
-                document.getElementById('detail-modal').classList.add('hidden');
-                document.body.classList.remove('modal-active');
-            }, 300);
+            document.getElementById('detail-modal').classList.add('hidden');
+            document.body.classList.remove('modal-active');
         };
-
-        // --- Logout & General ---
-        window.openLogoutModal = () => {
-            const modal = document.getElementById('logout-modal');
-            modal.classList.remove('hidden');
-            document.body.classList.add('modal-active');
-            setTimeout(() => {
-                document.getElementById('logout-backdrop').classList.add('opacity-100');
-                document.getElementById('logout-content').classList.remove('scale-90', 'opacity-0');
-            }, 10);
-        };
-
-        document.getElementById('close-logout').onclick = () => {
-            document.getElementById('logout-backdrop').classList.remove('opacity-100');
-            document.getElementById('logout-content').classList.add('scale-90', 'opacity-0');
-            setTimeout(() => {
-                document.getElementById('logout-modal').classList.add('hidden');
-                document.body.classList.remove('modal-active');
-            }, 300);
-        };
-
-        document.getElementById('confirm-logout').onclick = () => signOut(auth).then(() => window.location.replace("login.html"));
-
-        document.addEventListener('click', (e) => {
-            if (e.target.closest('#main-logout-btn')) openLogoutModal();
-        });
     </script>
 </body>
 </html>

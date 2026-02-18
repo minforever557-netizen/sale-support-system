@@ -214,21 +214,22 @@
                 dDate.setHours(dDate.getHours() + slaHours);
 
                 // บันทึกตามโครงสร้างเดิมในรูปที่ 9
-                await addDoc(collection(db, "tickets"), {
-                    topic: selectedTopic.name,        // ใช้ชื่อ field นี้เพื่อให้หน้า My Ticket เห็น
-                    topicId: topicSelect.value,
-                    id_number: document.getElementById('id_number').value.trim(),
-                    detail: detailInput.value,        // ใช้ detail (ไม่มี s)
-                    status: "Pending",
-                    owner: userDataGlobal.name || "Unknown", // ใช้ owner แทน sender_name
-                    ownerEmail: userDataGlobal.email || "",
-                    sender_uid: userDataGlobal.uid,
-                    sender_team: userDataGlobal.Team || "N/A",
-                    sender_subteam: userDataGlobal["Sub Team"] || "N/A",
-                    createdAt: serverTimestamp(),     // ใช้ CamelCase เหมือนของเดิม
-                    sla_hours: slaHours,              // ใช้ sla_hours
-                    due_at: dDate
-                });
+                // บันทึกข้อมูล (แก้ไข Field ให้ตรงตามระบบเดิมที่คุณแนบมา)
+await addDoc(collection(db, "tickets"), {
+    topic: selectedTopic.name,             // เดิมใช้ subject -> เปลี่ยนเป็น topic
+    topicId: topicSelect.value,            // เพิ่ม topicId
+    id_number: document.getElementById('id_number').value.trim(),
+    detail: detailInput.value,             // เดิมใช้ details -> เปลี่ยนเป็น detail (ไม่มี s)
+    status: "Pending",
+    owner: userDataGlobal.name || "Unknown", // เดิมใช้ sender_name -> เปลี่ยนเป็น owner
+    ownerEmail: userDataGlobal.email || "",  // เพิ่ม ownerEmail
+    sender_uid: userDataGlobal.uid,
+    sender_team: userDataGlobal.Team || "N/A",
+    sender_subteam: userDataGlobal["Sub Team"] || "N/A",
+    createdAt: serverTimestamp(),          // เดิมใช้ created_at -> เปลี่ยนเป็น createdAt (A ตัวใหญ่)
+    sla_hours: slaHours,                   // เดิมใช้ sla -> เปลี่ยนเป็น sla_hours
+    due_at: dDate                          // เก็บไว้อ้างอิงเวลาครบกำหนด
+});
 
                 // Success Animation
                 const overlay = document.getElementById('success-overlay');

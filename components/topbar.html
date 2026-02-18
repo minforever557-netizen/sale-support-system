@@ -1,31 +1,29 @@
 <header class="bg-white/80 backdrop-blur-md sticky top-0 z-40 border-b border-slate-100 px-4 md:px-8 py-4 shadow-sm">
-    <div class="flex items-center justify-between gap-4">
+    <div class="flex items-center justify-between">
         
-        <div class="flex items-center gap-3 md:gap-4">
-            <button onclick="window.toggleMobileMenu()" class="lg:hidden w-10 h-10 flex items-center justify-center rounded-xl bg-slate-50 text-slate-600 active:scale-95 transition-all border border-slate-100">
-                <i class="fa-solid fa-bars-staggered"></i>
+        <div class="flex items-center gap-3">
+            <button onclick="window.toggleMobileMenu()" class="lg:hidden w-10 h-10 flex items-center justify-center rounded-xl bg-slate-50 text-[#5c56f1] border border-slate-100 active:scale-95 transition-all">
+                <i class="fa-solid fa-bars-staggered text-lg"></i>
             </button>
 
-            <div id="tp-avatar-circle" class="w-10 h-10 md:w-12 md:h-12 bg-gradient-to-br from-[#5c56f1] to-[#7c77f5] rounded-xl md:rounded-2xl flex items-center justify-center text-white font-bold text-lg shadow-lg shadow-indigo-100 ring-2 ring-white shrink-0">
+            <div id="tp-avatar-circle" class="w-10 h-10 md:w-12 md:h-12 bg-gradient-to-br from-[#5c56f1] to-[#7c77f5] rounded-xl flex items-center justify-center text-white font-bold text-lg shadow-indigo-100 ring-2 ring-white shrink-0">
                 ?
             </div>
             
-            <div class="flex flex-col overflow-hidden">
+            <div class="flex flex-col min-w-0">
                 <div class="flex items-center gap-2">
-                    <span id="tp-fullname" class="text-slate-800 font-bold leading-tight text-sm md:text-lg truncate max-w-[120px] md:max-w-none">กำลังโหลด...</span>
-                    <span class="hidden md:inline text-slate-300 text-xs">|</span>
-                    <span id="tp-username" class="hidden md:inline text-[#5c56f1] text-xs font-black uppercase tracking-widest bg-indigo-50 px-2 py-0.5 rounded-md">@username</span>
+                    <span id="tp-fullname" class="text-slate-800 font-bold leading-tight text-sm md:text-lg truncate max-w-[120px] md:max-w-none">โหลดชื่อ...</span>
+                    <span id="tp-username" class="hidden sm:inline text-[#5c56f1] text-[10px] font-black uppercase tracking-widest bg-indigo-50 px-2 py-0.5 rounded-md">@user</span>
                 </div>
-                <span id="tp-email" class="text-slate-400 text-[10px] md:text-xs font-medium mt-0.5 truncate">email@loading.com</span>
+                <span id="tp-email" class="text-slate-400 text-[10px] md:text-xs truncate max-w-[150px] md:max-w-none font-medium mt-0.5">email@loading.com</span>
             </div>
         </div>
 
-        <div class="flex flex-row items-center bg-slate-50 px-3 md:px-6 py-2 md:py-2.5 rounded-xl md:rounded-[1.5rem] border border-slate-100 gap-3">
+        <div class="flex items-center bg-slate-50 px-3 md:px-5 py-2 rounded-xl border border-slate-100">
             <div class="flex items-center gap-2">
-                <span class="w-1.5 h-1.5 md:w-2 md:h-2 bg-emerald-500 rounded-full animate-pulse"></span>
-                <div id="tp-clock" class="text-sm md:text-2xl font-black text-slate-700 tracking-tighter leading-none min-w-[60px] md:min-w-[100px] text-right">00:00:00</div>
+                <span class="w-1.5 h-1.5 bg-emerald-500 rounded-full animate-pulse"></span>
+                <div id="tp-clock" class="text-sm md:text-2xl font-black text-slate-700 tracking-tighter min-w-[60px] md:min-w-[100px] text-right">00:00:00</div>
             </div>
-            <div id="tp-date" class="hidden lg:block text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] mt-0.5 border-l border-slate-200 pl-3">กำลังโหลดวันเวลา...</div>
         </div>
     </div>
 </header>
@@ -35,10 +33,9 @@
     import { getFirestore, doc, getDoc } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
     import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
 
+    // จัดการ Firebase App Instance
     let app;
-    try { 
-        app = getApp(); 
-    } catch (e) {
+    try { app = getApp(); } catch (e) {
         const firebaseConfig = {
             apiKey: "AIzaSyAa2uSD_tjNqYE2eXnZcn75h_jAVscDG-c",
             authDomain: "salesupportsystemapp.firebaseapp.com",
@@ -53,49 +50,25 @@
     const db = getFirestore(app);
     const auth = getAuth(app);
 
-    function initTopbarClock() {
-        const update = () => {
-            const now = new Date();
-            const clockEl = document.getElementById('tp-clock');
-            const dateEl = document.getElementById('tp-date');
-            
-            if(clockEl) clockEl.innerText = now.toLocaleTimeString('th-TH', { 
-                hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: false 
-            });
-            
-            if(dateEl) dateEl.innerText = now.toLocaleDateString('th-TH', { 
-                weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' 
-            });
-        };
-        setInterval(update, 1000);
-        update();
-    }
+    // --- นาฬิกา ---
+    setInterval(() => {
+        const now = new Date();
+        const clockEl = document.getElementById('tp-clock');
+        if(clockEl) clockEl.innerText = now.toLocaleTimeString('th-TH', { hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: false });
+    }, 1000);
 
+    // --- ดึงข้อมูล Profile ---
     onAuthStateChanged(auth, async (user) => {
         if (user) {
             try {
                 const userDoc = await getDoc(doc(db, "admin", user.uid));
                 const data = userDoc.exists() ? userDoc.data() : {};
                 
-                const fullName = data.name || user.displayName || 'Sale Support User';
-                const userName = data.username || user.email.split('@')[0];
-                const email = data.email || user.email;
-
-                const nameEl = document.getElementById('tp-fullname');
-                const userEl = document.getElementById('tp-username');
-                const mailEl = document.getElementById('tp-email');
-                const iconEl = document.getElementById('tp-avatar-circle');
-
-                if(nameEl) nameEl.innerText = fullName;
-                if(userEl) userEl.innerText = `@${userName}`;
-                if(mailEl) mailEl.innerText = email;
-                if(iconEl) iconEl.innerText = fullName.charAt(0).toUpperCase();
-                
-            } catch (err) {
-                console.error("Topbar Error:", err);
-            }
+                document.getElementById('tp-fullname').innerText = data.name || 'Sale Support User';
+                document.getElementById('tp-username').innerText = `@${data.username || 'user'}`;
+                document.getElementById('tp-email').innerText = data.email || user.email;
+                document.getElementById('tp-avatar-circle').innerText = (data.name || 'S').charAt(0).toUpperCase();
+            } catch (err) { console.error("Topbar Error:", err); }
         }
     });
-
-    initTopbarClock();
 </script>

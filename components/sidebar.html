@@ -4,13 +4,13 @@
         display: none !important;
     }
 
-    /* สไตล์เพิ่มเติมสำหรับ Mobile Overlay */
-    #mobile-overlay-container.active .backdrop { opacity: 1; }
-    #mobile-overlay-container.active .drawer { transform: translateX(0); }
+    /* สไตล์เพิ่มเติมสำหรับ Mobile Drawer */
+    #mobile-drawer-container.active .backdrop { opacity: 1; }
+    #mobile-drawer-container.active .drawer-content { transform: translateX(0); }
 </style>
 
-<div id="desktop-sidebar" class="hidden lg:flex flex-col w-64 bg-white h-screen border-r border-slate-200 sticky top-0 overflow-y-auto z-50">
-    <div id="sidebar-main-content" class="flex flex-col h-full">
+<aside id="desktop-sidebar" class="hidden lg:flex flex-col w-64 bg-white h-screen border-r border-slate-200 sticky top-0 overflow-y-auto z-50">
+    <div id="sidebar-core-logic">
         <div class="p-6">
             <h1 class="text-xl font-bold text-[#5c56f1] flex items-center gap-2">
                 <span class="w-8 h-8 bg-[#5c56f1] rounded-lg flex items-center justify-center text-white text-xs">S</span>
@@ -60,18 +60,23 @@
             </div>
         </nav>
 
-        <div class="p-4 border-t border-slate-100">
-            <button onclick="window.openLogoutModal()" class="w-full flex items-center gap-3 p-4 text-red-500 hover:bg-red-50 rounded-2xl transition font-bold">
+        <div class="p-4 border-t border-slate-100 mt-auto">
+            <button id="sidebar-logout-btn" class="w-full flex items-center gap-3 p-4 text-red-500 hover:bg-red-50 rounded-2xl transition font-bold">
                 <span class="text-lg">🚪</span> ออกจากระบบ
             </button>
         </div>
     </div>
-</div>
+</aside>
 
-<div id="mobile-overlay-container" class="fixed inset-0 z-[100] hidden lg:hidden">
+<div id="mobile-drawer-container" class="fixed inset-0 z-[999] hidden lg:hidden">
     <div class="backdrop absolute inset-0 bg-slate-900/50 backdrop-blur-sm opacity-0 transition-opacity duration-300" onclick="window.toggleMobileMenu()"></div>
-    <div class="drawer absolute left-0 top-0 bottom-0 w-72 bg-white shadow-2xl -translate-x-full transition-transform duration-300 ease-out flex flex-col">
-        <div id="mobile-content-target" class="h-full overflow-y-auto">
+    
+    <div class="drawer-content absolute left-0 top-0 bottom-0 w-72 bg-white -translate-x-full transition-transform duration-300 ease-out flex flex-col shadow-2xl">
+        <div class="p-5 border-b border-slate-50 flex items-center justify-between bg-[#5c56f1] text-white">
+            <span class="font-bold">เมนูหลัก</span>
+            <button onclick="window.toggleMobileMenu()" class="w-8 h-8 flex items-center justify-center rounded-full bg-white/20"><i class="fa-solid fa-xmark"></i></button>
+        </div>
+        <div id="mobile-content-target" class="flex-1 overflow-y-auto">
             </div>
     </div>
 </div>
@@ -94,52 +99,26 @@
     const auth = getAuth(app);
     const db = getFirestore(app);
 
-    let currentSessionUser = null;
-
-    // --- 1. Global Activity Tracker ---
-    window.saveActivityLog = async (actionType, details, isError = false) => {
-        const user = auth.currentUser;
-        if (!user) return;
-        try {
-            await addDoc(collection(db, "logs"), {
-                userId: user.uid,
-                userName: currentSessionUser?.name || user.email,
-                userEmail: user.email,
-                actionType: actionType,
-                details: details,
-                isError: isError,
-                path: window.location.pathname.split("/").pop() || "index.html",
-                timestamp: serverTimestamp()
-            });
-        } catch (err) { console.error("Logging failed", err); }
+    // --- 1. Global Logout Function (เพื่อให้ใช้ได้ทั้ง Desktop และ Mobile) ---
+    const handleLogout = () => {
+        if (confirm("คุณต้องการออกจากระบบใช่หรือไม่?")) {
+            signOut(auth).then(() => window.location.replace("login.html"));
+        }
     };
 
-    // --- 2. Active Link Highlight & Responsive Clone ---
-    const currentPage = window.location.pathname.split("/").pop() || "dashboard.html";
-    
-    // ฟังก์ชันช่วยจัดการ Active Class
-    const highlightActiveLinks = (container) => {
-        container.querySelectorAll('.nav-link').forEach(link => {
-            if (link.getAttribute('href') === currentPage) {
-                link.classList.add('bg-indigo-50', 'text-[#5c56f1]', 'font-bold');
-            }
-        });
-    };
-
-    // --- 3. Mobile Menu Toggle Logic ---
+    // --- 2. Mobile Toggle Logic ---
     window.toggleMobileMenu = () => {
-        const container = document.getElementById('mobile-overlay-container');
-        const isHidden = container.classList.contains('hidden');
+        const container = document.getElementById('mobile-drawer-container');
+        const target = document.getElementById('mobile-content-target');
         
-        if (isHidden) {
-            // ก๊อปปี้เนื้อหาจาก Desktop มาใส่ Mobile (ทำครั้งเดียว)
-            const target = document.getElementById('mobile-content-target');
+        if (container.classList.contains('hidden')) {
+            // ก๊อปปี้เนื้อหาเมนูไปใส่ Mobile ครั้งแรกที่เปิด
             if (target.innerHTML.trim() === "") {
-                const content = document.getElementById('sidebar-main-content').cloneNode(true);
-                // เปลี่ยน ID ป้องกันการซ้ำ
-                content.id = "sidebar-mobile-content";
-                target.appendChild(content);
-                highlightActiveLinks(target);
+                const navClone = document.getElementById('sidebar-core-logic').cloneNode(true);
+                target.appendChild(navClone);
+                
+                // ผูกเหตุการณ์ Logout ให้ปุ่มใน Mobile ด้วย
+                target.querySelector('#sidebar-logout-btn')?.addEventListener('click', handleLogout);
             }
             
             container.classList.remove('hidden');
@@ -150,10 +129,7 @@
         }
     };
 
-    // ไฮไลต์หน้าปัจจุบันบน Desktop ทันที
-    highlightActiveLinks(document.getElementById('desktop-sidebar'));
-
-    // --- 4. Role Check & Secure Display ---
+    // --- 3. Firebase Auth & Role Check ---
     onAuthStateChanged(auth, async (user) => {
         if (user) {
             try {
@@ -162,26 +138,25 @@
                 
                 if (userSnap.exists()) {
                     const userData = userSnap.data();
-                    currentSessionUser = userData;
                     const userRole = (userData.role || "").toString().toLowerCase().trim();
 
-                    // ปรับการซ่อน/โชว์ Admin Menu (ทำทั้ง Desktop และ Mobile)
-                    const updateAdminVisibility = () => {
-                        document.querySelectorAll('#admin-menu-section').forEach(section => {
-                            if (userRole === 'admin') {
-                                section.classList.remove('hidden-secure');
-                            } else {
-                                section.classList.add('hidden-secure');
-                            }
-                        });
-                    };
-                    
-                    updateAdminVisibility();
-                    window.saveActivityLog('PAGE_VIEW', `เข้าสู่หน้า: ${currentPage}`);
+                    // ปรับการโชว์ Admin Menu ทั้ง Desktop และ Mobile
+                    document.querySelectorAll('#admin-menu-section').forEach(el => {
+                        if (userRole === 'admin') el.classList.remove('hidden-secure');
+                    });
                 }
-            } catch (err) { console.error("Auth Error:", err); }
-        } else {
-            if (!window.location.href.includes("login.html")) window.location.replace("login.html");
+            } catch (err) { console.error("Sidebar Auth Error:", err); }
         }
     });
+
+    // ไฮไลต์ลิงก์ปัจจุบัน
+    const currentPage = window.location.pathname.split("/").pop() || "dashboard.html";
+    document.querySelectorAll('.nav-link').forEach(link => {
+        if (link.getAttribute('href') === currentPage) {
+            link.classList.add('bg-indigo-50', 'text-[#5c56f1]', 'font-bold');
+        }
+    });
+
+    // ผูกปุ่ม Logout Desktop
+    document.getElementById('sidebar-logout-btn')?.addEventListener('click', handleLogout);
 </script>

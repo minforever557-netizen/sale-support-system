@@ -84,21 +84,11 @@
 </aside>
 
 <script type="module">
-window.toggleMobileMenu = () => {
-    const sidebar = document.getElementById('sidebar-wrapper');
-    const mainContent = document.getElementById('main-content'); // เพิ่ม ID นี้ที่ไฟล์หน้าจอหลักด้วย
-    
-    sidebar.classList.toggle('active');
-    
-    // ถ้ามี mainContent ให้ปรับ Margin/Padding ออก
-    if(mainContent) {
-        if(sidebar.classList.contains('active')) {
-             document.body.style.overflow = 'hidden';
-        } else {
-             document.body.style.overflow = 'auto';
-        }
-    }
-};
+    window.toggleMobileMenu = () => {
+        const sidebar = document.getElementById('sidebar-wrapper');
+        sidebar.classList.toggle('active');
+        document.body.style.overflow = sidebar.classList.contains('active') ? 'hidden' : 'auto';
+    };
 
     // [Firebase Script เดิมของคุณ...]
     import { initializeApp, getApps } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";

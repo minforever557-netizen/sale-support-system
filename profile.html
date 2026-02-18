@@ -16,6 +16,9 @@
         .form-input:focus { border-color: #5c56f1; background-color: white; outline: none; }
         .label-title { font-size: 0.75rem; font-weight: 700; color: #94a3b8; text-transform: uppercase; margin-left: 0.5rem; margin-bottom: 0.4rem; display: block; }
         .profile-card { background: white; border-radius: 2.5rem; border: 1px solid #f1f5f9; }
+        
+        /* แก้ไขให้ Topbar ค้างแต่เนื้อหาไหลผ่าน */
+        #topbar-placeholder { position: sticky; top: 0; z-index: 50; }
     </style>
 </head>
 <body class="flex min-h-screen">
@@ -34,9 +37,9 @@
 
                 <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
                     <div class="md:col-span-1">
-                        <div class="profile-card p-8 text-center sticky top-24 shadow-sm">
-                            <div id="avatar-container" class="w-24 h-24 bg-indigo-600 rounded-[2rem] mx-auto mb-4 flex items-center justify-center text-3xl text-white font-bold shadow-lg shadow-indigo-100 uppercase">?</div>
-                            <h2 id="display-name" class="text-xl font-bold text-slate-800 italic">...</h2>
+                        <div class="profile-card p-8 text-center sticky top-28 shadow-sm">
+                            <div id="avatar-container" class="w-24 h-24 bg-indigo-600 rounded-[2.5rem] mx-auto mb-4 flex items-center justify-center text-3xl text-white font-bold shadow-lg shadow-indigo-100 uppercase">?</div>
+                            <h2 id="display-name" class="text-xl font-bold text-slate-800">...</h2>
                             <span id="display-role" class="inline-block mt-2 px-4 py-1 bg-amber-50 text-amber-600 rounded-full text-[10px] font-black uppercase tracking-widest">Loading</span>
                         </div>
                     </div>
@@ -53,10 +56,6 @@
                                     <input type="text" id="prof-user" class="form-input bg-slate-50" readonly>
                                 </div>
                                 <div>
-                                    <label class="label-title">อีเมล (Email)</label>
-                                    <input type="email" id="prof-email" class="form-input bg-slate-50" readonly>
-                                </div>
-                                <div class="md:col-span-2">
                                     <label class="label-title">เบอร์โทรศัพท์</label>
                                     <input type="text" id="prof-phone" class="form-input">
                                 </div>
@@ -66,13 +65,13 @@
 
                             <div class="grid grid-cols-1 md:grid-cols-2 gap-5">
                                 <div>
-                                    <label class="label-title text-indigo-500">ทีมหลัก (Main Team)</label>
+                                    <label class="label-title text-indigo-500">ทีมหลัก (MAIN TEAM)</label>
                                     <select id="prof-main" class="form-input" required>
                                         <option value="">กำลังโหลดทีม...</option>
                                     </select>
                                 </div>
                                 <div>
-                                    <label class="label-title text-indigo-500">ทีมย่อย (Sub Team)</label>
+                                    <label class="label-title text-indigo-500">ทีมย่อย (SUB TEAM)</label>
                                     <select id="prof-sub" class="form-input" required disabled>
                                         <option value="">เลือกทีมหลักก่อน</option>
                                     </select>
@@ -83,11 +82,12 @@
 
                             <div>
                                 <label class="label-title">เปลี่ยนรหัสผ่านใหม่</label>
-                                <input type="password" id="prof-pass" class="form-input" placeholder="•••••••• (เว้นว่างไว้หากไม่เปลี่ยน)">
+                                <input type="password" id="prof-pass" class="form-input" placeholder="•••••••• (เว้นว่างไว้หากไม่ต้องการเปลี่ยน)">
+                                <p class="text-[10px] text-slate-400 mt-2 ml-2 italic">* ระบบจะอัปเดตการเข้าสู่ระบบทันทีหลังบันทึก</p>
                             </div>
 
                             <div class="pt-4 flex justify-end">
-                                <button type="submit" id="saveBtn" class="bg-[#5d58f0] text-white px-10 py-4 rounded-2xl font-bold shadow-lg shadow-indigo-100 hover:bg-indigo-700 transition active:scale-95">
+                                <button type="submit" id="saveBtn" class="bg-[#4338ca] text-white px-10 py-4 rounded-2xl font-bold shadow-lg shadow-indigo-100 hover:bg-indigo-700 transition active:scale-95">
                                     <i class="fas fa-check-circle mr-2"></i> บันทึกการเปลี่ยนแปลง
                                 </button>
                             </div>
@@ -99,9 +99,9 @@
     </div>
 
     <div id="logout-modal" class="fixed inset-0 z-[100] hidden">
-        <div class="absolute inset-0 bg-slate-900/40 backdrop-blur-sm"></div>
+        <div class="absolute inset-0 bg-slate-900/40 backdrop-blur-sm" id="logout-backdrop"></div>
         <div class="absolute inset-0 flex items-center justify-center p-4">
-            <div class="bg-white w-full max-w-sm rounded-[2.5rem] p-8 shadow-2xl">
+            <div class="bg-white w-full max-w-sm rounded-[2.5rem] p-8 shadow-2xl scale-95" id="logout-content">
                 <div class="w-20 h-20 bg-red-50 rounded-full flex items-center justify-center mx-auto mb-6"><span class="text-4xl">🚪</span></div>
                 <h3 class="text-2xl font-bold text-slate-800 text-center mb-2">ออกจากระบบ?</h3>
                 <div class="flex gap-3 mt-8">
@@ -117,6 +117,7 @@
         import { getFirestore, doc, getDoc, getDocs, collection, updateDoc } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
         import { getAuth, onAuthStateChanged, updatePassword, signOut } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
 
+        // Firebase Config (คงเดิม)
         const firebaseConfig = { 
             apiKey: "AIzaSyAa2uSD_tjNqYE2eXnZcn75h_jAVscDG-c", 
             authDomain: "salesupportsystemapp.firebaseapp.com", 
@@ -156,10 +157,11 @@
 
         document.getElementById('confirm-logout').onclick = () => signOut(auth).then(() => window.location.href="login.html");
 
-        // --- 2. Team Logic ---
+        // --- 2. Team Dropdown Logic ---
         async function fetchTeams() {
             const snap = await getDocs(collection(db, "teams"));
             allTeams = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+            
             const mainSelect = document.getElementById('prof-main');
             mainSelect.innerHTML = '<option value="" disabled selected>เลือกทีมหลัก</option>';
             allTeams.filter(t => t.type === "main").forEach(t => {
@@ -172,6 +174,7 @@
         function renderSubTeams(parentId, savedSubName = null) {
             const subSelect = document.getElementById('prof-sub');
             const filtered = allTeams.filter(t => t.type === "sub" && t.parentId === parentId);
+            
             subSelect.innerHTML = '<option value="" disabled selected>เลือกทีมย่อย</option>';
             if(filtered.length > 0) {
                 subSelect.disabled = false;
@@ -186,7 +189,7 @@
             }
         }
 
-        // --- 3. Auth & Data Loading ---
+        // --- 3. Initial Load ---
         onAuthStateChanged(auth, async (user) => {
             if (user) {
                 currentUser = user;
@@ -202,7 +205,6 @@
                     
                     document.getElementById('prof-name').value = d.name || "";
                     document.getElementById('prof-user').value = d.username || "";
-                    document.getElementById('prof-email').value = user.email; // แสดง Email
                     document.getElementById('prof-phone').value = d["Phone No."] || "";
 
                     const teamObj = allTeams.find(t => t.name === d.Team && t.type === "main");
@@ -216,7 +218,7 @@
             }
         });
 
-        // --- 4. Save Changes (แก้ไขเพื่อเลี่ยง Error Phone No.) ---
+        // --- 4. แก้ไขปัญหายอดฮิต: Firebase Invalid field path (Phone No.) ---
         document.getElementById('profile-form').onsubmit = async (e) => {
             e.preventDefault();
             const btn = document.getElementById('saveBtn');
@@ -228,27 +230,33 @@
             btn.innerHTML = '<i class="fas fa-spinner animate-spin mr-2"></i> กำลังบันทึก...';
 
             try {
-                // สร้าง object แบบระบุชื่อฟิลด์เป็น string เพื่อแก้ปัญหาอักขระพิเศษในชื่อฟิลด์
-                const updateData = {
+                // *** วิธีแก้: การส่ง Key ที่มีจุด (.) ต้องส่งเป็น Object ครบก้อน หรือระบุ FieldPath ***
+                // ในกรณีนี้ส่งเป็น Object ธรรมดาที่มี Key เป็น String ตรงๆ จะง่ายที่สุด
+                const dataToUpdate = {
                     name: document.getElementById('prof-name').value.trim(),
-                    Team: mainTeamName
+                    Team: mainTeamName,
+                    "Sub Team": document.getElementById('prof-sub').value,
+                    "Phone No.": document.getElementById('prof-phone').value.trim() // ใส่ "" ครอบ key
                 };
-                
-                updateData["Phone No."] = document.getElementById('prof-phone').value.trim();
-                updateData["Sub Team"] = document.getElementById('prof-sub').value;
 
-                await updateDoc(doc(db, "admin", currentUser.uid), updateData);
+                await updateDoc(doc(db, "admin", currentUser.uid), dataToUpdate);
 
                 if (newPass) {
+                    if (newPass.length < 6) throw new Error("รหัสผ่านต้องมีความยาวอย่างน้อย 6 ตัวอักษร");
                     await updatePassword(currentUser, newPass);
                     alert("บันทึกข้อมูลและรหัสผ่านใหม่เรียบร้อย!");
                 } else {
-                    alert("บันทึกข้อมูลเรียบร้อย!");
+                    alert("บันทึกข้อมูลส่วนตัวเรียบร้อย!");
                 }
+                
                 location.reload();
             } catch (err) {
                 console.error(err);
-                alert("ล้มเหลว: " + err.message);
+                let errorMsg = "ล้มเหลว: " + err.message;
+                if(err.message.includes("recent-login")) {
+                    errorMsg = "เพื่อความปลอดภัย โปรดออกจากระบบและเข้าสู่ระบบใหม่อีกครั้งก่อนดำเนินการเปลี่ยนรหัสผ่าน";
+                }
+                alert(errorMsg);
                 btn.disabled = false;
                 btn.innerHTML = '<i class="fas fa-check-circle mr-2"></i> บันทึกการเปลี่ยนแปลง';
             }

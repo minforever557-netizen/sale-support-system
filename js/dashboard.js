@@ -132,30 +132,31 @@ function initLiveClock() {
         setInterval(update, 1000);
     }
 }
-// 5. ระบบ Sidebar Toggle (แก้ไขเพื่อให้ย่อพื้นที่ Placeholder ด้วย)
 function attachSidebarEvents() {
     const placeholder = document.getElementById('sidebar-placeholder');
     const toggleBtn = document.getElementById('sidebar-toggle');
     
-    // สร้างหรือหาไอคอนข้างในปุ่ม
-    if (toggleBtn && !toggleBtn.querySelector('i')) {
-        toggleBtn.innerHTML = '<i id="toggle-icon" class="fa-solid fa-chevron-left text-white text-xs"></i>';
-    }
+    if (!toggleBtn || !placeholder) return;
 
-    const toggleIcon = document.getElementById('toggle-icon');
+    // ล้างข้อมูลข้างในแล้วฉีดไอคอนเข้าไปใหม่เพื่อให้ชัวร์ว่ามี i แน่นอน
+    toggleBtn.innerHTML = ''; 
+    const icon = document.createElement('i');
+    icon.id = 'toggle-icon';
+    // เช็คสถานะปัจจุบันว่า mini อยู่หรือไม่ เพื่อเลือกรูปเริ่มต้น
+    const isCurrentlyMini = placeholder.classList.contains('mini');
+    icon.className = isCurrentlyMini ? 'fa-solid fa-chevron-right text-white text-xs' : 'fa-solid fa-chevron-left text-white text-xs';
+    toggleBtn.appendChild(icon);
 
-    if (toggleBtn && placeholder) {
-        toggleBtn.onclick = (e) => {
-            e.preventDefault();
-            placeholder.classList.toggle('mini');
+    toggleBtn.onclick = (e) => {
+        e.preventDefault();
+        placeholder.classList.toggle('mini');
 
-            // สลับไอคอนลูกศร
-            if (toggleIcon) {
-                const isMini = placeholder.classList.contains('mini');
-                toggleIcon.className = isMini ? 'fa-solid fa-chevron-right text-white text-xs' : 'fa-solid fa-chevron-left text-white text-xs';
-            }
-        };
-    }
+        // สลับไอคอนลูกศร
+        const isMini = placeholder.classList.contains('mini');
+        icon.className = isMini ? 'fa-solid fa-chevron-right text-white text-xs' : 'fa-solid fa-chevron-left text-white text-xs';
+        
+        console.log("Sidebar toggled. Is Mini:", isMini); // เช็คใน Console ว่าทำงานไหม
+    };
 }
 // 6. ฟังก์ชันสถิติ Dashboard
 async function loadDashboardStats(userEmail) {

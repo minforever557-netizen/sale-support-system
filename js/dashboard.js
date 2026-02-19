@@ -141,15 +141,27 @@ function attachSidebarEvents() {
     if (toggleBtn && placeholder) {
         toggleBtn.onclick = (e) => {
             e.preventDefault();
-            // แก้จุดนี้: สลับคลาส mini ที่ placeholder ตัวเดียวพอครับ
             placeholder.classList.toggle('mini');
 
+            // เปลี่ยนไอคอนลูกศรให้ User ทราบสถานะ
             if (toggleIcon) {
                 const isMini = placeholder.classList.contains('mini');
+                // ถ้า mini (ย่อ) ให้ชี้ขวา (>) | ถ้าปกติให้ชี้ซ้าย (<)
                 toggleIcon.className = isMini ? 'fa-solid fa-chevron-right' : 'fa-solid fa-chevron-left';
             }
         };
     }
+
+    // --- ส่วนที่ 2: ทำให้แถบ Active ทำงานตามหน้าจริง ---
+    const currentPath = window.location.pathname.split("/").pop() || "dashboard.html";
+    document.querySelectorAll('.nav-link-modern').forEach(link => {
+        // ตรวจสอบว่า data-page ใน HTML ตรงกับชื่อไฟล์ปัจจุบันไหม
+        if (link.getAttribute('href').includes(currentPath)) {
+            link.classList.add('active');
+        } else {
+            link.classList.remove('active');
+        }
+    });
 }
 // 6. ฟังก์ชันสถิติ Dashboard
 async function loadDashboardStats(userEmail) {

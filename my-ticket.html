@@ -3,8 +3,11 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Blank Page - Sale Support System</title>
-    <link rel="stylesheet" href="style.css"> <script src="https://cdn.tailwindcss.com"></script>
+    <title>My Tickets - Sale Support System</title>
+    
+    <link rel="stylesheet" href="style.css"> 
+    
+    <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://fonts.googleapis.com/css2?family=Kanit:wght@300;400;600&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
 </head>
@@ -19,9 +22,9 @@
         <main class="flex-1 overflow-y-auto p-6 md:p-10 custom-scroll">
             <div class="max-w-[1600px] mx-auto fade-in-up">
                 
-                <div class="bg-white rounded-[2.5rem] p-10 shadow-sm border border-slate-100">
+                <div class="bg-white rounded-[2.5rem] p-10 shadow-sm border border-slate-100 min-h-[500px]">
                     <h1 class="text-4xl font-bold text-slate-800">Hello</h1>
-                    <p class="text-slate-500 mt-4">ไม่ต้องเขียน Firebase ซ้ำแล้วครับ!</p>
+                    <p class="text-slate-500 mt-4 text-lg">เรียกใช้ Logic จาก dashboard.js เรียบร้อยแล้ว</p>
                 </div>
 
             </div>
@@ -29,8 +32,12 @@
     </div>
 
     <script type="module">
-        import { initPage } from './app.js';
-        initPage();
+        // เรียกใช้ฟังก์ชันจาก dashboard.js ของคุณ
+        // สมมติว่าใน dashboard.js คุณมีฟังก์ชันชื่อ initialize หรือ loadLayout
+        import { initDashboard } from './dashboard.js'; 
+        
+        // รันฟังก์ชันเพื่อให้ Sidebar/Topbar ทำงาน
+        initDashboard(); 
     </script>
 </body>
 </html>

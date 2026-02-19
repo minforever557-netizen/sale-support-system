@@ -4,11 +4,14 @@
 console.log("layout loaded");
 async function loadLayout() {
 
-    // ---------- SIDEBAR ----------
-    const sidebar = await fetch("./components/sidebar.html?v=" + Date.now())
+    console.log("loading sidebar...");
+
+    const sidebar = await fetch("./components/sidebar.html")
         .then(res => res.text());
 
-    document.getElementById("sidebar-container").innerHTML = sidebar;
+    console.log("sidebar html:", sidebar);
+
+        document.getElementById("sidebar-container").innerHTML = sidebar;
 
     // ---------- TOPBAR ----------
     const topbar = await fetch("./components/topbar.html?v=" + Date.now())

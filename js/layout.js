@@ -1,30 +1,56 @@
 // ==============================
+// PAGE GUARD
+// ==============================
+function authGuard() {
+
+    const user = localStorage.getItem("user");
+    console.log("AUTH CHECK:", user);
+
+    if (!user) {
+        window.location.href = "index.html";
+        return false;
+    }
+
+    return true;
+}
+
+
+// ==============================
 // LOAD SIDEBAR + TOPBAR
 // ==============================
-console.log("layout loaded");
 async function loadLayout() {
 
-    console.log("loading sidebar...");
+    console.log("loading layout...");
 
-    const sidebar = await fetch("./components/sidebar.html")
+    // ---------- SIDEBAR ----------
+    const sidebarHTML = await fetch("./components/sidebar.html")
         .then(res => res.text());
 
-    console.log("sidebar html:", sidebar);
+    const sidebarEl =
+        document.getElementById("sidebar-placeholder");
 
-        document.getElementById("sidebar-container").innerHTML = sidebar;
+    if (sidebarEl) {
+        sidebarEl.innerHTML = sidebarHTML;
+    }
 
     // ---------- TOPBAR ----------
-    const topbar = await fetch("./components/topbar.html?v=" + Date.now())
+    const topbarHTML = await fetch("./components/topbar.html")
         .then(res => res.text());
 
-    document.getElementById("topbar-container").innerHTML = topbar;
+    const topbarEl =
+        document.getElementById("topbar-placeholder");
 
-    // หลัง inject HTML ต้อง init
+    if (topbarEl) {
+        topbarEl.innerHTML = topbarHTML;
+    }
+
+    // INIT AFTER LOAD
     initLogout();
     loadUserToTopbar();
     setActiveMenu();
-}
 
+    console.log("layout loaded ✅");
+}
 
 
 // ==============================
@@ -33,7 +59,6 @@ async function loadLayout() {
 function loadUserToTopbar() {
 
     const user = JSON.parse(localStorage.getItem("user"));
-
     if (!user) return;
 
     const role = document.getElementById("userRole");
@@ -46,24 +71,25 @@ function loadUserToTopbar() {
             (user.name || "") + " " + (user.lastname || "");
     if (email) email.innerText = user.email || "-";
 }
+
+
 // ==============================
-// SET ACTIVE MENU
+// ACTIVE MENU
 // ==============================
 function setActiveMenu() {
 
-    const currentPage = location.pathname.split("/").pop();
+    const currentPage =
+        location.pathname.split("/").pop();
 
-    document.querySelectorAll(".nav-link-modern")
+    document
+        .querySelectorAll(".nav-link-modern")
         .forEach(link => {
 
-            const page = link.dataset.page;
-
-            if (page === currentPage) {
+            if (link.dataset.page === currentPage) {
                 link.classList.add("active");
             }
         });
 }
-
 
 
 // ==============================
@@ -78,36 +104,15 @@ function initLogout() {
     if (!btn) return;
 
     btn.addEventListener("click", () => {
-
         localStorage.removeItem("user");
         window.location.href = "index.html";
     });
 }
 
 
-
-<script>
 // ==============================
-// PAGE GUARD
+// START APP
 // ==============================
-function authGuard() {
-
-    const user = localStorage.getItem("user");
-    console.log("AUTH GUARD CHECK:", user);
-
-    if (!user) {
-        window.location.href = "index.html";
-    }
+if (authGuard()) {
+    loadLayout();
 }
-
-// run immediately
-authGuard();
-</script>
-
-
-
-// ==============================
-// START
-// ==============================
-authGuard();
-loadLayout();

@@ -14,19 +14,28 @@
         .modal-active { overflow: hidden; }
         .modal-backdrop-blur { backdrop-filter: blur(10px); background-color: rgba(15, 23, 42, 0.5); }
         .modal-animate { transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1); }
+        
+        /* Sidebar Width Sync */
+        aside#sidebar-placeholder { width: 256px; min-width: 256px; }
+        @media (max-width: 1024px) { aside#sidebar-placeholder { display: none; } }
     </style>
 </head>
 <body class="flex min-h-screen">
 
-    <aside id="sidebar-placeholder" class="hidden lg:block w-64 sticky top-0 h-screen bg-white border-r border-slate-200"></aside>
+    <aside id="sidebar-placeholder" class="hidden lg:block sticky top-0 h-screen bg-white border-r border-slate-200 z-50"></aside>
 
     <div class="flex-1 flex flex-col min-w-0">
-        <div id="topbar-placeholder"></div>
+        <div id="topbar-placeholder" class="sticky top-0 z-40"></div>
 
         <main class="p-4 md:p-8">
-            <div class="mb-8">
-                <h2 class="text-2xl font-bold text-slate-800 tracking-tight">System Audit Trail</h2>
-                <p class="text-sm text-slate-500">ติดตามกิจกรรมผู้ใช้และ Error ทั้งหมด (ย้อนหลัง 90 วัน)</p>
+            <div class="mb-8 flex justify-between items-end">
+                <div>
+                    <h2 class="text-2xl font-bold text-slate-800 tracking-tight">System Audit Trail</h2>
+                    <p class="text-sm text-slate-500">ติดตามกิจกรรมผู้ใช้และ Error ทั้งหมด (ย้อนหลัง 90 วัน)</p>
+                </div>
+                <div class="text-[10px] font-bold text-indigo-500 uppercase tracking-widest bg-indigo-50 px-3 py-1 rounded-full border border-indigo-100">
+                    Admin Access Only
+                </div>
             </div>
 
             <div class="bg-white p-6 rounded-[2.5rem] shadow-sm border border-slate-100 mb-6">
@@ -49,7 +58,7 @@
                         </select>
                     </div>
                     <div class="flex items-end">
-                        <button onclick="applyFilters()" class="w-full py-2.5 bg-[#5c56f1] text-white rounded-xl font-bold hover:bg-indigo-700 transition shadow-lg shadow-indigo-100">
+                        <button onclick="applyFilters()" class="w-full py-2.5 bg-[#5c56f1] text-white rounded-xl font-bold hover:bg-indigo-700 transition shadow-lg shadow-indigo-100 active:scale-95">
                             กรองข้อมูล
                         </button>
                     </div>
@@ -63,7 +72,7 @@
                             <tr class="bg-slate-50/50 border-b border-slate-100">
                                 <th class="p-6 text-[10px] font-black text-slate-400 uppercase tracking-widest">วัน/เวลา</th>
                                 <th class="p-6 text-[10px] font-black text-slate-400 uppercase tracking-widest">ผู้ใช้งาน / หน้า</th>
-                                <th class="p-6 text-[10px] font-black text-slate-400 uppercase tracking-widest">รายละเอียดกิจกรรม / สิ่งที่พิมพ์</th>
+                                <th class="p-6 text-[10px] font-black text-slate-400 uppercase tracking-widest">รายละเอียดกิจกรรม</th>
                                 <th class="p-6 text-[10px] font-black text-slate-400 uppercase tracking-widest text-center">ประเภท</th>
                             </tr>
                         </thead>
@@ -77,7 +86,7 @@
     </div>
 
     <div id="logout-modal" class="fixed inset-0 z-[100] hidden flex items-center justify-center p-4">
-        <div class="absolute inset-0 modal-backdrop-blur opacity-0 transition-opacity duration-300" id="logout-backdrop"></div>
+        <div class="absolute inset-0 modal-backdrop-blur opacity-0 transition-opacity duration-300" id="logout-backdrop" onclick="closeLogoutModal()"></div>
         <div class="relative bg-white w-full max-w-sm rounded-[3rem] p-10 shadow-2xl scale-90 opacity-0 modal-animate" id="logout-content">
             <div class="text-center">
                 <div class="w-20 h-20 bg-red-50 rounded-full flex items-center justify-center mx-auto mb-6">
@@ -87,7 +96,7 @@
                 <p class="text-slate-500 mb-8 text-sm">ต้องการออกจากระบบใช่หรือไม่?</p>
                 <div class="flex gap-3">
                     <button id="confirm-logout" class="flex-1 py-4 bg-red-500 text-white rounded-2xl font-bold hover:bg-red-600 transition shadow-lg">ยืนยัน</button>
-                    <button id="close-logout" class="flex-1 py-4 bg-slate-100 text-slate-600 rounded-2xl font-bold hover:bg-slate-200">ยกเลิก</button>
+                    <button id="close-logout" class="flex-1 py-4 bg-slate-100 text-slate-600 rounded-2xl font-bold hover:bg-slate-200" onclick="closeLogoutModal()">ยกเลิก</button>
                 </div>
             </div>
         </div>
@@ -128,7 +137,6 @@
                     el.innerHTML = await res.text();
                     el.classList.remove('hidden');
                     
-                    // เรียกใช้ Script ใน Component ที่โหลดมา
                     el.querySelectorAll("script").forEach(oldScript => {
                         const newScript = document.createElement("script");
                         newScript.type = "module";
@@ -138,7 +146,7 @@
                 }
             }
 
-            // ตั้งข้อมูลใน Topbar หลังโหลดเสร็จ
+            // Sync Profile to Topbar
             setTimeout(() => {
                 const nameEl = document.querySelector('#topbar-user-name');
                 const emailEl = document.querySelector('#topbar-user-email');
@@ -146,7 +154,11 @@
                 if (nameEl) nameEl.innerText = userData.name || "Admin";
                 if (emailEl) emailEl.innerText = email;
                 if (avatarEl) avatarEl.innerText = (userData.name || "A")[0].toUpperCase();
-            }, 500);
+
+                // Bind Logout to Sidebar Button (ถ้ามี)
+                const sidebarLogout = document.querySelector('#main-logout-btn');
+                if (sidebarLogout) sidebarLogout.onclick = (e) => { e.preventDefault(); openLogoutModal(); };
+            }, 600);
         }
 
         // --- 2. Auth Check ---
@@ -161,7 +173,7 @@
             } else { window.location.replace("login.html"); }
         });
 
-        // --- 3. Logs Data Management ---
+        // --- 3. Logs Logic ---
         function initLogsListener() {
             const ninetyDaysAgo = new Date();
             ninetyDaysAgo.setDate(ninetyDaysAgo.getDate() - 90);
@@ -170,7 +182,7 @@
                 collection(db, "logs"),
                 where("timestamp", ">=", ninetyDaysAgo),
                 orderBy("timestamp", "desc"),
-                limit(1000)
+                limit(500) // จำกัดเบื้องต้นเพื่อความเร็ว
             );
 
             onSnapshot(q, (snapshot) => {
@@ -188,7 +200,7 @@
 
             list.innerHTML = logs.map(log => {
                 const date = log.timestamp?.toDate().toLocaleString('th-TH') || '-';
-                const isError = log.isError === true || log.actionType === 'SYSTEM_ERROR';
+                const isError = log.isError === true || log.actionType === 'SYSTEM_ERROR' || log.actionType === 'ERROR';
                 
                 return `
                     <tr class="${isError ? 'error-row' : 'hover:bg-slate-50'} transition-all group">
@@ -223,11 +235,10 @@
 
                 return matchesUser && matchesDate && matchesType;
             });
-
             renderLogs(filtered);
         };
 
-        // --- 4. Logout Modal Support ---
+        // --- 4. Modal System ---
         window.openLogoutModal = () => {
             const modal = document.getElementById('logout-modal');
             modal.classList.remove('hidden');
@@ -238,7 +249,7 @@
             }, 10);
         };
 
-        const closeLogoutModal = () => {
+        window.closeLogoutModal = () => {
             document.getElementById('logout-backdrop').classList.remove('opacity-100');
             document.getElementById('logout-content').classList.add('scale-90', 'opacity-0');
             setTimeout(() => {
@@ -247,7 +258,6 @@
             }, 300);
         };
 
-        document.getElementById('close-logout').onclick = closeLogoutModal;
         document.getElementById('confirm-logout').onclick = async () => {
             await signOut(auth);
             window.location.replace("login.html");

@@ -1,4 +1,61 @@
-<a class="block p-3 rounded-lg cursor-pointer 
-hover:bg-primary text-gray-700">
-  Dashboard
-</a>
+/* 1. ตั้งค่าฟอนต์และพื้นหลังหลักทั้งระบบ */
+body { 
+    font-family: 'Kanit', sans-serif; 
+    background-color: #f8fafc; 
+    color: #1e293b;
+    margin: 0;
+}
+
+/* 2. ดีไซน์การ์ดแบบกระจก (ใช้กับหน้า Dashboard และตาราง) */
+.glass-card { 
+    background: white; 
+    border-radius: 2.5rem; 
+    box-shadow: 0 4px 20px rgba(0,0,0,0.02); 
+    transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1); 
+    border: 1px solid #f1f5f9; 
+}
+
+.glass-card:hover { 
+    transform: translateY(-5px); 
+    box-shadow: 0 15px 35px rgba(0,0,0,0.06); 
+}
+
+/* 3. ปุ่มหลักสีน้ำเงิน (Primary Button) */
+.btn-primary {
+    background-color: #5c67f2;
+    color: white;
+    padding: 0.875rem 2rem;
+    border-radius: 1.25rem;
+    font-weight: 700;
+    transition: all 0.2s;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    box-shadow: 0 10px 15px -3px rgba(92, 103, 242, 0.2);
+    border: none;
+    cursor: pointer;
+}
+
+.btn-primary:active {
+    transform: scale(0.95);
+}
+
+/* 4. สไตล์สำหรับ Modal (ใช้ร่วมกันทั้งระบบ) */
+.modal-backdrop-blur { 
+    backdrop-filter: blur(8px); 
+    background-color: rgba(15, 23, 42, 0.4); 
+}
+
+.modal-animate { 
+    transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1); 
+}
+
+/* 5. สถานะ Badge ในตาราง */
+.status-badge {
+    padding: 0.25rem 0.75rem;
+    border-radius: 9999px;
+    font-size: 10px;
+    font-weight: 900;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+}

@@ -1,18 +1,20 @@
 <div id="sidebar-wrapper"
-class="h-full flex flex-col bg-white transition-all duration-300 border-r border-slate-100 relative z-50 w-64">
+class="h-full flex flex-col bg-white transition-all duration-300 border-r border-slate-100 relative">
+
+    <!-- TOGGLE BUTTON (เหลือปุ่มเดียว) -->
+    <button id="sidebar-toggle"
+        class="absolute -right-3 top-24 w-7 h-7 bg-emerald-500 text-white
+        rounded-full flex items-center justify-center
+        shadow-lg hover:scale-110 transition z-[9999]">
+
+        <i id="toggle-icon" class="fa-solid fa-chevron-left text-xs"></i>
+    </button>
 
 
     <!-- LOGO -->
     <div class="flex items-center gap-3 px-6 h-20 overflow-hidden flex-shrink-0">
         
-    <!-- ✅ ปุ่มลูกศร (ต้องอยู่ตรงนี้) -->
-    <button id="sidebar-toggle"
-class="absolute -right-3 top-24 w-7 h-7 bg-emerald-500 text-white
-rounded-full flex items-center justify-center
-shadow-lg hover:scale-110 transition z-[9999]">
-
-    <i id="toggle-icon" class="fa-solid fa-chevron-left text-xs"></i>
-</button>
+   
     <!-- MENU -->
     <nav class="flex-1 px-4 py-6 space-y-2 overflow-y-auto">
 

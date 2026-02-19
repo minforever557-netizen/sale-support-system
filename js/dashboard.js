@@ -134,23 +134,31 @@ function initLiveClock() {
 }
 
 // 5. ระบบ Sidebar Toggle & Active Link
+// 5. ระบบ Sidebar Toggle & Active Link (แก้ไขให้รองรับโครงสร้าง Placeholder)
 function attachSidebarEvents() {
-    const sidebar = document.getElementById('sidebar-wrapper');
+    const sidebar = document.getElementById('sidebar-wrapper'); // ตัวจริงใน sidebar.html
+    const placeholder = document.getElementById('sidebar-placeholder'); // ตัวหุ้มใน dashboard.html
     const toggleBtn = document.getElementById('sidebar-toggle');
     const toggleIcon = document.getElementById('toggle-icon');
 
     if (toggleBtn && sidebar) {
         toggleBtn.onclick = (e) => {
             e.preventDefault();
+            // สั่งย่อทั้งตัว Placeholder และ Wrapper เพื่อความชัวร์
             sidebar.classList.toggle('mini');
+            if (placeholder) placeholder.classList.toggle('w-20'); // ปรับความกว้าง placeholder ด้วย
+            if (placeholder) placeholder.classList.toggle('w-64'); 
+
+            // เปลี่ยนไอคอนลูกศร
             if (toggleIcon) {
                 const isMini = sidebar.classList.contains('mini');
                 toggleIcon.className = isMini ? 'fa-solid fa-chevron-right' : 'fa-solid fa-chevron-left';
             }
         };
+        console.log("✅ Sidebar Toggle System Ready");
     }
 
-    // จัดการ Active Menu (ห้ามแก้ Link เดิม)
+    // จัดการ Active Menu
     const currentPath = window.location.pathname.split("/").pop() || "dashboard.html";
     document.querySelectorAll('.nav-link-modern').forEach(link => {
         if (link.getAttribute('data-page') === currentPath) {

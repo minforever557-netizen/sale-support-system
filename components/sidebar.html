@@ -1,22 +1,40 @@
-<div id="sidebar-wrapper" class="h-full flex flex-col bg-white transition-all duration-300 border-r border-slate-100 relative group">
-    
+<div id="sidebar-wrapper"
+class="w-64 h-full flex flex-col bg-white transition-all duration-300 border-r border-slate-100 relative z-50">
+
+    <!-- LOGO -->
     <div class="flex items-center gap-3 px-6 h-20 overflow-hidden flex-shrink-0">
-    <button id="sidebarToggle"
-    class="w-10 h-10 bg-emerald-500 rounded-full flex items-center justify-center text-white shadow hover:scale-95 transition">
+        <div class="w-10 h-10 bg-emerald-500 rounded-full"></div>
+        <span class="text-xl font-bold text-slate-800 sidebar-text">
+            SaleSupport
+        </span>
+    </div>
 
-    <i id="toggleIcon" class="fa-solid fa-chevron-left text-sm"></i>
+    <!-- ✅ ปุ่มลูกศร (ต้องอยู่ตรงนี้) -->
+    <button id="sidebar-toggle"
+    class="absolute -right-3 top-24 w-7 h-7 bg-emerald-500 text-white
+    rounded-full flex items-center justify-center
+    shadow-lg hover:scale-110 transition z-[9999]">
 
+        <i id="toggle-icon" class="fa-solid fa-chevron-left text-xs"></i>
+    </button>
+
+    <!-- MENU -->
+    <nav class="flex-1 px-4 py-6 space-y-2 overflow-y-auto">
+
+
+    <div class="flex items-center gap-3 px-6 h-20 overflow-hidden flex-shrink-0">
 </button>
 
     <span class="text-xl font-bold text-slate-800 sidebar-text">SaleSupport</span>
 </div>
-<button id="floatingToggle"
-class="absolute -right-3 top-24 w-6 h-6 bg-emerald-500 text-white rounded-full
-flex items-center justify-center shadow-lg z-[2000]
-hover:scale-110 transition">
+<button id="sidebar-toggle"
+class="absolute -right-3 top-24 w-7 h-7 bg-emerald-500 text-white
+rounded-full flex items-center justify-center
+shadow-lg hover:scale-110 transition z-[9999]">
 
-    <i id="floatingIcon" class="fa-solid fa-chevron-left text-[10px]"></i>
+    <i id="toggle-icon" class="fa-solid fa-chevron-left text-xs"></i>
 </button>
+
     <nav class="flex-1 px-4 py-6 space-y-2 overflow-y-auto">
     <p class="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] px-4 mb-4 sidebar-text">Main Menu</p>
         
@@ -58,6 +76,28 @@ hover:scale-110 transition">
             </a>
         </div>
     </nav>
+        <script>
+const sidebar = document.getElementById("sidebar-wrapper");
+const toggleBtn = document.getElementById("sidebar-toggle");
+const icon = document.getElementById("toggle-icon");
+
+toggleBtn.addEventListener("click", () => {
+
+    // เปลี่ยนขนาด sidebar
+    sidebar.classList.toggle("w-64");
+    sidebar.classList.toggle("w-20");
+
+    // ซ่อนข้อความ
+    document.querySelectorAll(".sidebar-text").forEach(el=>{
+        el.classList.toggle("hidden");
+    });
+
+    // กลับด้านลูกศร
+    icon.classList.toggle("fa-chevron-left");
+    icon.classList.toggle("fa-chevron-right");
+});
+</script>
+
 
     <div class="p-4 border-t border-slate-100">
 <button id="main-logout-btn" class="logout-btn-modern">

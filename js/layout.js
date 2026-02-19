@@ -102,6 +102,38 @@ function initLogout() {
         window.location.replace("index.html");
     };
 }
+// ==============================
+// CLOCK
+// ==============================
+function startClock() {
+
+    function updateClock() {
+
+        const now = new Date();
+
+        const time = now.toLocaleTimeString("th-TH", {
+            hour: "2-digit",
+            minute: "2-digit",
+            second: "2-digit"
+        });
+
+        const date = now.toLocaleDateString("th-TH", {
+            weekday: "long",
+            year: "numeric",
+            month: "long",
+            day: "numeric"
+        });
+
+        const timeEl = document.getElementById("topbar-time");
+        const dateEl = document.getElementById("topbar-date");
+
+        if (timeEl) timeEl.innerText = time;
+        if (dateEl) dateEl.innerText = date;
+    }
+
+    updateClock();
+    setInterval(updateClock, 1000);
+}
 
 
 // ==============================
@@ -109,3 +141,4 @@ function initLogout() {
 // ==============================
 authGuard();
 loadLayout();
+startClock();

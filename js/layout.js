@@ -111,21 +111,20 @@ function initSidebarToggle() {
 
     const btn = document.getElementById("sidebarToggle");
     const sidebar = document.getElementById("sidebar-container");
+    const arrow = document.getElementById("sidebarArrow");
 
     if (!btn || !sidebar) {
-        console.log("toggle not found");
+        console.log("Sidebar toggle not found");
         return;
     }
 
     btn.addEventListener("click", () => {
 
-        // ย่อ / ขยาย
         sidebar.classList.toggle("w-64");
         sidebar.classList.toggle("w-20");
 
-        // หมุนลูกศร
-        const icon = document.getElementById("toggleIcon");
-        if (icon) icon.classList.toggle("rotate-180");
+        if (arrow)
+            arrow.classList.toggle("rotate-180");
     });
 }
 

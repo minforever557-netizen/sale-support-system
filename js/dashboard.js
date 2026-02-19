@@ -140,14 +140,12 @@ function initSidebarBehavior(userData) {
     const currentPath = window.location.pathname.split("/").pop() || "dashboard.html";
 
     // --- 1. ตรวจสอบสิทธิ์จากฟิลด์ role เท่านั้น ---
-    const adminSection = document.getElementById('admin-menu-section');
+const adminSection = document.getElementById('admin-menu-section');
     if (adminSection) {
-        // เช็คจากค่าในฟิลด์ role ที่ดึงมาจาก Firestore
-        if (userData && userData.role === 'Admin') {
+        // ปรับให้เช็คเป็น 'admin' (ตัวเล็ก) ตามฐานข้อมูล
+        if (userData && userData.role && userData.role.toLowerCase() === 'admin') {
             adminSection.classList.remove('hidden', 'hidden-secure');
-            console.log("Admin access granted to menu");
         } else {
-            // หากไม่ใช่ Admin ให้ลบทิ้งเพื่อความปลอดภัย ไม่ให้เห็นแม้แต่โครงสร้าง
             adminSection.remove(); 
         }
     }

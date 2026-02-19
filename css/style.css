@@ -351,22 +351,30 @@ body {
     margin-left: 0.5rem;
 }
 
+/* กล่องกรอกข้อมูล: เน้นขอบให้ชัดเจนขึ้น */
 .profile-input-field {
     width: 100%;
-    background-color: #f8fafc; /* เทาอ่อนมาก */
-    border: 1.5px solid #f1f5f9;
-    border-radius: 1.25rem; /* ขอบโค้งสี่เหลี่ยม */
-    padding: 0.85rem 1.25rem;
+    background-color: #ffffff; /* เปลี่ยนเป็นสีขาวเพื่อให้ตัดกับพื้นหลังกล่องใหญ่ */
+    border: 2px solid #e2e8f0; /* เส้นขอบที่ชัดเจนขึ้น */
+    border-radius: 1rem;
+    padding: 0.75rem 1.25rem;
     font-size: 1rem;
     color: #1e293b;
-    transition: all 0.2s ease;
+    transition: all 0.3s ease;
+    box-shadow: inset 0 2px 4px rgba(0,0,0,0.02); /* เพิ่มมิติด้านใน */
+}
+   /* สถานะเมื่อ Hover: เส้นขอบจะเข้มขึ้นเล็กน้อย */
+.profile-input-field:hover {
+    border-color: #cbd5e1;
 }
 
+/* สถานะเมื่อคลิก (Focus): เปลี่ยนเป็นสีส้มตาม Theme และขยายเงา */
 .profile-input-field:focus {
     background-color: #ffffff;
     border-color: var(--primary-orange);
     outline: none;
-    box-shadow: 0 0 0 4px rgba(249, 115, 22, 0.1);
+    box-shadow: 0 0 0 4px rgba(249, 115, 22, 0.15);
+    transform: translateY(-1px); /* ยกตัวขึ้นเล็กน้อย */
 }
 
 /* กรณีช่องที่แก้ไขไม่ได้ */
@@ -396,3 +404,32 @@ select.profile-input-field {
     background-position: right 1rem center;
     background-size: 1rem;
 }
+/* ตกแต่ง Dropdown (Select) ให้หรูหรา */
+select.profile-input-field {
+    cursor: pointer;
+    appearance: none;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 24 24' stroke='%23f97316' stroke-width='3'%3E%3Cpath stroke-linecap='round' stroke-linejoin='round' d='M19 9l-7 7-7-7'%3E%3C/path%3E%3C/svg%3E");
+    background-repeat: no-repeat;
+    background-position: right 1.25rem center;
+    background-size: 1rem;
+    padding-right: 3rem;
+}
+   /* สำหรับช่อง Read-only (เช่น Username) */
+.profile-input-field:read-only {
+    background-color: #f8fafc;
+    border: 2px dashed #e2e8f0;
+    color: #94a3b8;
+    cursor: not-allowed;
+    box-shadow: none;
+}
+
+/* หัวข้อ (Labels) ให้ดูเด่นขึ้น */
+.field-label {
+    font-weight: 700;
+    color: #334155;
+    margin-bottom: 0.6rem;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+   

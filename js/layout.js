@@ -56,8 +56,9 @@ function loadUserToTopbar() {
     const user = JSON.parse(localStorage.getItem("user"));
     if (!user) return;
 
-    const fullname = document.getElementById("userFullname");
-    const role = document.getElementById("userRole");
+    const fullname = document.getElementById("topbar-user-name");
+    const role = document.getElementById("topbar-role");
+    const email = document.getElementById("topbar-user-email");
 
     if (fullname)
         fullname.innerText =
@@ -65,7 +66,11 @@ function loadUserToTopbar() {
 
     if (role)
         role.innerText = user.role || "User";
+
+    if (email)
+        email.innerText = user.email || "-";
 }
+
 
 
 // ==============================

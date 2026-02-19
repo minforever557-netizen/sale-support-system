@@ -1,3 +1,5 @@
+<!DOCTYPE html>
+<html lang="th">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -9,7 +11,7 @@
     <style>
         body { font-family: 'Kanit', sans-serif; background-color: #f8fafc; }
         
-        /* ควบคุมขนาด Sidebar เหมือนหน้า Dashboard */
+        /* ควบคุมขนาด Sidebar เหมือนหน้า Dashboard เพื่อไม่ให้ Layout พังขณะโหลด */
         #sidebar-placeholder { 
             width: 260px; 
             transition: all 0.3s ease; 
@@ -98,13 +100,218 @@
     </div>
 
     <div id="detail-modal" class="fixed inset-0 z-[100] hidden flex items-center justify-center p-4">
+        <div class="absolute inset-0 modal-backdrop-blur" onclick="closeDetailModal()"></div>
+        <div class="relative bg-white w-full max-w-2xl rounded-[3rem] shadow-2xl overflow-hidden flex flex-col max-h-[90vh]">
+            <div class="bg-emerald-600 p-8 text-white flex justify-between items-start">
+                <div>
+                    <h3 class="text-xl font-bold">รายละเอียดใบงาน</h3>
+                    <p class="text-emerald-100 text-[10px] uppercase font-black tracking-widest mt-1" id="det-modal-id">TICKET INFO</p>
+                </div>
+                <button onclick="closeDetailModal()" class="w-10 h-10 flex items-center justify-center bg-white/10 hover:bg-white/20 rounded-full transition text-white">
+                    <i class="fa-solid fa-xmark text-lg"></i>
+                </button>
+            </div>
+            <div class="p-8 overflow-y-auto custom-scroll space-y-6">
+                <div class="grid grid-cols-2 gap-6 bg-slate-50 p-6 rounded-[2rem] border border-slate-100">
+                    <div>
+                        <p class="text-[10px] font-black text-slate-400 uppercase mb-1 tracking-widest">Internet No.</p>
+                        <p id="det-id-number" class="font-bold text-slate-800">-</p>
+                    </div>
+                    <div>
+                        <p class="text-[10px] font-black text-slate-400 uppercase mb-1 tracking-widest">Create Date</p>
+                        <p id="det-create-date" class="text-slate-600">-</p>
+                    </div>
+                </div>
+                <div>
+                    <p class="text-[10px] font-black text-slate-400 uppercase mb-2 px-1 tracking-widest">หัวข้อปัญหา</p>
+                    <div id="det-topic" class="p-5 bg-white rounded-2xl border border-slate-100 font-bold text-emerald-700 shadow-sm">-</div>
+                </div>
+                <div>
+                    <p class="text-[10px] font-black text-slate-400 uppercase mb-2 px-1 tracking-widest">รายละเอียด</p>
+                    <div id="det-detail" class="bg-white p-6 rounded-2xl border border-slate-100 text-slate-600 text-sm leading-relaxed">-</div>
+                </div>
+                <div class="p-6 bg-emerald-50 rounded-[2rem] border border-emerald-100">
+                    <div class="flex justify-between items-center mb-4">
+                        <p class="text-[10px] font-black text-emerald-600 uppercase tracking-widest">Admin Resolution</p>
+                        <span id="det-admin-user" class="text-[9px] bg-emerald-200 text-emerald-800 px-3 py-1 rounded-full font-black">-</span>
+                    </div>
+                    <div id="det-admin-remark" class="bg-white p-4 rounded-xl text-slate-700 text-sm border border-emerald-50 italic">ไม่มีบันทึกเพิ่มเติม</div>
+                </div>
+            </div>
+            <div class="p-6 bg-slate-50 text-right border-t border-slate-100">
+                <button onclick="closeDetailModal()" class="px-10 py-3 bg-white border border-emerald-200 text-emerald-700 rounded-2xl font-bold hover:bg-emerald-50 transition shadow-sm">ปิด</button>
+            </div>
         </div>
+    </div>
 
     <div id="logout-modal" class="fixed inset-0 z-[110] hidden flex items-center justify-center p-4">
+        <div class="absolute inset-0 bg-slate-900/40 backdrop-blur-sm" id="logout-backdrop"></div>
+        <div class="relative bg-white w-full max-w-sm rounded-[3rem] p-10 shadow-2xl">
+            <div class="text-center">
+                <div class="w-20 h-20 bg-red-50 rounded-full flex items-center justify-center mx-auto mb-6">
+                    <span class="text-3xl">🚪</span>
+                </div>
+                <h3 class="text-2xl font-bold text-slate-800 mb-2">Logout?</h3>
+                <p class="text-slate-500 mb-8 text-sm">ต้องการออกจากระบบใช่หรือไม่?</p>
+                <div class="flex gap-3">
+                    <button id="confirm-logout" class="flex-1 py-4 bg-red-500 text-white rounded-2xl font-bold hover:bg-red-600 transition shadow-lg">ยืนยัน</button>
+                    <button id="close-logout" class="flex-1 py-4 bg-slate-100 text-slate-600 rounded-2xl font-bold hover:bg-slate-200">ยกเลิก</button>
+                </div>
+            </div>
         </div>
+    </div>
 
     <script type="module">
-        // ... (คงเดิม) ...
+        import { initializeApp, getApps } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
+        import { getFirestore, collection, query, where, orderBy, onSnapshot, doc, getDoc } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+        import { getAuth, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
+
+        const firebaseConfig = {
+            apiKey: "AIzaSyAa2uSD_tjNqYE2eXnZcn75h_jAVscDG-c",
+            authDomain: "salesupportsystemapp.firebaseapp.com",
+            projectId: "salesupportsystemapp",
+            storageBucket: "salesupportsystemapp.firebasestorage.app",
+            messagingSenderId: "840890441207",
+            appId: "1:840890441207:web:f3a5076d46e963a90de2f2"
+        };
+
+        const app = getApps().length === 0 ? initializeApp(firebaseConfig) : getApps()[0];
+        const db = getFirestore(app);
+        const auth = getAuth(app);
+
+        let currentTickets = [];
+
+        onAuthStateChanged(auth, async (user) => {
+            if (user) {
+                const userDoc = await getDoc(doc(db, "users", user.uid));
+                const adminDoc = await getDoc(doc(db, "admin", user.uid));
+                const userData = adminDoc.exists() ? adminDoc.data() : (userDoc.exists() ? userDoc.data() : {});
+                
+                await loadLayout(userData, user.email);
+                initTicketListener(user.email);
+            } else {
+                window.location.replace("login.html");
+            }
+        });
+
+        async function loadLayout(userData, email) {
+            const comps = [
+                { id: 'sidebar-placeholder', url: './components/sidebar.html' },
+                { id: 'topbar-placeholder', url: './components/topbar.html' }
+            ];
+            for (const comp of comps) {
+                const res = await fetch(comp.url);
+                if (res.ok) {
+                    const el = document.getElementById(comp.id);
+                    el.innerHTML = await res.text();
+                    
+                    el.querySelectorAll("script").forEach(s => {
+                        const ns = document.createElement("script");
+                        ns.type = "module";
+                        ns.textContent = s.textContent;
+                        document.head.appendChild(ns);
+                    });
+                }
+            }
+            
+            document.addEventListener('click', (e) => {
+                if (e.target.closest('#main-logout-btn')) {
+                    e.preventDefault();
+                    document.getElementById('logout-modal').classList.remove('hidden');
+                }
+            });
+        }
+
+        function initTicketListener(email) {
+            const [field, direction] = document.getElementById('sortOrder').value.split('-');
+            const q = query(
+                collection(db, "tickets"),
+                where("ownerEmail", "==", email),
+                orderBy(field, direction)
+            );
+
+            onSnapshot(q, (snapshot) => {
+                currentTickets = snapshot.docs.map(d => ({ id: d.id, ...d.data() }));
+                renderTickets(currentTickets);
+            });
+        }
+
+        function renderTickets(tickets) {
+            const list = document.getElementById('ticket-list');
+            const searchTerm = document.getElementById('searchInput').value.toLowerCase();
+
+            const filtered = tickets.filter(t => 
+                t.id_number?.toLowerCase().includes(searchTerm) || 
+                t.topic?.toLowerCase().includes(searchTerm)
+            );
+
+            if (filtered.length === 0) {
+                list.innerHTML = `<tr><td colspan="6" class="p-20 text-center text-slate-400">ไม่พบใบงานที่ค้นหา</td></tr>`;
+                return;
+            }
+
+            list.innerHTML = filtered.map(t => {
+                const createDate = t.createdAt?.toDate().toLocaleString('th-TH', {dateStyle:'short', timeStyle:'short'}) || '-';
+                const updateDate = t.updatedAt?.toDate().toLocaleString('th-TH', {dateStyle:'short', timeStyle:'short'}) || '-';
+                
+                let statusClass = "bg-slate-100 text-slate-600";
+                if(t.status === 'Open') statusClass = "bg-blue-100 text-blue-700";
+                if(t.status === 'On Progress') statusClass = "bg-orange-100 text-orange-700";
+                if(t.status === 'Success') statusClass = "bg-emerald-100 text-emerald-700";
+                if(t.status === 'Reject') statusClass = "bg-red-100 text-red-700";
+
+                return `
+                    <tr class="hover:bg-emerald-50/30 transition-all border-b border-emerald-50 last:border-0 group">
+                        <td class="p-7 font-bold text-slate-700 group-hover:text-emerald-700 transition-colors">${t.id_number || '-'}</td>
+                        <td class="p-7 text-slate-500 text-[12px]">${createDate}</td>
+                        <td class="p-7 text-slate-700 font-medium">${t.topic}</td>
+                        <td class="p-7 text-center">
+                            <span class="status-badge ${statusClass}">${t.status}</span>
+                        </td>
+                        <td class="p-7 text-slate-500 text-[12px]">${updateDate}</td>
+                        <td class="p-7 text-right px-10">
+                            <button onclick="viewDetail('${t.id}')" class="bg-slate-50 text-slate-600 hover:bg-emerald-600 hover:text-white px-5 py-2.5 rounded-xl text-xs font-black transition-all active:scale-95 shadow-sm">
+                                <i class="fa-solid fa-eye mr-2"></i>ดูข้อมูล
+                            </button>
+                        </td>
+                    </tr>
+                `;
+            }).join('');
+        }
+
+        window.viewDetail = async (id) => {
+            const docSnap = await getDoc(doc(db, "tickets", id));
+            if (docSnap.exists()) {
+                const t = docSnap.data();
+                document.getElementById('det-modal-id').innerText = `ID: ${id}`;
+                document.getElementById('det-id-number').innerText = t.id_number || '-';
+                document.getElementById('det-create-date').innerText = t.createdAt?.toDate().toLocaleString('th-TH') || '-';
+                document.getElementById('det-topic').innerText = t.topic;
+                document.getElementById('det-detail').innerText = t.detail;
+                document.getElementById('det-admin-user').innerText = t.adminName || 'System';
+                document.getElementById('det-admin-remark').innerText = t.adminNote || 'ไม่มีบันทึกเพิ่มเติมจากแอดมิน';
+
+                document.getElementById('detail-modal').classList.remove('hidden');
+                document.body.classList.add('modal-active');
+            }
+        };
+
+        window.closeDetailModal = () => {
+            document.getElementById('detail-modal').classList.add('hidden');
+            document.body.classList.remove('modal-active');
+        };
+
+        document.getElementById('searchInput').addEventListener('input', () => renderTickets(currentTickets));
+        document.getElementById('sortOrder').addEventListener('change', () => {
+            const authUser = auth.currentUser;
+            if (authUser) initTicketListener(authUser.email);
+        });
+
+        document.getElementById('close-logout').onclick = () => document.getElementById('logout-modal').classList.add('hidden');
+        document.getElementById('confirm-logout').onclick = async () => {
+            await signOut(auth);
+            window.location.replace("login.html");
+        };
     </script>
 </body>
 </html>

@@ -7,16 +7,14 @@
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://fonts.googleapis.com/css2?family=Kanit:wght@300;400;600&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
-    <style>
-        body { font-family: 'Kanit', sans-serif; background-color: #f8fafc; }
-        .glass-card { background: white; border-radius: 2.5rem; border: 1px solid #f1f5f9; box-shadow: 0 10px 50px rgba(0,0,0,0.03); }
-        textarea { resize: none; line-height: 1.8; scrollbar-width: none; }
-        textarea::-webkit-scrollbar { display: none; }
-        
-        .custom-scroll::-webkit-scrollbar { width: 6px; }
-        .custom-scroll::-webkit-scrollbar-track { background: #f1f1f1; }
-        .custom-scroll::-webkit-scrollbar-thumb { background: #6366f1; border-radius: 10px; }
+    
+    <link rel="stylesheet" href="./css/style.css"> 
 
+    <style>
+        body { font-family: 'Kanit', sans-serif; }
+        .glass-card { background: white; border-radius: 3rem; border: 1px solid #f1f5f9; box-shadow: 0 10px 50px rgba(0,0,0,0.03); }
+        textarea { resize: none; line-height: 1.8; }
+        
         /* Success Overlay */
         #success-overlay {
             display: none;
@@ -36,75 +34,75 @@
         }
     </style>
 </head>
-<body class="flex min-h-screen overflow-hidden">
+<body class="flex min-h-screen">
 
-    <aside id="sidebar-placeholder" class="hidden lg:block w-64 sticky top-0 h-screen bg-white border-r border-slate-200 flex-shrink-0"></aside>
+    <aside id="sidebar-placeholder" class="hidden lg:block w-64 sticky top-0 h-screen bg-white border-r border-slate-200"></aside>
 
-    <div class="flex-1 flex flex-col min-w-0 h-screen">
+    <div class="flex-1 flex flex-col min-w-0">
         
-        <div id="topbar-placeholder" class="sticky top-0 z-40"></div>
+        <div id="topbar-placeholder"></div>
 
-        <main class="flex-1 overflow-y-auto p-4 md:p-10 custom-scroll">
-            <div class="max-w-4xl mx-auto w-full fade-in-up">
-                
-                <div class="mb-8 px-4">
+        <main class="p-6 md:p-10 max-w-7xl mx-auto w-full space-y-8 fade-in-up">
+            
+            <div class="flex flex-col md:flex-row justify-between items-start md:items-center gap-6">
+                <div>
                     <h2 class="text-3xl font-bold text-slate-800 tracking-tight">สร้างใบงานใหม่</h2>
-                    <p class="text-indigo-600 font-medium text-sm mt-1">Create a new support ticket</p>
+                    <p class="text-slate-500 mt-1">กรุณากรอกข้อมูลเพื่อแจ้งปัญหาหรือขอรับบริการ</p>
+                </div>
+            </div>
+
+            <div class="glass-card overflow-hidden">
+                <div class="bg-emerald-600 p-8 md:p-10 text-white relative overflow-hidden">
+                    <div class="relative z-10">
+                        <h3 class="text-2xl font-bold tracking-tight">Ticket Details</h3>
+                        <p class="text-emerald-100 mt-2 opacity-90 text-sm">กรุณากรอกข้อมูลต่อท้ายหัวข้อที่ระบบเตรียมไว้ให้</p>
+                    </div>
+                    <div class="absolute -right-10 -top-10 w-40 h-40 bg-white/10 rounded-full blur-2xl"></div>
                 </div>
 
-                <div class="glass-card overflow-hidden">
-                    <div class="bg-indigo-600 p-8 md:p-10 text-white relative overflow-hidden">
-                        <div class="relative z-10">
-                            <h3 class="text-2xl font-bold tracking-tight">Ticket Details</h3>
-                            <p class="text-indigo-100 mt-2 opacity-90 text-sm">กรุณากรอกข้อมูลต่อท้ายหัวข้อที่ระบบเตรียมไว้ให้</p>
+                <form id="ticketForm" class="p-8 md:p-10 space-y-8">
+                    <div class="flex items-center gap-4 p-5 bg-emerald-50/50 rounded-[2rem] border border-emerald-100/50">
+                        <div id="form-user-avatar" class="w-12 h-12 bg-emerald-600 rounded-2xl flex items-center justify-center text-white font-bold text-xl shadow-lg shadow-emerald-200">-</div>
+                        <div>
+                            <p class="text-[10px] text-emerald-500 font-black uppercase tracking-[0.2em]">เจ้าหน้าที่ผู้แจ้ง</p>
+                            <p id="form-user-name" class="font-bold text-slate-700 text-lg uppercase">กำลังโหลด...</p>
                         </div>
-                        <div class="absolute -right-10 -top-10 w-40 h-40 bg-white/10 rounded-full blur-2xl"></div>
                     </div>
 
-                    <form id="ticketForm" class="p-8 md:p-10 space-y-8">
-                        <div class="flex items-center gap-4 p-5 bg-indigo-50/50 rounded-[2rem] border border-indigo-100/50">
-                            <div id="form-user-avatar" class="w-12 h-12 bg-indigo-600 rounded-2xl flex items-center justify-center text-white font-bold text-xl shadow-lg shadow-indigo-200">-</div>
-                            <div>
-                                <p class="text-[10px] text-indigo-400 font-black uppercase tracking-[0.2em]">เจ้าหน้าที่ผู้แจ้ง</p>
-                                <p id="form-user-name" class="font-bold text-slate-700 text-lg uppercase">กำลังโหลด...</p>
-                            </div>
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+                        <div class="space-y-3">
+                            <label class="text-[11px] font-black text-slate-400 uppercase tracking-widest ml-2">1. หัวข้อปัญหา</label>
+                            <select id="topic" required class="w-full px-6 py-4 bg-slate-50 border border-slate-100 rounded-2xl focus:bg-white focus:border-emerald-500 outline-none transition-all font-semibold text-slate-600 cursor-pointer">
+                                <option value="">เลือกหัวข้อปัญหา</option>
+                            </select>
                         </div>
+                        <div class="space-y-3">
+                            <label class="text-[11px] font-black text-slate-400 uppercase tracking-widest ml-2">2. Internet No.</label>
+                            <input type="text" id="id_number" required placeholder="88XXXXXXXX" 
+                                class="w-full px-6 py-4 bg-slate-50 border border-slate-100 rounded-2xl focus:bg-white focus:border-emerald-500 outline-none transition-all font-semibold text-slate-700">
+                        </div>
+                    </div>
 
-                        <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
-                            <div class="space-y-3">
-                                <label class="text-[11px] font-black text-slate-400 uppercase tracking-widest ml-2">1. หัวข้อปัญหา</label>
-                                <select id="topic" required class="w-full px-6 py-4 bg-slate-50 border border-slate-100 rounded-2xl focus:bg-white focus:border-indigo-500 focus:ring-4 focus:ring-indigo-500/5 outline-none transition-all font-semibold text-slate-600 cursor-pointer">
-                                    <option value="">เลือกหัวข้อปัญหา</option>
-                                </select>
-                            </div>
-                            <div class="space-y-3">
-                                <label class="text-[11px] font-black text-slate-400 uppercase tracking-widest ml-2">2. Internet No.</label>
-                                <input type="text" id="id_number" required placeholder="88XXXXXXXX" 
-                                    class="w-full px-6 py-4 bg-slate-50 border border-slate-100 rounded-2xl focus:bg-white focus:border-indigo-500 focus:ring-4 focus:ring-indigo-500/5 outline-none transition-all font-semibold text-slate-700">
+                    <div class="space-y-4">
+                        <div class="flex justify-between items-center px-2">
+                            <label class="text-[11px] font-black text-slate-400 uppercase tracking-widest">3. รายละเอียดปัญหา</label>
+                            <div id="sla-badge" class="hidden bg-emerald-50 border border-emerald-100 px-4 py-2 rounded-full">
+                                <p class="text-[10px] font-black text-emerald-700 uppercase" id="sla-hours-text"></p>
                             </div>
                         </div>
+                        <textarea id="detail-input" rows="8" required 
+                            class="w-full px-8 py-6 bg-slate-50 border border-slate-100 rounded-[2.5rem] focus:bg-white focus:border-emerald-500 outline-none transition-all text-slate-700 shadow-inner"></textarea>
+                    </div>
 
-                        <div class="space-y-4">
-                            <div class="flex justify-between items-center px-2">
-                                <label class="text-[11px] font-black text-slate-400 uppercase tracking-widest">3. รายละเอียดปัญหา</label>
-                                <div id="sla-badge" class="hidden bg-emerald-50 border border-emerald-100 px-4 py-2 rounded-full">
-                                    <p class="text-[10px] font-black text-emerald-700 uppercase" id="sla-hours-text"></p>
-                                </div>
-                            </div>
-                            <textarea id="detail-input" rows="8" required 
-                                class="w-full px-8 py-6 bg-slate-50 border border-slate-100 rounded-[2.5rem] focus:bg-white focus:border-indigo-500 focus:ring-4 focus:ring-indigo-500/5 outline-none transition-all text-slate-700 shadow-inner"></textarea>
-                        </div>
-
-                        <div class="pt-4">
-                            <button type="submit" id="submitBtn" class="w-full py-5 bg-indigo-600 text-white rounded-[2rem] font-bold text-lg hover:bg-indigo-700 hover:shadow-2xl hover:shadow-indigo-200 transition-all flex justify-center items-center gap-3 active:scale-[0.98]">
-                                <i class="fa-solid fa-paper-plane text-sm"></i> ยืนยันการส่งข้อมูล
-                            </button>
-                        </div>
-                    </form>
-                </div>
-                
-                <div class="h-10"></div>
+                    <div class="pt-4">
+                        <button type="submit" id="submitBtn" class="w-full py-5 bg-emerald-600 text-white rounded-[2rem] font-bold text-lg hover:bg-emerald-700 hover:shadow-2xl hover:shadow-emerald-200 transition-all flex justify-center items-center gap-3 active:scale-[0.98]">
+                            <i class="fa-solid fa-paper-plane text-sm"></i> ยืนยันการส่งข้อมูล
+                        </button>
+                    </div>
+                </form>
             </div>
+            
+            <div class="h-10"></div>
         </main>
     </div>
 
@@ -117,6 +115,8 @@
             <p class="text-slate-500">ระบบกำลังนำคุณไปยังหน้ารายการใบงาน...</p>
         </div>
     </div>
+
+    <script type="module" src="./js/dashboard.js"></script>
 
     <script type="module">
         import { initializeApp, getApps } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
@@ -140,10 +140,7 @@
         let originalLines = [];
         let userDataGlobal = null;
 
-        const ticketForm = document.getElementById('ticketForm');
-        const topicSelect = document.getElementById('topic');
-        const detailInput = document.getElementById('detail-input');
-
+        // ตรวจสอบสถานะการเข้าสู่ระบบ
         onAuthStateChanged(auth, async (user) => {
             if (user) {
                 const adminDoc = await getDoc(doc(db, "admin", user.uid));
@@ -151,37 +148,20 @@
                 userDataGlobal = adminDoc.exists() ? adminDoc.data() : (userDoc.exists() ? userDoc.data() : {});
                 userDataGlobal.uid = user.uid;
                 userDataGlobal.email = user.email;
-                loadLayout(userDataGlobal);
+
+                // อัปเดตข้อมูลผู้แจ้งในฟอร์ม (รอ dashboard.js โหลด)
+                setTimeout(() => {
+                    document.getElementById('form-user-name').innerText = userDataGlobal.name || "User";
+                    document.getElementById('form-user-avatar').innerText = (userDataGlobal.name || "U")[0].toUpperCase();
+                }, 800);
             } else {
                 window.location.replace("login.html");
             }
         });
 
-        async function loadLayout(userData) {
-            const comps = [
-                { id: 'sidebar-placeholder', url: './components/sidebar.html' },
-                { id: 'topbar-placeholder', url: './components/topbar.html' }
-            ];
-            for (const comp of comps) {
-                const res = await fetch(comp.url);
-                if (res.ok) {
-                    const el = document.getElementById(comp.id);
-                    el.innerHTML = await res.text();
-                    el.classList.remove('hidden');
-                    el.querySelectorAll("script").forEach(s => {
-                        const ns = document.createElement("script");
-                        ns.type = "module"; ns.textContent = s.textContent;
-                        document.head.appendChild(ns);
-                    });
-                }
-            }
-            setTimeout(() => {
-                document.getElementById('form-user-name').innerText = userData.name || "User";
-                document.getElementById('form-user-avatar').innerText = (userData.name || "U")[0].toUpperCase();
-            }, 800);
-        }
-
+        // ดึงหัวข้อปัญหา
         onSnapshot(collection(db, "topics"), (snapshot) => {
+            const topicSelect = document.getElementById('topic');
             topicSelect.innerHTML = '<option value="">เลือกหัวข้อปัญหา</option>';
             snapshot.forEach(doc => {
                 topicsData[doc.id] = doc.data();
@@ -191,44 +171,36 @@
             });
         });
 
-        topicSelect.addEventListener('change', (e) => {
+        // Event: เมื่อเปลี่ยนหัวข้อ
+        document.getElementById('topic').addEventListener('change', (e) => {
             const topic = topicsData[e.target.value];
             if (topic) {
                 originalLines = (topic.checklist || "").split("\n").filter(l => l.trim() !== "");
-                detailInput.value = originalLines.map(line => line + " ").join("\n");
+                document.getElementById('detail-input').value = originalLines.map(line => line + " ").join("\n");
                 document.getElementById('sla-hours-text').innerText = `🕒 SLA: ${topic.sla} ชม.`;
                 document.getElementById('sla-badge').classList.remove('hidden');
             }
         });
 
-        detailInput.addEventListener('input', () => {
-            const lines = detailInput.value.split("\n");
-            const restored = lines.map((line, i) => {
-                const orig = originalLines[i] ? originalLines[i] + " " : "";
-                if (orig && !line.startsWith(orig)) return orig + line.replace(new RegExp('^' + orig.trim()), '');
-                return line;
-            });
-            if (detailInput.value !== restored.join("\n")) detailInput.value = restored.join("\n");
-        });
-
-        ticketForm.addEventListener('submit', async (e) => {
+        // Event: ส่งฟอร์ม
+        document.getElementById('ticketForm').addEventListener('submit', async (e) => {
             e.preventDefault();
             const btn = document.getElementById('submitBtn');
-            const originalBtn = btn.innerHTML;
             btn.disabled = true;
             btn.innerHTML = `<i class="fa-solid fa-spinner animate-spin"></i> กำลังบันทึก...`;
 
             try {
-                const selectedTopic = topicsData[topicSelect.value];
+                const topicId = document.getElementById('topic').value;
+                const selectedTopic = topicsData[topicId];
                 const slaHours = parseInt(selectedTopic.sla) || 0;
                 const dDate = new Date();
                 dDate.setHours(dDate.getHours() + slaHours);
 
                 await addDoc(collection(db, "tickets"), {
                     topic: selectedTopic.name,
-                    topicId: topicSelect.value,
+                    topicId: topicId,
                     id_number: document.getElementById('id_number').value.trim(),
-                    detail: detailInput.value,
+                    detail: document.getElementById('detail-input').value,
                     status: "Open",
                     owner: userDataGlobal.name || "Unknown",
                     ownerEmail: userDataGlobal.email || "",
@@ -241,21 +213,18 @@
                     due_at: dDate
                 });
 
-                const overlay = document.getElementById('success-overlay');
-                const content = document.getElementById('success-content');
-                overlay.style.display = 'flex';
+                document.getElementById('success-overlay').style.display = 'flex';
                 setTimeout(() => {
-                    content.classList.replace('opacity-0', 'opacity-100');
-                    content.classList.replace('scale-95', 'scale-100');
+                    document.getElementById('success-content').classList.replace('opacity-0', 'opacity-100');
+                    document.getElementById('success-content').classList.replace('scale-95', 'scale-100');
                 }, 50);
 
                 setTimeout(() => { window.location.href = "my-ticket.html"; }, 2200);
 
             } catch (error) {
-                console.error("Save error:", error);
                 alert("เกิดข้อผิดพลาด: " + error.message);
                 btn.disabled = false;
-                btn.innerHTML = originalBtn;
+                btn.innerHTML = `<i class="fa-solid fa-paper-plane text-sm"></i> ยืนยันการส่งข้อมูล`;
             }
         });
     </script>

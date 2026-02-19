@@ -118,17 +118,30 @@ body {
 }
 
 /* 5. รองรับ Mini Sidebar (เมื่อกดพับเมนู) */
-#sidebar-placeholder.mini .sidebar-text {
-    display: none; /* ซ่อนตัวหนังสือเมื่อย่อ */
+#sidebar-placeholder.mini {
+    width: 80px; /* ลดความกว้างลงให้พอดีไอคอน */
 }
 
+/* ปรับปรุงการย่อ Sidebar */
+#sidebar-placeholder {
+    width: 280px; /* ความกว้างปกติ */
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* ซ่อนข้อความและลูกศรในปุ่ม Logout เมื่อย่อ */
+#sidebar-placeholder.mini .sidebar-text,
+#sidebar-placeholder.mini .fa-chevron-right {
+    display: none;
+}
+/* ปรับให้เนื้อหาขยับตาม (ถ้าใช้ Flexbox ใน body) */
+.flex-1 {
+    transition: all 0.3s ease;
+}
+/* จัดไอคอนให้อยู่ตรงกลางเมื่อย่อ */
 #sidebar-placeholder.mini .nav-link-modern {
-    justify-content: center; /* จัดไอคอนไว้ตรงกลาง */
-    padding: 12px 0;
-}
-
-#sidebar-placeholder.mini p.sidebar-text {
-    display: none; /* ซ่อนหัวข้อ Group Menu (Main / Admin) */
+    justify-content: center;
+    padding-left: 0;
+    padding-right: 0;
 }
 
 /* เมนูที่กำลังใช้งานอยู่ (Active) */

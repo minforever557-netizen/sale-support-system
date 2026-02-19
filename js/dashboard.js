@@ -2,7 +2,7 @@ import { initializeApp, getApps } from "https://www.gstatic.com/firebasejs/10.7.
 import { getFirestore, doc, getDoc, collection, getDocs, query, where } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
 import { getAuth, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
 
-// 1. Firebase Configuration (แทนที่ Config เดิม)
+// 1. Firebase Configuration
 const firebaseConfig = {
     apiKey: "AIzaSyAa2uSD_tjNqYE2eXnZcn75h_jAVscDG-c",
     authDomain: "salesupportsystemapp.firebaseapp.com",
@@ -16,7 +16,40 @@ const app = getApps().length === 0 ? initializeApp(firebaseConfig) : getApps()[0
 const db = getFirestore(app);
 const auth = getAuth(app);
 
-// 2. ฟังก์ชันโหลด Sidebar/Topbar (แทนที่การเขียนชื่อ User แบบเดิม)
+// 2. ฟังก์ชันตรวจสอบสิทธิ์ (หัวใจสำคัญที่แก้ปัญหาเด้ง)
+onAuthStateChanged(auth, async (user) => {
+    if (user) {
+        // พบ User: พยายามดึงข้อมูลจาก Collection "admin"
+        try {
+            const adminDoc = await getDoc(doc(db, "admin", user.uid));
+            if (adminDoc.exists()) {
+                const userData = adminDoc.data();
+                // ล้าง localStorage เก่าทิ้งเพื่อป้องกันการตีกัน
+                localStorage.removeItem("user"); 
+                
+                // เริ่มโหลด Layout และข้อมูล
+                await initGlobalLayout(userData, user.email);
+                loadDashboardStats(user.email);
+            } else {
+                // หาก Login ผ่านแต่ไม่มีชื่อในระบบ admin ให้เตะออก
+                console.error("No admin record found");
+                await signOut(auth);
+                window.location.replace("login.html");
+            }
+        } catch (error) {
+            console.error("Error fetching admin data:", error);
+            window.location.replace("login.html");
+        }
+    } else {
+        // ไม่พบ User: ให้กลับไปหน้า Login
+        // เช็คก่อนว่าเราไม่ได้อยู่ที่หน้า login.html อยู่แล้วเพื่อป้องกัน Loop
+        if (!window.location.pathname.includes("login.html")) {
+            window.location.replace("login.html");
+        }
+    }
+});
+
+// --- ฟังก์ชันเสริม (เหมือนเดิม) ---
 async function initGlobalLayout(userData, email) {
     const comps = [
         { id: 'sidebar-placeholder', url: './components/sidebar.html' },
@@ -27,74 +60,47 @@ async function initGlobalLayout(userData, email) {
         const res = await fetch(comp.url);
         if (res.ok) {
             const el = document.getElementById(comp.id);
-            el.innerHTML = await res.text();
-            el.classList.remove('hidden');
+            if (el) {
+                el.innerHTML = await res.text();
+                el.classList.remove('hidden');
+            }
         }
     }
 
-    // ส่งชื่อ User ไปแสดงที่ Topbar (แทนที่ document.getElementById("loginUser"))
     const checkTopbar = setInterval(() => {
         const nameEl = document.querySelector('#topbar-user-name');
         if (nameEl) {
             nameEl.innerText = userData.name || "User";
-            document.querySelector('#topbar-user-email').innerText = email;
-            document.querySelector('#topbar-avatar-text').innerText = (userData.name || "U")[0].toUpperCase();
+            const emailEl = document.querySelector('#topbar-user-email');
+            const avatarEl = document.querySelector('#topbar-avatar-text');
+            if (emailEl) emailEl.innerText = email;
+            if (avatarEl) avatarEl.innerText = (userData.name || "U")[0].toUpperCase();
             clearInterval(checkTopbar);
         }
     }, 100);
 }
 
-// 3. ตรวจสอบสถานะการเข้าระบบ (แทนที่ Session Check เดิม)
-onAuthStateChanged(auth, async (user) => {
-    if (user) {
-        const adminDoc = await getDoc(doc(db, "admin", user.uid));
-        if (adminDoc.exists()) {
-            const userData = adminDoc.data();
-            await initGlobalLayout(userData, user.email);
-            loadDashboardStats(user.email);
-        }
-    } else {
-        window.location.replace("login.html");
-    }
-});
-
-// 4. โหลดสถิติใบงาน (ส่วน Logic หลักของ Dashboard)
 async function loadDashboardStats(userEmail) {
     try {
         const q = query(collection(db, "tickets"), where("ownerEmail", "==", userEmail));
         const snap = await getDocs(q);
-        
         let total = 0, progress = 0, closed = 0;
-        let slaTasks = [];
-
         snap.forEach(docSnap => {
             const d = docSnap.data();
             total++;
-            if (["In Progress", "Pending"].includes(d.status)) {
-                progress++;
-                if(d.sla_due) slaTasks.push({id: docSnap.id, ...d});
-            }
+            if (["In Progress", "Pending"].includes(d.status)) progress++;
             if (["Success", "Closed"].some(s => d.status?.includes(s))) closed++;
         });
-
-        // อัปเดตตัวเลขในหน้าจอ
         document.getElementById('stat-total').innerText = total;
         document.getElementById('stat-progress').innerText = progress;
         document.getElementById('stat-closed').innerText = closed;
-
-        // อัปเดต Success Rate Chart
-        const rate = total > 0 ? Math.round((closed / total) * 100) : 0;
-        const circle = document.getElementById('progress-circle');
-        if(circle) {
-            document.getElementById('eff-percent').innerText = rate + '%';
-            circle.setAttribute('stroke-dasharray', `${rate} 100`);
-        }
     } catch (err) { console.error("Stats Error:", err); }
 }
 
-// 5. ระบบ Logout Modal (แทนที่ logoutBtn เดิม)
+// ระบบ Modal Logout
 window.toggleLogout = (show) => {
     const modal = document.getElementById('logout-modal');
+    if (!modal) return;
     if (show) {
         modal.classList.remove('hidden');
         setTimeout(() => {
@@ -108,10 +114,8 @@ window.toggleLogout = (show) => {
     }
 };
 
-document.getElementById('close-logout').onclick = () => window.toggleLogout(false);
-document.getElementById('confirm-logout').onclick = () => signOut(auth);
-
-// ดักฟังการคลิก Logout จาก Sidebar
 document.addEventListener('click', (e) => {
     if (e.target.closest('#main-logout-btn')) window.toggleLogout(true);
+    if (e.target.id === 'close-logout') window.toggleLogout(false);
+    if (e.target.id === 'confirm-logout') signOut(auth).then(() => window.location.replace("login.html"));
 });

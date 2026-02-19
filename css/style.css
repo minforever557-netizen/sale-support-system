@@ -236,7 +236,22 @@ body {
 
 /* จัดการปุ่ม Logout: เมื่อย่อ (mini) ให้ซ่อนรูปทั้งหมด */
 #sidebar-placeholder.mini .logout-btn-modern {
-    display: none !important; 
+    display: flex !important; /* ดึงปุ่มกลับมา */
+    justify-content: center !important;
+    padding: 14px 0 !important;
+    background-color: transparent !important; /* เอาพื้นหลังออกตอนย่อให้ดูคลีน */
+}
+/* ซ่อนเฉพาะข้อความในปุ่ม Logout */
+#sidebar-placeholder.mini .logout-btn-modern .sidebar-text,
+#sidebar-placeholder.mini .logout-btn-modern div {
+    display: none !important;
+}
+
+/* บังคับให้ไอคอน i แสดงผลเสมอ */
+#sidebar-placeholder.mini .logout-btn-modern i {
+    display: block !important;
+    font-size: 1.25rem !important;
+    margin: 0 !important;
 }
 
 /* เมื่อไม่ย่อ (ปกติ) ให้แสดงปุ่ม Logout พร้อมไอคอน */

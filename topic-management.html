@@ -7,53 +7,65 @@
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://fonts.googleapis.com/css2?family=Kanit:wght@300;400;600&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <link rel="stylesheet" href="./css/style.css"> 
     <style>
-        body { font-family: 'Kanit', sans-serif; background-color: #f8fafc; }
+        body { font-family: 'Kanit', sans-serif; background-color: #f8fafc; color: #1e293b; }
         .modal-animate { animation: fadeIn 0.2s ease-out; }
         @keyframes fadeIn { from { opacity: 0; transform: scale(0.95); } to { opacity: 1; transform: scale(1); } }
         
-        /* Logout Modal Styles (Standardized) */
+        /* Modal & Overlay System */
         .modal-active { overflow: hidden; }
         #logout-modal { transition: visibility 0.3s; }
         #logout-backdrop { transition: opacity 0.3s ease-out; }
         #logout-content { transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1); }
+        .fade-in { animation: fadeInMain 0.5s ease-out; }
+        @keyframes fadeInMain { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
     </style>
 </head>
 <body class="flex min-h-screen">
 
-    <aside id="sidebar-placeholder"
-class="hidden lg:block flex-shrink-0">
-</aside>
+    <aside id="sidebar-placeholder" class="hidden lg:block w-64 sticky top-0 h-screen bg-white border-r border-slate-200"></aside>
 
     <div class="flex-1 flex flex-col min-w-0">
-        <div id="topbar-placeholder"></div>
+        <div id="topbar-placeholder" class="sticky top-0 z-50"></div>
 
-        <main class="p-4 md:p-8">
-            <div class="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-8">
-                <div>
-                    <h2 class="text-2xl font-bold text-slate-800 tracking-tight">จัดการหัวข้อและ SLA</h2>
-                    <p class="text-sm text-slate-500">กำหนดหัวข้อปัญหา, SLA และ Checklist สำหรับเจ้าหน้าที่</p>
+        <main class="p-4 md:p-10 fade-in">
+            <div class="max-w-7xl mx-auto">
+                
+                <div class="flex flex-col md:flex-row justify-between items-start md:items-center gap-6 mb-10">
+                    <div>
+                        <h2 class="text-3xl font-bold text-slate-800 tracking-tight">จัดการหัวข้อและ SLA</h2>
+                        <p class="text-slate-500 mt-1">กำหนดหัวข้อปัญหา, ระยะเวลาดำเนินการ และ Checklist สำหรับเจ้าหน้าที่</p>
+                    </div>
+                    <button onclick="openTopicModal()" class="bg-[#5d58f0] text-white px-8 py-4 rounded-2xl font-bold hover:bg-indigo-700 transition shadow-xl shadow-indigo-100 flex items-center gap-3 active:scale-95">
+                        <i class="fa-solid fa-plus text-sm"></i> 
+                        <span>เพิ่มหัวข้อใหม่</span>
+                    </button>
                 </div>
-                <button onclick="openTopicModal()" class="bg-[#5d58f0] text-white px-6 py-3 rounded-2xl font-bold hover:bg-indigo-700 transition shadow-lg flex items-center gap-2 active:scale-95">
-                    <i class="fa-solid fa-plus text-sm"></i> เพิ่มหัวข้อใหม่
-                </button>
-            </div>
 
-            <div class="bg-white rounded-[2.5rem] shadow-xl overflow-hidden border border-slate-100">
-                <div class="overflow-x-auto">
-                    <table class="w-full text-left">
-                        <thead>
-                            <tr class="bg-slate-50/50 border-b border-slate-100">
-                                <th class="p-6 text-[10px] font-black text-slate-400 uppercase tracking-widest">ชื่อหัวข้อ</th>
-                                <th class="p-6 text-[10px] font-black text-slate-400 uppercase tracking-widest text-center">SLA (ชั่วโมง)</th>
-                                <th class="p-6 text-[10px] font-black text-slate-400 uppercase tracking-widest">Checklist / คำแนะนำ</th>
-                                <th class="p-6 text-[10px] font-black text-slate-400 uppercase tracking-widest text-right">จัดการ</th>
-                            </tr>
-                        </thead>
-                        <tbody id="topic-list" class="divide-y divide-slate-50">
-                            <tr><td colspan="4" class="p-10 text-center text-slate-400 italic">กำลังโหลดข้อมูล...</td></tr>
-                        </tbody>
-                    </table>
+                <div class="bg-white rounded-[2.5rem] shadow-sm border border-slate-100 overflow-hidden">
+                    <div class="overflow-x-auto">
+                        <table class="w-full text-left border-collapse">
+                            <thead>
+                                <tr class="bg-slate-50/50 border-b border-slate-100">
+                                    <th class="p-6 text-[10px] font-black text-slate-400 uppercase tracking-widest">ชื่อหัวข้อ</th>
+                                    <th class="p-6 text-[10px] font-black text-slate-400 uppercase tracking-widest text-center">SLA (ชั่วโมง)</th>
+                                    <th class="p-6 text-[10px] font-black text-slate-400 uppercase tracking-widest">Checklist / คำแนะนำ</th>
+                                    <th class="p-6 text-[10px] font-black text-slate-400 uppercase tracking-widest text-right">จัดการ</th>
+                                </tr>
+                            </thead>
+                            <tbody id="topic-list" class="divide-y divide-slate-50">
+                                <tr>
+                                    <td colspan="4" class="p-12 text-center">
+                                        <div class="flex flex-col items-center gap-3">
+                                            <i class="fa-solid fa-circle-notch animate-spin text-indigo-500 text-2xl"></i>
+                                            <p class="text-slate-400 text-sm">กำลังโหลดข้อมูลหัวข้อ...</p>
+                                        </div>
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
                 </div>
             </div>
         </main>
@@ -62,26 +74,29 @@ class="hidden lg:block flex-shrink-0">
     <div id="topicModal" class="hidden fixed inset-0 z-[60] flex items-center justify-center p-4">
         <div class="absolute inset-0 bg-slate-900/60 backdrop-blur-sm" onclick="closeTopicModal()"></div>
         <div class="relative bg-white w-full max-w-lg rounded-[3rem] shadow-2xl overflow-hidden modal-animate">
-            <div class="bg-[#5d58f0] p-8 text-white text-center">
-                <h3 id="modal-title" class="text-xl font-bold">เพิ่มหัวข้อใหม่</h3>
-                <p class="text-indigo-100 text-xs mt-1">ตั้งค่าชื่อหัวข้อและระยะเวลาดำเนินการ (SLA)</p>
+            <div class="bg-[#5d58f0] p-10 text-white text-center">
+                <div class="w-16 h-16 bg-white/20 rounded-2xl flex items-center justify-center mx-auto mb-4 text-2xl">
+                    <i class="fa-solid fa-gears"></i>
+                </div>
+                <h3 id="modal-title" class="text-2xl font-bold">เพิ่มหัวข้อใหม่</h3>
+                <p class="text-indigo-100 text-sm mt-1">ตั้งค่าชื่อหัวข้อและระยะเวลาดำเนินการ</p>
             </div>
-            <div class="p-8 space-y-4">
+            <div class="p-10 space-y-6">
                 <div>
-                    <label class="block text-[10px] font-black text-slate-400 uppercase mb-1 ml-2">ชื่อหัวข้อ (ไทย)</label>
-                    <input type="text" id="topic-name" class="w-full p-4 bg-slate-50 border-2 border-slate-100 rounded-2xl focus:border-indigo-500 outline-none transition" placeholder="เช่น แจ้งปัญหาระบบ, ติดตามงาน">
+                    <label class="block text-[10px] font-black text-slate-400 uppercase mb-2 ml-2 tracking-widest">ชื่อหัวข้อ (ภาษาไทย)</label>
+                    <input type="text" id="topic-name" class="w-full p-4 bg-slate-50 border-2 border-slate-100 rounded-2xl focus:border-indigo-500 focus:bg-white outline-none transition" placeholder="เช่น แจ้งปัญหาระบบ, ติดตามงาน">
                 </div>
                 <div>
-                    <label class="block text-[10px] font-black text-slate-400 uppercase mb-1 ml-2">SLA (จำนวนชั่วโมง)</label>
-                    <input type="number" id="topic-sla" class="w-full p-4 bg-slate-50 border-2 border-slate-100 rounded-2xl focus:border-indigo-500 outline-none transition" placeholder="ระบุตัวเลข เช่น 4, 24, 48">
+                    <label class="block text-[10px] font-black text-slate-400 uppercase mb-2 ml-2 tracking-widest">SLA (จำนวนชั่วโมง)</label>
+                    <input type="number" id="topic-sla" class="w-full p-4 bg-slate-50 border-2 border-slate-100 rounded-2xl focus:border-indigo-500 focus:bg-white outline-none transition" placeholder="ระบุตัวเลข เช่น 4, 24, 48">
                 </div>
                 <div>
-                    <label class="block text-[10px] font-black text-slate-400 uppercase mb-1 ml-2">Checklist / คำแนะนำ</label>
-                    <textarea id="topic-checklist" rows="4" class="w-full p-4 bg-slate-50 border-2 border-slate-100 rounded-2xl focus:border-indigo-500 outline-none transition text-sm" placeholder="ระบุสิ่งที่ User ต้องกรอกหรือเตรียมมา..."></textarea>
+                    <label class="block text-[10px] font-black text-slate-400 uppercase mb-2 ml-2 tracking-widest">Checklist / คำแนะนำ</label>
+                    <textarea id="topic-checklist" rows="4" class="w-full p-4 bg-slate-50 border-2 border-slate-100 rounded-2xl focus:border-indigo-500 focus:bg-white outline-none transition text-sm" placeholder="ระบุสิ่งที่ User ต้องกรอกหรือเตรียมมา..."></textarea>
                 </div>
-                <div class="pt-4 flex gap-3">
+                <div class="pt-4 flex gap-4">
                     <button onclick="closeTopicModal()" class="flex-1 py-4 text-slate-500 font-bold hover:bg-slate-100 rounded-2xl transition">ยกเลิก</button>
-                    <button onclick="saveTopic()" id="save-btn" class="flex-[2] py-4 bg-[#5d58f0] text-white rounded-2xl font-bold hover:bg-indigo-700 shadow-lg transition active:scale-95">บันทึกข้อมูล</button>
+                    <button onclick="saveTopic()" id="save-btn" class="flex-[2] py-4 bg-[#5d58f0] text-white rounded-2xl font-bold hover:bg-indigo-700 shadow-xl shadow-indigo-100 transition active:scale-95">บันทึกข้อมูล</button>
                 </div>
             </div>
         </div>
@@ -90,18 +105,21 @@ class="hidden lg:block flex-shrink-0">
     <div id="logout-modal" class="fixed inset-0 z-[100] hidden">
         <div class="absolute inset-0 bg-slate-900/40 backdrop-blur-sm opacity-0" id="logout-backdrop"></div>
         <div class="absolute inset-0 flex items-center justify-center p-4">
-            <div class="bg-white w-full max-w-sm rounded-[2.5rem] p-8 shadow-2xl scale-90 opacity-0" id="logout-content">
-                <div class="w-20 h-20 bg-red-50 rounded-full flex items-center justify-center mx-auto mb-6"><span class="text-4xl">🚪</span></div>
-                <h3 class="text-2xl font-bold text-slate-800 text-center mb-2">ออกจากระบบ?</h3>
-                <p class="text-slate-500 text-center mb-8 text-sm leading-relaxed">คุณต้องการออกจากระบบใช่หรือไม่?</p>
-                <div class="flex gap-3">
-                    <button id="close-logout" class="flex-1 py-4 bg-slate-100 text-slate-600 rounded-2xl font-bold hover:bg-slate-200 transition-colors">ยกเลิก</button>
-                    <button id="confirm-logout" class="flex-1 py-4 bg-red-500 text-white rounded-2xl font-bold hover:bg-red-600 shadow-lg transition-all active:scale-95">ออกเลย</button>
+            <div class="bg-white w-full max-w-sm rounded-[3rem] p-10 shadow-2xl scale-90 opacity-0" id="logout-content">
+                <div class="text-center">
+                    <div class="w-20 h-20 bg-red-50 rounded-full flex items-center justify-center mx-auto mb-6"><span class="text-4xl">🚪</span></div>
+                    <h3 class="text-2xl font-bold text-slate-800 mb-2">ออกจากระบบ?</h3>
+                    <p class="text-slate-500 mb-8 text-sm leading-relaxed">ข้อมูลที่ยังไม่บันทึกอาจจะสูญหาย<br>ต้องการออกจากระบบใช่หรือไม่?</p>
+                    <div class="flex gap-3">
+                        <button id="close-logout" class="flex-1 py-4 bg-slate-100 text-slate-600 rounded-2xl font-bold hover:bg-slate-200 transition">ยกเลิก</button>
+                        <button id="confirm-logout" class="flex-1 py-4 bg-red-500 text-white rounded-2xl font-bold hover:bg-red-600 shadow-lg transition active:scale-95">ยืนยัน</button>
+                    </div>
                 </div>
             </div>
         </div>
     </div>
 
+    <script type="module" src="./js/dashboard.js"></script>
     <script type="module">
         import { initializeApp, getApps } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
         import { getFirestore, collection, onSnapshot, doc, setDoc, deleteDoc, serverTimestamp, getDoc, query, orderBy } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
@@ -122,8 +140,33 @@ class="hidden lg:block flex-shrink-0">
 
         let editId = null;
 
-        // --- Logout Logic ---
-        const openLogoutModal = () => {
+        // --- Auth & Layout Loader ---
+        onAuthStateChanged(auth, async (user) => {
+            if (user) {
+                const adminDoc = await getDoc(doc(db, "admin", user.uid));
+                if (adminDoc.exists()) {
+                    // Note: dashboard.js handle loading HTML, we just sync data here
+                    syncUserData(adminDoc.data(), user.email);
+                    listenTopics();
+                } else { window.location.replace("login.html"); }
+            } else { window.location.replace("login.html"); }
+        });
+
+        function syncUserData(userData, email) {
+            // Wait for components to be injected by dashboard.js
+            const checkExist = setInterval(() => {
+                const nameEl = document.querySelector('#topbar-user-name');
+                if (nameEl) {
+                    nameEl.innerText = userData.name || "Admin";
+                    if(document.querySelector('#topbar-user-email')) document.querySelector('#topbar-user-email').innerText = email;
+                    if(document.querySelector('#topbar-avatar-text')) document.querySelector('#topbar-avatar-text').innerText = (userData.name || "A")[0].toUpperCase();
+                    clearInterval(checkExist);
+                }
+            }, 100);
+        }
+
+        // --- Logout Modal Logic ---
+        window.handleLogout = () => {
             const logModal = document.getElementById('logout-modal');
             logModal.classList.remove('hidden');
             document.body.classList.add('modal-active');
@@ -142,77 +185,47 @@ class="hidden lg:block flex-shrink-0">
             }, 300);
         };
 
-        // --- Auth & Layout ---
-        onAuthStateChanged(auth, async (user) => {
-            if (user) {
-                const adminDoc = await getDoc(doc(db, "admin", user.uid));
-                if (adminDoc.exists()) {
-                    loadLayout(adminDoc.data(), user.email);
-                    listenTopics();
-                } else { window.location.replace("login.html"); }
-            } else { window.location.replace("login.html"); }
+        document.getElementById('close-logout').onclick = closeLogoutModal;
+        document.getElementById('confirm-logout').onclick = async () => {
+            await signOut(auth);
+            window.location.replace("login.html");
+        };
+
+        // Delegate Click to catch Sidebar Logout Button
+        document.addEventListener('click', (e) => {
+            if (e.target.closest('#logout-btn') || e.target.closest('.logout-link')) {
+                e.preventDefault();
+                window.handleLogout();
+            }
         });
 
-        async function loadLayout(userData, email) {
-            const components = [
-                { id: 'sidebar-placeholder', url: './components/sidebar.html' },
-                { id: 'topbar-placeholder', url: './components/topbar.html' }
-            ];
-
-            for (const comp of components) {
-                const res = await fetch(comp.url);
-                if (res.ok) {
-                    const container = document.getElementById(comp.id);
-                    container.innerHTML = await res.text();
-                    container.classList.remove('hidden');
-                    
-                    // Activate Scripts
-                    container.querySelectorAll("script").forEach(s => {
-                        const ns = document.createElement("script");
-                        ns.type = "module";
-                        ns.textContent = s.textContent;
-                        document.head.appendChild(ns);
-                    });
-                }
-            }
-
-            // Sync User Info (Topbar)
-            setTimeout(() => {
-                const nameEl = document.querySelector('#topbar-user-name');
-                const emailEl = document.querySelector('#topbar-user-email');
-                const avatarEl = document.querySelector('#topbar-avatar-text');
-                if(nameEl) nameEl.innerText = userData.name || "Admin";
-                if(emailEl) emailEl.innerText = email;
-                if(avatarEl) avatarEl.innerText = (userData.name || "A")[0].toUpperCase();
-            }, 500);
-
-            // Hook Logout
-            const btnLogout = document.getElementById('main-logout-btn');
-            if (btnLogout) btnLogout.addEventListener('click', (e) => { e.preventDefault(); openLogoutModal(); });
-        }
-
-        // --- Core Topic Logic ---
+        // --- Topic Core Logic ---
         function listenTopics() {
             const q = query(collection(db, "topics"), orderBy("updatedAt", "desc"));
             onSnapshot(q, (snapshot) => {
                 const list = document.getElementById('topic-list');
                 if (snapshot.empty) {
-                    list.innerHTML = '<tr><td colspan="4" class="p-10 text-center text-slate-400 italic">ยังไม่มีข้อมูลหัวข้อ</td></tr>';
+                    list.innerHTML = '<tr><td colspan="4" class="p-16 text-center text-slate-400 italic font-light">ไม่พบข้อมูลหัวข้อในระบบ</td></tr>';
                     return;
                 }
                 list.innerHTML = snapshot.docs.map(docSnap => {
                     const d = docSnap.data();
                     return `
-                        <tr class="hover:bg-slate-50 transition-colors">
-                            <td class="p-6 font-bold text-slate-700">${d.name}</td>
-                            <td class="p-6 text-center font-bold text-indigo-600">${d.sla} ชม.</td>
-                            <td class="p-6 text-sm text-slate-500 max-w-xs truncate">${d.checklist || '-'}</td>
+                        <tr class="hover:bg-slate-50/80 transition-colors group">
+                            <td class="p-6">
+                                <span class="font-bold text-slate-700 block">${d.name}</span>
+                                <span class="text-[10px] text-slate-400 font-medium">ID: ${docSnap.id}</span>
+                            </td>
+                            <td class="p-6 text-center">
+                                <span class="px-4 py-1.5 bg-indigo-50 text-indigo-600 rounded-full font-black text-xs">${d.sla} ชม.</span>
+                            </td>
+                            <td class="p-6">
+                                <p class="text-sm text-slate-500 max-w-xs truncate">${d.checklist || '<span class="italic text-slate-300">ไม่มี Checklist</span>'}</p>
+                            </td>
                             <td class="p-6 text-right">
-                                <div class="flex justify-end gap-2">
-                                    <button onclick="openTopicModal('${docSnap.id}')" class="bg-indigo-50 text-indigo-600 px-4 py-2 rounded-xl font-bold hover:bg-indigo-100 transition">แก้ไข</button>
-                                    <button onclick="deleteTopic('${docSnap.id}')" class="text-slate-300 hover:text-red-500 transition-all p-2">
-                                        <i class="fa-solid fa-trash-can"></i>
-                                    </button>
+                                <div class="flex justify-end gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
+                                    <button onclick="openTopicModal('${docSnap.id}')" class="bg-indigo-600 text-white px-4 py-2 rounded-xl text-xs font-bold hover:bg-indigo-700 shadow-lg shadow-indigo-100 transition">แก้ไข</button>
+                                    <button onclick="deleteTopic('${docSnap.id}')" class="bg-white border border-slate-200 text-slate-400 px-4 py-2 rounded-xl text-xs font-bold hover:text-red-500 hover:border-red-100 transition">ลบ</button>
                                 </div>
                             </td>
                         </tr>
@@ -244,35 +257,32 @@ class="hidden lg:block flex-shrink-0">
         window.closeTopicModal = () => document.getElementById('topicModal').classList.add('hidden');
 
         window.saveTopic = async () => {
-            const name = document.getElementById('topic-name').value;
+            const name = document.getElementById('topic-name').value.trim();
             const sla = document.getElementById('topic-sla').value;
-            const checklist = document.getElementById('topic-checklist').value;
+            const checklist = document.getElementById('topic-checklist').value.trim();
 
             if (!name || !sla) return alert("กรุณากรอกข้อมูลให้ครบถ้วน");
 
-            const topicId = editId || name.toLowerCase().replace(/\s+/g, '-');
             const btn = document.getElementById('save-btn');
+            const topicId = editId || name.toLowerCase().replace(/\s+/g, '-');
             
             try {
                 btn.disabled = true;
+                btn.innerText = "กำลังบันทึก...";
                 await setDoc(doc(db, "topics", topicId), {
                     name, sla: parseInt(sla), checklist, updatedAt: serverTimestamp()
                 }, { merge: true });
                 closeTopicModal();
             } catch(e) { alert("Error: " + e.message); }
-            finally { btn.disabled = false; }
+            finally { 
+                btn.disabled = false; 
+                btn.innerText = "บันทึกข้อมูล";
+            }
         };
 
         window.deleteTopic = async (id) => {
-            if (confirm("ยืนยันการลบหัวข้อนี้?")) await deleteDoc(doc(db, "topics", id));
+            if (confirm("ยืนยันการลบหัวข้อนี้ออกจากระบบ?")) await deleteDoc(doc(db, "topics", id));
         };
-
-        // Event Listeners
-        document.getElementById('close-logout').addEventListener('click', closeLogoutModal);
-        document.getElementById('confirm-logout').addEventListener('click', async () => {
-            await signOut(auth);
-            window.location.replace("login.html");
-        });
     </script>
 </body>
 </html>

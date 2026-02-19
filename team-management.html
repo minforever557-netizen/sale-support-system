@@ -7,72 +7,85 @@
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://fonts.googleapis.com/css2?family=Kanit:wght@300;400;600&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <link rel="stylesheet" href="./css/style.css"> 
     <style>
-        body { font-family: 'Kanit', sans-serif; background-color: #f8fafc; }
+        body { font-family: 'Kanit', sans-serif; background-color: #f8fafc; color: #1e293b; }
         .modal-animate { animation: fadeIn 0.2s ease-out; }
         @keyframes fadeIn { from { opacity: 0; transform: scale(0.95); } to { opacity: 1; transform: scale(1); } }
-        .team-card:hover { border-color: #5c56f1; transform: translateY(-2px); transition: all 0.3s ease; }
-
-        /* Logout Modal Styles (เหมือน User Management) */
+        .team-card { transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1); }
+        .team-card:hover { border-color: #5d58f0; transform: translateY(-4px); box-shadow: 0 20px 25px -5px rgba(93, 88, 240, 0.1); }
+        
+        /* Logout Modal Styles System */
         .modal-active { overflow: hidden; }
         #logout-modal { transition: visibility 0.3s; }
         #logout-backdrop { transition: opacity 0.3s ease-out; }
         #logout-content { transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1); }
+        .fade-in { animation: fadeInMain 0.5s ease-out; }
+        @keyframes fadeInMain { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
     </style>
 </head>
 <body class="flex min-h-screen">
 
-     <aside id="sidebar-placeholder" class="hidden lg:block w-64 sticky top-0 h-screen bg-white border-r border-slate-200"></aside>
+    <aside id="sidebar-placeholder" class="hidden lg:block w-64 sticky top-0 h-screen bg-white border-r border-slate-200"></aside>
 
     <div class="flex-1 flex flex-col min-w-0">
-        <div id="topbar-placeholder"></div>
+        <div id="topbar-placeholder" class="sticky top-0 z-50"></div>
 
-        <main class="p-4 md:p-8">
-            <div class="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-8">
-                <div>
-                    <h2 class="text-2xl font-bold text-slate-800 tracking-tight">โครงสร้างทีม (Team Structure)</h2>
-                    <p class="text-sm text-slate-500">จัดการทีมหลักและทีมย่อยเพื่อใช้ในการแบ่งกลุ่มพนักงาน</p>
+        <main class="p-4 md:p-10 fade-in">
+            <div class="max-w-7xl mx-auto">
+                <div class="flex flex-col md:flex-row justify-between items-start md:items-center gap-6 mb-10">
+                    <div>
+                        <h2 class="text-3xl font-bold text-slate-800 tracking-tight">โครงสร้างทีม (Team Structure)</h2>
+                        <p class="text-slate-500 mt-1">จัดการทีมหลักและทีมย่อยเพื่อใช้ในการแบ่งกลุ่มพนักงานในระบบ</p>
+                    </div>
+                    <button onclick="openTeamModal()" class="bg-[#5d58f0] text-white px-8 py-4 rounded-2xl font-bold hover:bg-indigo-700 transition shadow-xl shadow-indigo-100 flex items-center gap-3 active:scale-95">
+                        <i class="fa-solid fa-plus text-sm"></i> 
+                        <span>เพิ่มทีมใหม่</span>
+                    </button>
                 </div>
-                <button onclick="openTeamModal()" class="bg-[#5d58f0] text-white px-6 py-3 rounded-2xl font-bold hover:bg-indigo-700 transition shadow-lg flex items-center gap-2 active:scale-95">
-                    <i class="fa-solid fa-plus text-sm"></i> เพิ่มทีมใหม่
-                </button>
-            </div>
 
-            <div id="team-display-container" class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
-                <div class="p-10 text-center text-slate-400 col-span-full italic">กำลังโหลดข้อมูลโครงสร้างทีม...</div>
+                <div id="team-display-container" class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-8">
+                    <div class="p-20 text-center text-slate-400 col-span-full italic flex flex-col items-center gap-4">
+                        <i class="fa-solid fa-circle-notch animate-spin text-2xl text-indigo-500"></i>
+                        กำลังโหลดข้อมูลโครงสร้างทีม...
+                    </div>
+                </div>
             </div>
         </main>
     </div>
 
     <div id="teamModal" class="hidden fixed inset-0 z-[60] flex items-center justify-center p-4">
         <div class="absolute inset-0 bg-slate-900/60 backdrop-blur-sm" onclick="closeTeamModal()"></div>
-        <div class="relative bg-white w-full max-w-md rounded-[3rem] shadow-2xl overflow-hidden modal-animate">
-            <div class="bg-[#5d58f0] p-8 text-white text-center">
-                <h3 class="text-xl font-bold">ตั้งค่าข้อมูลทีม</h3>
-                <p class="text-indigo-100 text-xs mt-1">กำหนดประเภทและชื่อทีมให้สอดคล้องกับองค์กร</p>
+        <div class="relative bg-white w-full max-w-md rounded-[3rem] shadow-2xl overflow-hidden modal-animate border border-white/20">
+            <div class="bg-[#5d58f0] p-10 text-white text-center">
+                <div class="w-16 h-16 bg-white/20 rounded-2xl flex items-center justify-center mx-auto mb-4 text-2xl">
+                    <i class="fa-solid fa-sitemap"></i>
+                </div>
+                <h3 class="text-2xl font-bold">ตั้งค่าข้อมูลทีม</h3>
+                <p class="text-indigo-100 text-sm mt-1">กำหนดประเภทและสังกัดให้ถูกต้อง</p>
             </div>
-            <div class="p-8 space-y-6">
+            <div class="p-10 space-y-6">
                 <div>
                     <label class="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2 ml-2">ประเภททีม</label>
-                    <select id="team-type" onchange="toggleParentSelect()" class="w-full p-4 bg-slate-50 border-2 border-slate-100 rounded-2xl outline-none focus:border-indigo-500">
+                    <select id="team-type" onchange="toggleParentSelect()" class="w-full p-4 bg-slate-50 border-2 border-slate-100 rounded-2xl outline-none focus:border-indigo-500 focus:bg-white transition-all appearance-none cursor-pointer">
                         <option value="main">ทีมหลัก (Main Team)</option>
                         <option value="sub">ทีมย่อย (Sub Team)</option>
                     </select>
                 </div>
                 
-                <div id="parent-selection-div" class="hidden">
+                <div id="parent-selection-div" class="hidden animate-fadeIn">
                     <label class="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2 ml-2">สังกัดทีมหลัก</label>
-                    <select id="parent-team-select" class="w-full p-4 bg-slate-50 border-2 border-slate-100 rounded-2xl outline-none focus:border-indigo-500"></select>
+                    <select id="parent-team-select" class="w-full p-4 bg-slate-50 border-2 border-slate-100 rounded-2xl outline-none focus:border-indigo-500 focus:bg-white appearance-none cursor-pointer"></select>
                 </div>
 
                 <div>
                     <label class="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2 ml-2">ชื่อทีม</label>
-                    <input type="text" id="team-name" placeholder="เช่น ภาคกลาง, Telesale..." class="w-full p-4 bg-slate-50 border-2 border-slate-100 rounded-2xl outline-none focus:border-indigo-500">
+                    <input type="text" id="team-name" placeholder="เช่น ภาคกลาง, Telesale..." class="w-full p-4 bg-slate-50 border-2 border-slate-100 rounded-2xl outline-none focus:border-indigo-500 focus:bg-white transition-all">
                 </div>
             </div>
             <div class="p-8 bg-slate-50 flex gap-4 border-t border-slate-100">
                 <button onclick="closeTeamModal()" class="flex-1 py-4 font-bold text-slate-500 hover:bg-slate-200 rounded-2xl transition">ยกเลิก</button>
-                <button onclick="saveTeam()" id="save-team-btn" class="flex-[2] py-4 bg-[#5d58f0] text-white rounded-2xl font-bold hover:bg-indigo-700 shadow-xl transition-all">บันทึกข้อมูล</button>
+                <button onclick="saveTeam()" id="save-team-btn" class="flex-[2] py-4 bg-[#5d58f0] text-white rounded-2xl font-bold hover:bg-indigo-700 shadow-xl shadow-indigo-100 transition-all active:scale-95">บันทึกข้อมูล</button>
             </div>
         </div>
     </div>
@@ -80,20 +93,23 @@
     <div id="logout-modal" class="fixed inset-0 z-[100] hidden">
         <div class="absolute inset-0 bg-slate-900/40 backdrop-blur-sm opacity-0" id="logout-backdrop"></div>
         <div class="absolute inset-0 flex items-center justify-center p-4">
-            <div class="bg-white w-full max-w-sm rounded-[2.5rem] p-8 shadow-2xl scale-90 opacity-0" id="logout-content">
-                <div class="w-20 h-20 bg-red-50 rounded-full flex items-center justify-center mx-auto mb-6">
-                    <span class="text-4xl">🚪</span>
-                </div>
-                <h3 class="text-2xl font-bold text-slate-800 text-center mb-2">ออกจากระบบ?</h3>
-                <p class="text-slate-500 text-center mb-8 text-sm leading-relaxed">คุณต้องการออกจากระบบใช่หรือไม่?</p>
-                <div class="flex gap-3">
-                    <button id="close-logout" class="flex-1 py-4 bg-slate-100 text-slate-600 rounded-2xl font-bold hover:bg-slate-200 transition-colors">ยกเลิก</button>
-                    <button id="confirm-logout" class="flex-1 py-4 bg-red-500 text-white rounded-2xl font-bold hover:bg-red-600 shadow-lg transition-all active:scale-95">ออกเลย</button>
+            <div class="bg-white w-full max-w-sm rounded-[2.5rem] p-10 shadow-2xl scale-90 opacity-0" id="logout-content">
+                <div class="text-center">
+                    <div class="w-20 h-20 bg-red-50 rounded-full flex items-center justify-center mx-auto mb-6">
+                        <span class="text-4xl">🚪</span>
+                    </div>
+                    <h3 class="text-2xl font-bold text-slate-800 mb-2">ออกจากระบบ?</h3>
+                    <p class="text-slate-500 mb-8 text-sm">ต้องการออกจากระบบใช่หรือไม่?</p>
+                    <div class="flex gap-3">
+                        <button id="close-logout" class="flex-1 py-4 bg-slate-100 text-slate-600 rounded-2xl font-bold hover:bg-slate-200 transition">ยกเลิก</button>
+                        <button id="confirm-logout" class="flex-1 py-4 bg-red-500 text-white rounded-2xl font-bold hover:bg-red-600 shadow-lg transition active:scale-95">ยืนยัน</button>
+                    </div>
                 </div>
             </div>
         </div>
     </div>
 
+    <script type="module" src="./js/dashboard.js"></script>
     <script type="module">
         import { initializeApp, getApps } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
         import { getFirestore, collection, addDoc, onSnapshot, deleteDoc, doc, getDoc, serverTimestamp, query, orderBy } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
@@ -111,84 +127,64 @@
         const app = getApps().length === 0 ? initializeApp(firebaseConfig) : getApps()[0];
         const db = getFirestore(app);
         const auth = getAuth(app);
-        window.auth = auth;
 
-        // --- Logout Modal Logic ---
-        const logModal = document.getElementById('logout-modal');
-        const logBackdrop = document.getElementById('logout-backdrop');
-        const logContent = document.getElementById('logout-content');
-
-        const openLogoutModal = () => {
-            logModal.classList.remove('hidden');
-            document.body.classList.add('modal-active');
-            setTimeout(() => {
-                logBackdrop.classList.add('opacity-100');
-                logContent.classList.add('opacity-100', 'scale-100');
-            }, 10);
-        };
-
-        const closeLogoutModal = () => {
-            logBackdrop.classList.remove('opacity-100');
-            logContent.classList.remove('opacity-100', 'scale-100');
-            setTimeout(() => {
-                logModal.classList.add('hidden');
-                document.body.classList.remove('modal-active');
-            }, 300);
-        };
-
-        // --- Layout Loading ---
-        async function loadLayout(userData, email) {
-            const components = [
-                { id: 'sidebar-placeholder', url: './components/sidebar.html' },
-                { id: 'topbar-placeholder', url: './components/topbar.html' }
-            ];
-
-            for (const comp of components) {
-                const res = await fetch(comp.url);
-                if (res.ok) {
-                    const container = document.getElementById(comp.id);
-                    container.innerHTML = await res.text();
-                    container.classList.remove('hidden');
-
-                    // Activate scripts inside components
-                    container.querySelectorAll("script").forEach(oldScript => {
-                        const newScript = document.createElement("script");
-                        newScript.type = "module";
-                        newScript.textContent = oldScript.textContent;
-                        document.head.appendChild(newScript);
-                    });
-                }
-            }
-
-            // Update Topbar Info
-            setTimeout(() => {
-                const nameEl = document.querySelector('#topbar-user-name');
-                const emailEl = document.querySelector('#topbar-user-email');
-                const avatarEl = document.querySelector('#topbar-avatar-text');
-                if(nameEl) nameEl.innerText = userData.name || "Admin";
-                if(emailEl) emailEl.innerText = email;
-                if(avatarEl) avatarEl.innerText = (userData.name || "A")[0].toUpperCase();
-            }, 500);
-
-            // Hook Logout Button
-            const btnLogout = document.getElementById('main-logout-btn');
-            if (btnLogout) btnLogout.addEventListener('click', (e) => {
-                e.preventDefault();
-                openLogoutModal();
-            });
-        }
-
+        // --- Auth & Sync ---
         onAuthStateChanged(auth, async (user) => {
             if (user) {
                 const adminDoc = await getDoc(doc(db, "admin", user.uid));
                 if (adminDoc.exists()) {
-                    loadLayout(adminDoc.data(), user.email);
+                    syncUserData(adminDoc.data(), user.email);
                     listenTeams();
-                } else { window.location.replace("dashboard.html"); }
+                } else { window.location.replace("login.html"); }
             } else { window.location.replace("login.html"); }
         });
 
-        // --- Team Logic ---
+        function syncUserData(userData, email) {
+            const checkExist = setInterval(() => {
+                const nameEl = document.querySelector('#topbar-user-name');
+                if (nameEl) {
+                    nameEl.innerText = userData.name || "Admin";
+                    if(document.querySelector('#topbar-user-email')) document.querySelector('#topbar-user-email').innerText = email;
+                    if(document.querySelector('#topbar-avatar-text')) document.querySelector('#topbar-avatar-text').innerText = (userData.name || "A")[0].toUpperCase();
+                    clearInterval(checkExist);
+                }
+            }, 100);
+        }
+
+        // --- Logout Handling (Fix for dynamic Sidebar) ---
+        window.handleLogout = () => {
+            const logModal = document.getElementById('logout-modal');
+            logModal.classList.remove('hidden');
+            document.body.classList.add('modal-active');
+            setTimeout(() => {
+                document.getElementById('logout-backdrop').classList.add('opacity-100');
+                document.getElementById('logout-content').classList.add('opacity-100', 'scale-100');
+            }, 10);
+        };
+
+        const closeLogoutModal = () => {
+            document.getElementById('logout-backdrop').classList.remove('opacity-100');
+            document.getElementById('logout-content').classList.remove('opacity-100', 'scale-100');
+            setTimeout(() => {
+                document.getElementById('logout-modal').classList.add('hidden');
+                document.body.classList.remove('modal-active');
+            }, 300);
+        };
+
+        document.getElementById('close-logout').onclick = closeLogoutModal;
+        document.getElementById('confirm-logout').onclick = async () => {
+            await signOut(auth);
+            window.location.replace("login.html");
+        };
+
+        document.addEventListener('click', (e) => {
+            if (e.target.closest('#logout-btn') || e.target.closest('.logout-link')) {
+                e.preventDefault();
+                window.handleLogout();
+            }
+        });
+
+        // --- Team Core Logic ---
         function listenTeams() {
             const q = query(collection(db, "teams"), orderBy("createdAt", "asc"));
             onSnapshot(q, (snapshot) => {
@@ -201,35 +197,38 @@
                     mainTeams.map(t => `<option value="${t.id}">${t.name}</option>`).join('');
 
                 if (mainTeams.length === 0) {
-                    container.innerHTML = '<div class="col-span-full p-20 text-center text-slate-400 italic bg-white rounded-[2.5rem]">ยังไม่มีข้อมูลทีมในระบบ</div>';
+                    container.innerHTML = '<div class="col-span-full p-20 text-center text-slate-400 italic bg-white rounded-[3rem] border-2 border-dashed border-slate-100">ยังไม่มีข้อมูลทีมหลักในระบบ กรุณาเพิ่มทีมใหม่</div>';
                     return;
                 }
 
                 container.innerHTML = mainTeams.map(main => {
                     const subs = allTeams.filter(t => t.parentId === main.id);
                     return `
-                        <div class="team-card bg-white rounded-[2.5rem] p-6 shadow-sm border border-slate-100 flex flex-col">
-                            <div class="flex justify-between items-start mb-4">
-                                <div class="bg-indigo-50 p-3 rounded-2xl">
-                                    <i class="fa-solid fa-users text-indigo-600 text-xl"></i>
+                        <div class="team-card bg-white rounded-[2.5rem] p-8 shadow-sm border border-slate-100 flex flex-col">
+                            <div class="flex justify-between items-start mb-6">
+                                <div class="w-14 h-14 bg-indigo-50 rounded-2xl flex items-center justify-center text-indigo-600 text-xl shadow-inner">
+                                    <i class="fa-solid fa-users-rays"></i>
                                 </div>
-                                <button onclick="deleteTeam('${main.id}')" class="text-slate-200 hover:text-red-500 transition-all p-2">
+                                <button onclick="deleteTeam('${main.id}')" class="text-slate-200 hover:text-red-500 transition-all p-2 hover:bg-red-50 rounded-xl">
                                     <i class="fa-solid fa-trash-can"></i>
                                 </button>
                             </div>
-                            <h3 class="text-xl font-bold text-slate-800 mb-1">${main.name}</h3>
-                            <p class="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-4">Main Team</p>
+                            <h3 class="text-2xl font-bold text-slate-800 mb-1">${main.name}</h3>
+                            <div class="flex items-center gap-2 mb-6">
+                                <span class="px-2.5 py-0.5 bg-slate-100 text-slate-500 rounded text-[9px] font-black uppercase tracking-widest">Main Unit</span>
+                                <span class="text-xs text-slate-400 font-medium">${subs.length} Sub-teams</span>
+                            </div>
                             
                             <div class="space-y-2 mt-auto">
                                 ${subs.map(sub => `
-                                    <div class="flex justify-between items-center p-3 bg-slate-50 rounded-xl group border border-transparent hover:border-slate-200 transition-all">
-                                        <span class="text-sm font-medium text-slate-600">${sub.name}</span>
-                                        <button onclick="deleteTeam('${sub.id}')" class="opacity-0 group-hover:opacity-100 text-slate-300 hover:text-red-500 transition-all">
-                                            <i class="fa-solid fa-xmark"></i>
+                                    <div class="flex justify-between items-center p-3.5 bg-slate-50/50 rounded-2xl group border border-transparent hover:border-indigo-100 hover:bg-white transition-all">
+                                        <span class="text-sm font-semibold text-slate-600">${sub.name}</span>
+                                        <button onclick="deleteTeam('${sub.id}')" class="opacity-0 group-hover:opacity-100 text-slate-300 hover:text-red-500 transition-all w-8 h-8 flex items-center justify-center rounded-lg hover:bg-red-50">
+                                            <i class="fa-solid fa-xmark text-xs"></i>
                                         </button>
                                     </div>
                                 `).join('')}
-                                ${subs.length === 0 ? '<p class="text-xs text-slate-400 italic py-2">ยังไม่มีทีมย่อย</p>' : ''}
+                                ${subs.length === 0 ? '<div class="text-[11px] text-slate-300 text-center py-4 border-2 border-dashed border-slate-50 rounded-2xl italic">ไม่มีทีมย่อยในสังกัด</div>' : ''}
                             </div>
                         </div>
                     `;
@@ -240,35 +239,50 @@
         // --- Window Globals ---
         window.toggleParentSelect = () => {
             const type = document.getElementById('team-type').value;
-            document.getElementById('parent-selection-div').classList.toggle('hidden', type === 'main');
+            const parentDiv = document.getElementById('parent-selection-div');
+            if(type === 'sub') {
+                parentDiv.classList.remove('hidden');
+            } else {
+                parentDiv.classList.add('hidden');
+            }
         };
+
         window.openTeamModal = () => {
             document.getElementById('teamModal').classList.remove('hidden');
             document.getElementById('team-name').value = "";
         };
+
         window.closeTeamModal = () => document.getElementById('teamModal').classList.add('hidden');
+
         window.saveTeam = async () => {
-            const name = document.getElementById('team-name').value;
+            const name = document.getElementById('team-name').value.trim();
             const type = document.getElementById('team-type').value;
             const parentId = document.getElementById('parent-team-select').value;
-            if (!name) return alert("กรุณาระบุชื่อทีม");
-            if (type === 'sub' && !parentId) return alert("กรุณาเลือกทีมหลัก");
             
-            await addDoc(collection(db, "teams"), {
-                name, type, parentId: type === 'sub' ? parentId : null, createdAt: serverTimestamp()
-            });
-            closeTeamModal();
-        };
-        window.deleteTeam = async (id) => {
-            if (confirm("การลบทีมหลักอาจส่งผลต่อการแสดงผลทีมย่อย ยืนยันการลบ?")) await deleteDoc(doc(db, "teams", id));
+            if (!name) return alert("กรุณาระบุชื่อทีม");
+            if (type === 'sub' && !parentId) return alert("กรุณาเลือกทีมหลักที่สังกัด");
+            
+            const btn = document.getElementById('save-team-btn');
+            btn.disabled = true;
+            btn.innerHTML = '<i class="fa-solid fa-circle-notch animate-spin mr-2"></i> กำลังบันทึก...';
+
+            try {
+                await addDoc(collection(db, "teams"), {
+                    name, type, parentId: type === 'sub' ? parentId : null, createdAt: serverTimestamp()
+                });
+                closeTeamModal();
+            } catch(e) { alert("Error: " + e.message); }
+            finally {
+                btn.disabled = false;
+                btn.innerText = "บันทึกข้อมูล";
+            }
         };
 
-        // Modal Listeners
-        document.getElementById('close-logout').addEventListener('click', closeLogoutModal);
-        document.getElementById('confirm-logout').addEventListener('click', async () => {
-            await signOut(auth);
-            window.location.replace("login.html");
-        });
+        window.deleteTeam = async (id) => {
+            if (confirm("ยืนยันการลบข้อมูลทีม? การลบทีมหลักอาจทำให้การแสดงผลทีมย่อยผิดพลาดได้")) {
+                await deleteDoc(doc(db, "teams", id));
+            }
+        };
     </script>
 </body>
 </html>

@@ -434,26 +434,23 @@ select.profile-input-field {
 }
 
    /* ===== SIDEBAR COLLAPSE ===== */
-
-/* ===== COLLAPSE MODE ===== */
-
+/* ===== NORMAL ===== */
 #sidebar-wrapper {
     width: 260px;
+    transition: all .3s ease;
 }
 
-.sidebar-collapsed {
-    width: 80px !important;
+/* ===== COLLAPSED ===== */
+#sidebar-wrapper.sidebar-collapsed {
+    width: 80px;
 }
 
-/* ซ่อนข้อความ */
-.sidebar-collapsed .sidebar-text {
-    opacity: 0;
-    width: 0;
-    overflow: hidden;
+/* ซ่อนเฉพาะข้อความ */
+#sidebar-wrapper.sidebar-collapsed .sidebar-text {
+    display: none;
 }
 
-/* icon อยู่กลาง */
-.sidebar-collapsed .nav-link-modern {
+/* จัด icon ให้อยู่กลาง */
+#sidebar-wrapper.sidebar-collapsed .nav-link-modern {
     justify-content: center;
 }
-

@@ -109,24 +109,28 @@ function initLogout() {
 // ==============================
 function initSidebarToggle() {
 
-    const btn = document.getElementById("sidebarToggle");
-    const sidebar = document.getElementById("sidebar-container");
-    const arrow = document.getElementById("sidebarArrow");
+    const btn = document.getElementById("sidebar-toggle");
+    const sidebar = document.getElementById("sidebar-wrapper");
+    const icon = document.getElementById("toggle-icon");
 
-    if (!btn || !sidebar) {
-        console.log("Sidebar toggle not found");
-        return;
-    }
+    if (!btn || !sidebar) return;
 
     btn.addEventListener("click", () => {
 
-        sidebar.classList.toggle("w-64");
-        sidebar.classList.toggle("w-20");
+        sidebar.classList.toggle("sidebar-collapsed");
 
-        if (arrow)
-            arrow.classList.toggle("rotate-180");
+        // สลับลูกศร
+        if (sidebar.classList.contains("sidebar-collapsed")) {
+            icon.classList.remove("fa-chevron-left");
+            icon.classList.add("fa-chevron-right");
+        } else {
+            icon.classList.remove("fa-chevron-right");
+            icon.classList.add("fa-chevron-left");
+        }
+
     });
 }
+
 
 // ==============================
 // CLOCK

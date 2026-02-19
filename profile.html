@@ -16,102 +16,100 @@
     <div class="flex-1 flex flex-col min-w-0">
         <div id="topbar-placeholder"></div>
 
-        <main class="p-6 md:p-10 max-w-5xl mx-auto w-full profile-container">
-            
-            <header class="mb-10">
-                <h2 class="text-3xl font-bold text-slate-800 tracking-tight">ตั้งค่าโปรไฟล์</h2>
-                <p class="text-slate-500 mt-1">จัดการข้อมูลส่วนตัวและสังกัดของคุณให้เป็นปัจจุบัน</p>
-            </header>
-
-            <div class="grid grid-cols-1 lg:grid-cols-12 gap-8">
+        <main class="p-6 md:p-10 max-w-6xl mx-auto w-full profile-container">
+    <div class="grid grid-cols-1 lg:grid-cols-12 gap-8">
+        
+        <div class="lg:col-span-4">
+            <div class="glass-card p-10 text-center sticky top-24">
+                <div class="relative inline-block mb-6">
+                    <div id="avatar-display" class="w-32 h-32 profile-avatar-custom flex items-center justify-center text-5xl text-white font-bold shadow-lg">
+                        ณ
+                    </div>
+                    <label for="avatar-upload" class="absolute bottom-1 right-1 w-9 h-9 bg-white rounded-full shadow-md flex items-center justify-center text-[#f59e0b] border-2 border-white cursor-pointer hover:scale-110 transition">
+                        <i class="fa-solid fa-camera text-xs"></i>
+                    </label>
+                </div>
                 
-                <div class="lg:col-span-4">
-                    <div class="glass-card p-8 text-center sticky top-24">
-                        <div class="relative inline-block group mb-6">
-                            <div id="avatar-display" class="w-28 h-28 profile-avatar-gradient rounded-[2.5rem] flex items-center justify-center text-4xl text-white font-bold shadow-2xl shadow-indigo-100 uppercase transition-transform group-hover:scale-105 duration-300">?</div>
-                            <div class="absolute -bottom-2 -right-2 w-10 h-10 bg-white rounded-2xl shadow-lg flex items-center justify-center text-[#5c67f2] border border-slate-50">
-                                <i class="fa-solid fa-camera text-sm"></i>
-                            </div>
+                <h2 id="name-display" class="text-2xl font-bold text-slate-800 mb-2">ณัฐวุฒิ ธรรมจินดา</h2>
+                <div class="status-badge status-badge-green inline-block mb-8">ADMIN</div>
+                
+                <div class="pt-6 border-t border-slate-50">
+                    <div class="info-display-card">
+                        <div class="w-10 h-10 rounded-xl bg-white shadow-sm flex items-center justify-center text-emerald-500">
+                            <i class="fa-regular fa-envelope"></i>
                         </div>
-                        <h2 id="name-display" class="text-xl font-bold text-slate-800 mb-1">...</h2>
-                        <span id="role-display" class="inline-block px-4 py-1.5 bg-indigo-50 text-[#5c67f2] rounded-full text-[10px] font-black uppercase tracking-widest">Loading</span>
-                        
-                        <div class="mt-8 pt-8 border-t border-slate-100 space-y-4 text-left">
-                            <div class="flex items-center gap-4 p-4 rounded-2xl bg-slate-50/50">
-                                <div class="w-10 h-10 rounded-xl bg-white shadow-sm flex items-center justify-center text-[#5c67f2]">
-                                    <i class="fa-regular fa-envelope"></i>
-                                </div>
-                                <div class="overflow-hidden">
-                                    <p class="label-title !mb-0 !ml-0" style="font-size: 9px;">Email Address</p>
-                                    <p id="side-email" class="text-xs font-semibold text-slate-700 truncate">...</p>
-                                </div>
-                            </div>
+                        <div class="text-left overflow-hidden">
+                            <p class="text-[10px] font-bold text-slate-400 uppercase">Email Address</p>
+                            <p id="side-email" class="text-xs font-bold text-slate-700 truncate">user1@test.com</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="lg:col-span-8">
+            <form id="profile-form" class="space-y-6">
+                
+                <div class="content-section-box">
+                    <div class="flex items-center gap-3 mb-8">
+                        <div class="w-10 h-10 rounded-xl bg-emerald-500 text-white flex items-center justify-center shadow-md">
+                            <i class="fa-solid fa-user-pen"></i>
+                        </div>
+                        <h3 class="text-lg font-bold text-slate-800">ข้อมูลส่วนตัว</h3>
+                    </div>
+
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        <div class="md:col-span-2 input-group-container">
+                            <label class="field-label">ชื่อ-นามสกุลจริง</label>
+                            <input type="text" id="prof-name" class="profile-input-field" placeholder="ระบุชื่อและนามสกุล">
+                        </div>
+                        <div class="input-group-container">
+                            <label class="field-label">ชื่อผู้ใช้งาน (USERNAME)</label>
+                            <input type="text" id="prof-user" class="profile-input-field" readonly>
+                        </div>
+                        <div class="input-group-container">
+                            <label class="field-label">เบอร์โทรศัพท์</label>
+                            <input type="text" id="prof-phone" class="profile-input-field" placeholder="0XXXXXXXXX">
+                        </div>
+                        <div class="md:col-span-2 input-group-container">
+                            <label class="field-label">อีเมล</label>
+                            <input type="email" id="prof-email" class="profile-input-field">
                         </div>
                     </div>
                 </div>
 
-                <div class="lg:col-span-8">
-                    <form id="profile-form" class="glass-card p-6 md:p-10 space-y-10">
-                        <section>
-                            <div class="flex items-center gap-3 mb-8">
-                                <div class="w-8 h-8 rounded-lg bg-[#5c67f2] flex items-center justify-center text-white text-xs shadow-lg shadow-indigo-100">
-                                    <i class="fa-solid fa-user-gear"></i>
-                                </div>
-                                <h3 class="font-bold text-slate-800">ข้อมูลส่วนตัว</h3>
-                            </div>
-                            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-                                <div class="md:col-span-2">
-                                    <label class="label-title">ชื่อ-นามสกุลจริง</label>
-                                    <input type="text" id="prof-name" class="form-input" required>
-                                </div>
-                                <div>
-                                    <label class="label-title">ชื่อผู้ใช้งาน (Username)</label>
-                                    <input type="text" id="prof-user" class="form-input input-readonly" readonly>
-                                </div>
-                                <div>
-                                    <label class="label-title">เบอร์โทรศัพท์</label>
-                                    <input type="text" id="prof-phone" class="form-input" placeholder="0XXXXXXXXX">
-                                </div>
-                                <div class="md:col-span-2">
-                                    <label class="label-title">อีเมล</label>
-                                    <input type="email" id="prof-email" class="form-input" required>
-                                </div>
-                            </div>
-                        </section>
+                <div class="content-section-box">
+                    <div class="flex items-center gap-3 mb-8">
+                        <div class="w-10 h-10 rounded-xl bg-orange-500 text-white flex items-center justify-center shadow-md">
+                            <i class="fa-solid fa-layer-group"></i>
+                        </div>
+                        <h3 class="text-lg font-bold text-slate-800">สังกัดและทีม</h3>
+                    </div>
 
-                        <hr class="border-slate-100">
-
-                        <section>
-                            <div class="flex items-center gap-3 mb-8">
-                                <div class="w-8 h-8 rounded-lg bg-emerald-500 flex items-center justify-center text-white text-xs shadow-lg shadow-emerald-100">
-                                    <i class="fa-solid fa-sitemap"></i>
-                                </div>
-                                <h3 class="font-bold text-slate-800">สังกัดและทีม</h3>
-                            </div>
-                            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-                                <div>
-                                    <label class="label-title">ทีมหลัก</label>
-                                    <select id="prof-main" class="form-input" required>
-                                        <option value="" disabled selected>กำลังโหลด...</option>
-                                    </select>
-                                </div>
-                                <div>
-                                    <label class="label-title">ทีมย่อย</label>
-                                    <select id="prof-sub" class="form-input" required disabled>
-                                        <option value="" disabled selected>เลือกทีมหลักก่อน</option>
-                                    </select>
-                                </div>
-                            </div>
-                        </section>
-
-                        <button type="submit" id="saveBtn" class="w-full py-4 btn-save-profile text-white rounded-2xl font-bold text-lg shadow-xl flex items-center justify-center gap-3">
-                            <span>บันทึกข้อมูล</span>
-                            <i class="fa-solid fa-paper-plane text-sm"></i>
-                        </button>
-                    </form>
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        <div class="input-group-container">
+                            <label class="field-label">ทีมหลัก</label>
+                            <select id="prof-main" class="profile-input-field">
+                                <option value="">กำลังโหลด...</option>
+                            </select>
+                        </div>
+                        <div class="input-group-container">
+                            <label class="field-label">ทีมย่อย</label>
+                            <select id="prof-sub" class="profile-input-field">
+                                <option value="">เลือกทีมหลักก่อน</option>
+                            </select>
+                        </div>
+                    </div>
                 </div>
-            </div>
-        </main>
+
+                <button type="submit" id="saveBtn" class="btn-save-full">
+                    <span>บันทึกข้อมูลส่วนตัว</span>
+                    <i class="fa-solid fa-check-circle"></i>
+                </button>
+            </form>
+        </div>
+    </div>
+</main>
     </div>
 
     <div id="success-overlay">

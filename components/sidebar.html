@@ -1,9 +1,5 @@
 <div id="sidebar-wrapper" class="h-full flex flex-col bg-white transition-all duration-300 border-r border-slate-100 relative group">
     
-    <button id="sidebar-toggle" class="absolute -right-3 top-6 w-6 h-6 bg-emerald-500 text-white rounded-full flex items-center justify-center text-[10px] shadow-lg z-[2000] hover:scale-110 transition-transform">
-    <i class="fa-solid fa-chevron-left" id="toggle-icon"></i>
-</button>
-
     <div class="flex items-center gap-3 px-6 h-20 overflow-hidden flex-shrink-0">
     <button id="sidebarToggle"
     class="w-10 h-10 bg-emerald-500 rounded-full flex items-center justify-center text-white shadow hover:scale-95 transition">
@@ -14,7 +10,13 @@
 
     <span class="text-xl font-bold text-slate-800 sidebar-text">SaleSupport</span>
 </div>
+<button id="floatingToggle"
+class="absolute -right-3 top-24 w-6 h-6 bg-emerald-500 text-white rounded-full
+flex items-center justify-center shadow-lg z-[2000]
+hover:scale-110 transition">
 
+    <i id="floatingIcon" class="fa-solid fa-chevron-left text-[10px]"></i>
+</button>
     <nav class="flex-1 px-4 py-6 space-y-2 overflow-y-auto">
     <p class="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] px-4 mb-4 sidebar-text">Main Menu</p>
         

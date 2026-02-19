@@ -80,78 +80,28 @@ body {
 /* ==========================================================================
    4. MINI SIDEBAR MODE (Toggle Logic)
    ========================================================================== */
-/* ==========================================================================
-   4. MINI SIDEBAR MODE (Force Icon Only & Center)
-   ========================================================================== */
-
-/* 4.1 บังคับความกว้างและซ่อนส่วนที่ล้นออก */
-#sidebar-placeholder.mini,
+/* 4.1 บีบความกว้าง Sidebar */
+#sidebar-placeholder.mini, 
 #sidebar-placeholder.mini #sidebar-wrapper {
     width: var(--sidebar-mini-width) !important;
-    min-width: var(--sidebar-mini-width) !important;
-    overflow: hidden !important;
 }
 
-/* 4.2 บังคับซ่อนข้อความทุกชนิด (รวมถึงในปุ่ม Logout) */
+/* 4.2 ตัดตัวหนังสือออก (เจาะจงเฉพาะคลาสที่ใช้ใน HTML) */
 #sidebar-placeholder.mini .sidebar-text,
-#sidebar-placeholder.mini span,
 #sidebar-placeholder.mini p,
-#sidebar-placeholder.mini b,
-#sidebar-placeholder.mini .font-medium,
-#sidebar-placeholder.mini .fa-chevron-right {
-    display: none !important;
-    opacity: 0 !important;
-    visibility: hidden !important;
-    width: 0 !important;
-    margin: 0 !important;
-}
-
-/* 4.3 จัดไอคอนเมนูหลักให้กึ่งกลางเป๊ะ */
-#sidebar-placeholder.mini .nav-link-modern {
-    justify-content: center !important;
-    padding: 12px 0 !important;
-    gap: 0 !important;
-    margin: 4px 8px !important;
-}
-
-#sidebar-placeholder.mini .nav-icon, 
-#sidebar-placeholder.mini .nav-link-modern i {
-    margin: 0 !important;
-    min-width: unset !important;
-    width: auto !important;
-    font-size: 1.25rem !important;
-}
-
-/* 4.4 จัดการปุ่ม Logout ให้เหลือแต่ไอคอนกึ่งกลาง */
-#sidebar-placeholder.mini .logout-btn-modern {
-    padding: 14px 0 !important;
-    display: flex !important;
-    justify-content: center !important;
-    align-items: center !important;
-}
-
-/* เจาะจงตัว div ข้างในปุ่ม Logout เพื่อเอา gap ออก */
+#sidebar-placeholder.mini .fa-chevron-right,
 #sidebar-placeholder.mini .logout-btn-modern div {
-    gap: 0 !important;
-    padding: 0 !important;
-    display: flex !important;
+    display: none !important;
+}
+
+/* 4.3 จัดไอคอนและปุ่ม Logout ให้อยู่กึ่งกลาง */
+#sidebar-placeholder.mini .nav-link-modern,
+#sidebar-placeholder.mini .logout-btn-modern,
+#sidebar-placeholder.mini .h-20 {
     justify-content: center !important;
-}
-
-#sidebar-placeholder.mini .logout-btn-modern i {
-    margin: 0 !important;
-    font-size: 1.25rem !important;
-}
-
-/* 4.5 จัดตำแหน่งปุ่ม Toggle และหัวข้อ Admin Control */
-#sidebar-placeholder.mini #sidebar-toggle {
-    right: -12px;
-}
-
-/* ซ่อนเส้นคั่นหรือหัวข้อ Admin ตอนย่อ */
-#sidebar-placeholder.mini .border-t {
-    border-top: 1px solid #f1f5f9 !important;
-    margin-top: 1rem !important;
+    padding-left: 0 !important;
+    padding-right: 0 !important;
+    gap: 0 !important;
 }
 
 /* ==========================================================================

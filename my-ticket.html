@@ -3,41 +3,32 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>My Tickets - Sale Support System</title>
-    
-    <link rel="stylesheet" href="style.css"> 
-    
+    <title>My Ticket - Sale Support System</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://fonts.googleapis.com/css2?family=Kanit:wght@300;400;600&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    
+    <link rel="stylesheet" href="./css/style.css"> 
 </head>
+<body class="flex min-h-screen">
 
-<body class="flex h-screen overflow-hidden bg-[#f8fafc]">
-
-    <aside id="sidebar-placeholder" class="flex-shrink-0 z-[1001] bg-white border-r border-slate-200" style="width: 260px;"></aside>
-
+    <aside id="sidebar-placeholder" class="hidden lg:block w-64 sticky top-0 h-screen bg-white border-r border-slate-200"></aside>
+    
     <div class="flex-1 flex flex-col min-w-0">
-        <header id="topbar-placeholder" class="z-50 bg-white border-b border-slate-100"></header>
+        <div id="topbar-placeholder"></div>
 
-        <main class="flex-1 overflow-y-auto p-6 md:p-10 custom-scroll">
-            <div class="max-w-[1600px] mx-auto fade-in-up">
-                
-                <div class="bg-white rounded-[2.5rem] p-10 shadow-sm border border-slate-100 min-h-[500px]">
-                    <h1 class="text-4xl font-bold text-slate-800">Hello</h1>
-                    <p class="text-slate-500 mt-4 text-lg">เรียกใช้ Logic จาก dashboard.js เรียบร้อยแล้ว</p>
-                </div>
-
+        <main class="p-6 md:p-10 max-w-7xl mx-auto w-full space-y-8">
+            <div>
+                <h2 class="text-3xl font-bold text-slate-800 tracking-tight">ใบงานของฉัน</h2>
+                <p class="text-slate-500 mt-1">Hello! นี่คือเนื้อหาใหม่ในโครงสร้างเดิม</p>
+            </div>
+            
+            <div class="glass-card p-10 text-center">
+                 Content ของคุณจะอยู่ตรงนี้...
             </div>
         </main>
     </div>
 
-    <script type="module">
-        // เรียกใช้ฟังก์ชันจาก dashboard.js ของคุณ
-        // สมมติว่าใน dashboard.js คุณมีฟังก์ชันชื่อ initialize หรือ loadLayout
-        import { initDashboard } from './dashboard.js'; 
-        
-        // รันฟังก์ชันเพื่อให้ Sidebar/Topbar ทำงาน
-        initDashboard(); 
-    </script>
+    <script type="module" src="./js/dashboard.js"></script>
 </body>
 </html>

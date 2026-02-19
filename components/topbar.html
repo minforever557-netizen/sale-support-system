@@ -2,102 +2,26 @@
     <div class="flex flex-col md:flex-row md:items-center justify-between gap-4">
         
         <div class="flex items-center gap-4">
-            <div id="tp-avatar-circle" class="w-12 h-12 bg-gradient-to-br from-[#5c56f1] to-[#7c77f5] rounded-2xl flex items-center justify-center text-white font-bold text-xl shadow-lg shadow-indigo-100 ring-2 ring-white">
+            <div id="topbar-avatar" class="w-12 h-12 bg-gradient-to-br from-emerald-400 to-emerald-600 rounded-2xl flex items-center justify-center text-white font-bold text-xl shadow-lg shadow-emerald-100 ring-2 ring-white">
                 ?
             </div>
             
             <div class="flex flex-col">
                 <div class="flex items-center gap-2">
-                    <span id="tp-fullname" class="text-slate-800 font-bold leading-tight text-lg">กำลังโหลด...</span>
+                    <span id="topbar-user-name" class="text-slate-800 font-bold leading-tight text-lg">กำลังโหลด...</span>
                     <span class="text-slate-300 text-xs">|</span>
-                    <span id="tp-username" class="text-[#5c56f1] text-xs font-black uppercase tracking-widest bg-indigo-50 px-2 py-0.5 rounded-md">@username</span>
+                    <span id="topbar-role" class="text-emerald-600 text-[10px] font-black uppercase tracking-widest bg-emerald-50 px-2 py-0.5 rounded-md">User</span>
                 </div>
-                <span id="tp-email" class="text-slate-400 text-xs font-medium mt-0.5">email@loading.com</span>
+                <span id="topbar-user-email" class="text-slate-400 text-xs font-medium mt-0.5">email@loading.com</span>
             </div>
         </div>
 
         <div class="flex flex-row md:flex-col items-center md:items-end bg-slate-50 px-6 py-2.5 rounded-[1.5rem] border border-slate-100 gap-3 md:gap-1">
             <div class="flex items-center gap-2">
                 <span class="w-2 h-2 bg-emerald-500 rounded-full animate-pulse"></span>
-                <div id="tp-clock" class="text-2xl font-black text-slate-700 tracking-tighter leading-none min-w-[100px] text-right">00:00:00</div>
+                <div id="topbar-time" class="text-2xl font-black text-slate-700 tracking-tighter leading-none min-w-[100px] text-right">00:00:00</div>
             </div>
-            <div id="tp-date" class="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] mt-0.5">กำลังโหลดวันเวลา...</div>
+            <div id="topbar-date" class="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] mt-0.5 text-right">กำลังโหลดวันเวลา...</div>
         </div>
     </div>
 </header>
-
-<script type="module">
-    import { initializeApp, getApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
-    import { getFirestore, doc, getDoc } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
-    import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
-
-    // จัดการ Firebase App Instance
-    let app;
-    try { 
-        app = getApp(); 
-    } catch (e) {
-        const firebaseConfig = {
-            apiKey: "AIzaSyAa2uSD_tjNqYE2eXnZcn75h_jAVscDG-c",
-            authDomain: "salesupportsystemapp.firebaseapp.com",
-            projectId: "salesupportsystemapp",
-            storageBucket: "salesupportsystemapp.firebasestorage.app",
-            messagingSenderId: "840890441207",
-            appId: "1:840890441207:web:f3a5076d46e963a90de2f2"
-        };
-        app = initializeApp(firebaseConfig);
-    }
-    
-    const db = getFirestore(app);
-    const auth = getAuth(app);
-
-    // --- ฟังก์ชันนาฬิกา Real-time ---
-    function initTopbarClock() {
-        const update = () => {
-            const now = new Date();
-            const clockEl = document.getElementById('tp-clock');
-            const dateEl = document.getElementById('tp-date');
-            
-            if(clockEl) clockEl.innerText = now.toLocaleTimeString('th-TH', { 
-                hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: false 
-            });
-            
-            if(dateEl) dateEl.innerText = now.toLocaleDateString('th-TH', { 
-                weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' 
-            });
-        };
-        setInterval(update, 1000);
-        update();
-    }
-
-    // --- ดึงข้อมูล Profile จาก Firestore ---
-    onAuthStateChanged(auth, async (user) => {
-        if (user) {
-            try {
-                // ค้นหาข้อมูลใน Collection 'admin' ตาม UID
-                const userDoc = await getDoc(doc(db, "admin", user.uid));
-                const data = userDoc.exists() ? userDoc.data() : {};
-                
-                // รวมข้อมูลแสดงผล
-                const fullName = data.name || user.displayName || 'Sale Support User';
-                const userName = data.username || user.email.split('@')[0];
-                const email = data.email || user.email;
-
-                // อัปเดต UI
-                const nameEl = document.getElementById('tp-fullname');
-                const userEl = document.getElementById('tp-username');
-                const mailEl = document.getElementById('tp-email');
-                const iconEl = document.getElementById('tp-avatar-circle');
-
-                if(nameEl) nameEl.innerText = fullName;
-                if(userEl) userEl.innerText = `@${userName}`;
-                if(mailEl) mailEl.innerText = email;
-                if(iconEl) iconEl.innerText = fullName.charAt(0).toUpperCase();
-                
-            } catch (err) {
-                console.error("Topbar Error:", err);
-            }
-        }
-    });
-
-    initTopbarClock();
-</script>

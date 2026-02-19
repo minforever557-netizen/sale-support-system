@@ -132,30 +132,29 @@ function initLiveClock() {
         setInterval(update, 1000);
     }
 }
+
 function attachSidebarEvents() {
     const placeholder = document.getElementById('sidebar-placeholder');
     const toggleBtn = document.getElementById('sidebar-toggle');
     
     if (!toggleBtn || !placeholder) return;
 
-    // ล้างข้อมูลข้างในแล้วฉีดไอคอนเข้าไปใหม่เพื่อให้ชัวร์ว่ามี i แน่นอน
-    toggleBtn.innerHTML = ''; 
-    const icon = document.createElement('i');
-    icon.id = 'toggle-icon';
-    // เช็คสถานะปัจจุบันว่า mini อยู่หรือไม่ เพื่อเลือกรูปเริ่มต้น
-    const isCurrentlyMini = placeholder.classList.contains('mini');
-    icon.className = isCurrentlyMini ? 'fa-solid fa-chevron-right text-white text-xs' : 'fa-solid fa-chevron-left text-white text-xs';
-    toggleBtn.appendChild(icon);
+    // ฟังก์ชันสำหรับอัปเดตไอคอน
+    const updateToggleIcon = () => {
+        const isMini = placeholder.classList.contains('mini');
+        // ฉีด HTML ไอคอนเข้าไปใหม่ทุกครั้งเพื่อความชัวร์
+        toggleBtn.innerHTML = isMini 
+            ? '<i class="fa-solid fa-chevron-right text-white text-[10px]"></i>' 
+            : '<i class="fa-solid fa-chevron-left text-white text-[10px]"></i>';
+    };
+
+    // เรียกครั้งแรกเพื่อให้ไอคอนขึ้นทันทีที่โหลดหน้า
+    updateToggleIcon();
 
     toggleBtn.onclick = (e) => {
         e.preventDefault();
         placeholder.classList.toggle('mini');
-
-        // สลับไอคอนลูกศร
-        const isMini = placeholder.classList.contains('mini');
-        icon.className = isMini ? 'fa-solid fa-chevron-right text-white text-xs' : 'fa-solid fa-chevron-left text-white text-xs';
-        
-        console.log("Sidebar toggled. Is Mini:", isMini); // เช็คใน Console ว่าทำงานไหม
+        updateToggleIcon(); // อัปเดตรูปเมื่อมีการคลิก
     };
 }
 // 6. ฟังก์ชันสถิติ Dashboard

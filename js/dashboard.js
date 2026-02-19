@@ -12,6 +12,7 @@ const firebaseConfig = {
     appId: "1:840890441207:web:f3a5076d46e963a90de2f2"
 };
 
+// Initialize Firebase
 const app = getApps().length === 0 ? initializeApp(firebaseConfig) : getApps()[0];
 const db = getFirestore(app);
 const auth = getAuth(app);
@@ -20,15 +21,19 @@ const auth = getAuth(app);
 onAuthStateChanged(auth, async (user) => {
     if (user) {
         try {
+            // ดึงข้อมูลจากคอลเลกชัน 'admin' ตาม UID
             const userDoc = await getDoc(doc(db, "admin", user.uid));
+            
             if (userDoc.exists()) {
                 const userData = userDoc.data();
                 const userRole = (userData.role || "").toLowerCase();
 
+                // ตรวจสอบสิทธิ์การใช้งาน
                 if (['admin', 'user', 'staff'].includes(userRole)) {
-                    // เรียกโหลดโครงสร้างหน้าเว็บ
+                    // เรียกโหลด Layout และส่งข้อมูลผู้ใช้เข้าไป
                     await initGlobalLayout(userData, user.email);
                     
+                    // โหลดสถิติ Dashboard
                     if (typeof loadDashboardStats === 'function') {
                         loadDashboardStats(user.email);
                     }
@@ -52,14 +57,14 @@ onAuthStateChanged(auth, async (user) => {
     }
 });
 
-// 3. ฟังก์ชันโหลด Sidebar และ Topbar (ฉบับเสถียร)
+// 3. ฟังก์ชันโหลด Sidebar และ Topbar
 async function initGlobalLayout(userData, email) {
     const components = [
         { id: 'sidebar-placeholder', url: './components/sidebar.html' },
         { id: 'topbar-placeholder', url: './components/topbar.html' }
     ];
 
-    // 1. โหลดไฟล์ HTML ทั้งหมดแบบ Serial (รอให้เสร็จทีละตัว)
+    // 1. โหลด HTML Components ทั้งหมด
     for (const comp of components) {
         try {
             const response = await fetch(comp.url);
@@ -68,51 +73,61 @@ async function initGlobalLayout(userData, email) {
             const container = document.getElementById(comp.id);
             if (container) {
                 container.innerHTML = html;
-                console.log(`✅ Component Loaded: ${comp.id}`);
+                console.log(`✅ Loaded: ${comp.id}`);
             }
         } catch (error) {
             console.error(`❌ Error loading ${comp.id}:`, error);
         }
     }
 
-    // 2. ฟังก์ชันฉีดข้อมูลเข้า UI พร้อมระบบ Retry (ปรับให้แม่นยำขึ้น)
-    const renderUserData = (attempts = 0) => {
+    // 2. ฟังก์ชันอัปเดตข้อมูล UI (ใช้ระบบ Retry เพื่อป้องกัน Race Condition)
+    const startUIRender = (attempts = 0) => {
         const nameEl = document.getElementById('tp-fullname');
-        const userEl = document.getElementById('tp-username');
-        const emailEl = document.getElementById('tp-email');
-        const avatarEl = document.getElementById('tp-avatar-circle');
+        const adminSection = document.getElementById('admin-menu-section');
 
-        // ตรวจสอบว่า Element สำคัญ (ชื่อ) ปรากฏใน DOM หรือยัง
-        if (nameEl) {
-            // ฉีดข้อมูลจาก Firestore (อ้างอิงจากภาพ image_0f7262.png)
+        // ตรวจสอบว่า Element สำคัญโหลดมาในหน้าเว็บหรือยัง
+        if (nameEl && adminSection !== undefined) {
+            // --- ส่วนที่ 1: อัปเดต Topbar ---
             nameEl.innerText = userData.name || "user 02";
+            const userEl = document.getElementById('tp-username');
+            const emailEl = document.getElementById('tp-email');
+            const avatarEl = document.getElementById('tp-avatar-circle');
+
             if (userEl) userEl.innerText = `@${userData.username || "user02"}`;
             if (emailEl) emailEl.innerText = email || userData.email;
-            
-            // อัปเดตตัวอักษรแรกในวงกลม Avatar
             if (avatarEl && (userData.name || userData.username)) {
-                const firstChar = (userData.name || userData.username).charAt(0).toUpperCase();
-                avatarEl.innerText = firstChar;
+                avatarEl.innerText = (userData.name || userData.username).charAt(0).toUpperCase();
             }
-            
-            console.log("🚀 Topbar UI Updated Successfully!");
-            
-            // เริ่มฟังก์ชันที่ต้องรอ UI ให้ทำงานต่อ
+
+            // --- ส่วนที่ 2: ตรวจสอบ Role เพื่อซ่อน/ลบเมนู Admin ---
+            const userRole = (userData.role || "").toLowerCase();
+            if (adminSection) {
+                if (userRole === 'admin') {
+                    adminSection.classList.remove('hidden');
+                    console.log("🔓 Admin Access Granted");
+                } else {
+                    adminSection.remove(); // ลบออกถาวรสำหรับ User ทั่วไป
+                    console.log("🔒 Admin Menu Removed (User Role)");
+                }
+            }
+
+            // --- ส่วนที่ 3: เริ่มทำงานฟังก์ชันเสริม ---
             initLiveClock();
-            initSidebarBehavior(userData); 
+            initSidebarBehavior();
+            console.log("🚀 Dashboard UI Fully Ready!");
+            
         } else if (attempts < 50) {
-            // หากยังไม่เจอ Element ให้ลองใหม่ทุกๆ 30ms (รวมสูงสุด 1.5 วินาที)
-            setTimeout(() => renderUserData(attempts + 1), 30);
+            // ถ้ายังไม่เจอ Element ให้ลองใหม่ทุก 30ms
+            setTimeout(() => startUIRender(attempts + 1), 30);
         } else {
-            console.error("❌ Critical: Could not find Topbar elements in DOM.");
+            console.error("❌ Critical: Dashboard elements not found after timeout");
         }
     };
 
-    // เริ่มกระบวนการฉีดข้อมูล
-    renderUserData();
+    startUIRender();
 }
 
-// ระบบนาฬิกา (คงเดิม)
+// 4. ระบบควบคุมนาฬิกา
 function initLiveClock() {
     const clockEl = document.getElementById('tp-clock');
     const dateEl = document.getElementById('tp-date');
@@ -128,31 +143,22 @@ function initLiveClock() {
         setInterval(update, 1000);
     }
 }
-// 4. ระบบควบคุม Sidebar
-function initSidebarBehavior(userData) {
+
+// 5. ระบบควบคุมพฤติกรรม Sidebar
+function initSidebarBehavior() {
     const sidebar = document.getElementById('sidebar-placeholder');
     const toggleBtn = document.getElementById('sidebar-toggle');
     const toggleIcon = document.getElementById('toggle-icon');
     const currentPath = window.location.pathname.split("/").pop() || "dashboard.html";
 
-    // จัดการเมนู Admin
-    const adminSection = document.getElementById('admin-menu-section');
-    if (adminSection) {
-        if (userData && userData.role && userData.role.toLowerCase() === 'admin') {
-            adminSection.classList.remove('hidden');
-        } else {
-            adminSection.remove(); 
-        }
-    }
-
-    // Active Link
+    // ตั้งค่า Active State ให้เมนู
     document.querySelectorAll('.nav-link-modern').forEach(link => {
         if (link.getAttribute('data-page') === currentPath) {
             link.classList.add('active');
         }
     });
 
-    // Desktop Toggle
+    // ระบบย่อ-ขยาย Sidebar
     if (toggleBtn) {
         toggleBtn.onclick = () => {
             if (sidebar) sidebar.classList.toggle('mini');
@@ -165,7 +171,7 @@ function initSidebarBehavior(userData) {
     }
 }
 
-// 5. ฟังก์ชันดึงสถิติ Dashboard
+// 6. ฟังก์ชันดึงสถิติ Dashboard
 async function loadDashboardStats(userEmail) {
     try {
         const q = query(collection(db, "tickets"), where("ownerEmail", "==", userEmail));
@@ -179,11 +185,13 @@ async function loadDashboardStats(userEmail) {
             if (["Success", "Closed", "ปิดงานแล้ว"].includes(data.status)) closed++;
         });
 
+        // อัปเดตตัวเลขการ์ดสถิติ
         const setVal = (id, val) => { if(document.getElementById(id)) document.getElementById(id).innerText = val; };
         setVal('stat-total', total);
         setVal('stat-progress', progress);
         setVal('stat-closed', closed);
 
+        // คำนวณความสำเร็จ (%)
         if (total > 0) {
             const percent = Math.round((closed / total) * 100);
             setVal('eff-percent', percent + "%");
@@ -195,7 +203,7 @@ async function loadDashboardStats(userEmail) {
     }
 }
 
-// 6. ระบบ Logout
+// 7. ระบบ Logout (Event Delegation)
 document.addEventListener('click', (e) => {
     if (e.target.closest('#main-logout-btn')) {
         const modal = document.getElementById('logout-modal');

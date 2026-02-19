@@ -11,11 +11,11 @@
     <link rel="stylesheet" href="./css/style.css"> 
 
     <style>
-        body { font-family: 'Kanit', sans-serif; }
+        body { font-family: 'Kanit', sans-serif; background-color: #f8fafc; }
+        /* รักษาดีไซน์ Main เดิมไว้ */
         .glass-card { background: white; border-radius: 3rem; border: 1px solid #f1f5f9; box-shadow: 0 10px 50px rgba(0,0,0,0.03); }
         textarea { resize: none; line-height: 1.8; }
         
-        /* Success Overlay */
         #success-overlay {
             display: none;
             position: fixed;
@@ -137,10 +137,8 @@
         const auth = getAuth(app);
 
         let topicsData = {};
-        let originalLines = [];
         let userDataGlobal = null;
 
-        // ตรวจสอบสถานะการเข้าสู่ระบบ
         onAuthStateChanged(auth, async (user) => {
             if (user) {
                 const adminDoc = await getDoc(doc(db, "admin", user.uid));
@@ -149,17 +147,18 @@
                 userDataGlobal.uid = user.uid;
                 userDataGlobal.email = user.email;
 
-                // อัปเดตข้อมูลผู้แจ้งในฟอร์ม (รอ dashboard.js โหลด)
+                // อัปเดตข้อมูลผู้แจ้งในฟอร์ม
                 setTimeout(() => {
-                    document.getElementById('form-user-name').innerText = userDataGlobal.name || "User";
-                    document.getElementById('form-user-avatar').innerText = (userDataGlobal.name || "U")[0].toUpperCase();
-                }, 800);
+                    const nameDisplay = document.getElementById('form-user-name');
+                    const avatarDisplay = document.getElementById('form-user-avatar');
+                    if(nameDisplay) nameDisplay.innerText = userDataGlobal.name || "User";
+                    if(avatarDisplay) avatarDisplay.innerText = (userDataGlobal.name || "U")[0].toUpperCase();
+                }, 1000);
             } else {
                 window.location.replace("login.html");
             }
         });
 
-        // ดึงหัวข้อปัญหา
         onSnapshot(collection(db, "topics"), (snapshot) => {
             const topicSelect = document.getElementById('topic');
             topicSelect.innerHTML = '<option value="">เลือกหัวข้อปัญหา</option>';
@@ -171,18 +170,16 @@
             });
         });
 
-        // Event: เมื่อเปลี่ยนหัวข้อ
         document.getElementById('topic').addEventListener('change', (e) => {
             const topic = topicsData[e.target.value];
             if (topic) {
-                originalLines = (topic.checklist || "").split("\n").filter(l => l.trim() !== "");
+                const originalLines = (topic.checklist || "").split("\n").filter(l => l.trim() !== "");
                 document.getElementById('detail-input').value = originalLines.map(line => line + " ").join("\n");
                 document.getElementById('sla-hours-text').innerText = `🕒 SLA: ${topic.sla} ชม.`;
                 document.getElementById('sla-badge').classList.remove('hidden');
             }
         });
 
-        // Event: ส่งฟอร์ม
         document.getElementById('ticketForm').addEventListener('submit', async (e) => {
             e.preventDefault();
             const btn = document.getElementById('submitBtn');
@@ -201,7 +198,7 @@
                     topicId: topicId,
                     id_number: document.getElementById('id_number').value.trim(),
                     detail: document.getElementById('detail-input').value,
-                    status: "Open",
+                    status: "Pending", // เปลี่ยนเป็น Pending เพื่อให้ Admin เห็นในหน้า Management
                     owner: userDataGlobal.name || "Unknown",
                     ownerEmail: userDataGlobal.email || "",
                     sender_uid: userDataGlobal.uid,

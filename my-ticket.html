@@ -13,18 +13,23 @@
 
 <body class="flex h-screen overflow-hidden bg-[#f8fafc]">
 
-    <aside id="sidebar-placeholder" class="flex-shrink-0 z-[1001] transition-all duration-300" style="width: 260px;"></aside>
+    <aside id="sidebar-placeholder" class="flex-shrink-0 z-[1001] bg-white border-r border-slate-200 transition-all duration-300" style="width: 260px;"></aside>
 
     <div class="flex-1 flex flex-col min-w-0">
         
-        <header id="topbar-placeholder" class="flex-shrink-0 z-50"></header>
+        <header id="topbar-placeholder" class="z-50 bg-white/80 backdrop-blur-md border-b border-slate-100"></header>
 
-        <main class="flex-1 overflow-y-auto p-8 custom-scroll">
-            <div class="max-w-7xl mx-auto w-full fade-in-up">
-                
-                <h1 class="text-4xl font-bold text-slate-800">Hello</h1>
-                <p class="text-slate-500 mt-2">หน้านี้ Layout เหมือน Dashboard แล้วครับ</p>
+        <main class="flex-1 overflow-y-auto custom-scroll">
+            <div class="p-6 md:p-10"> 
+                <div class="max-w-[1600px] mx-auto fade-in-up">
+                    
+                    <div class="bg-white rounded-[2.5rem] p-10 shadow-sm border border-slate-100 min-h-[500px]">
+                        <h1 class="text-4xl font-bold text-slate-800">Hello</h1>
+                        <p class="text-slate-500 mt-4 text-lg">หน้านี้ Layout เหมือน Dashboard 100% แล้วครับ</p>
+                    </div>
+
                 </div>
+            </div>
         </main>
     </div>
 
@@ -36,22 +41,17 @@
             ];
 
             for (const comp of comps) {
-                try {
-                    const res = await fetch(comp.url);
-                    if (res.ok) {
-                        const el = document.getElementById(comp.id);
-                        el.innerHTML = await res.text();
-                        
-                        // รัน Script ของ Sidebar/Topbar (เพื่อให้ปุ่มกดได้)
-                        el.querySelectorAll("script").forEach(oldScript => {
-                            const newScript = document.createElement("script");
-                            newScript.type = "module";
-                            newScript.textContent = oldScript.textContent;
-                            document.head.appendChild(newScript);
-                        });
-                    }
-                } catch (err) {
-                    console.error("Error loading component:", err);
+                const res = await fetch(comp.url);
+                if (res.ok) {
+                    const el = document.getElementById(comp.id);
+                    el.innerHTML = await res.text();
+                    
+                    el.querySelectorAll("script").forEach(oldScript => {
+                        const newScript = document.createElement("script");
+                        newScript.type = "module";
+                        newScript.textContent = oldScript.textContent;
+                        document.head.appendChild(newScript);
+                    });
                 }
             }
         }

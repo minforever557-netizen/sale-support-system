@@ -323,6 +323,92 @@ body {
     inset: 0; 
     z-index: 2000;
     background: rgba(255, 255, 255, 0.8); 
+
+   /* ==========================================================================
+   6.1 ADDITIONAL BOX STYLING (เพิ่มความสวยงามให้กล่องข้อมูล)
+   ========================================================================== */
+
+/* ปรับระยะห่างและพื้นหลังของ Main ให้ดูมีมิติ */
+.profile-container {
+    max-width: 1100px;
+    margin: 0 auto;
+    padding-bottom: 5rem;
+}
+
+/* ตกแต่งกล่อง Section ภายในฟอร์ม */
+.form-section-box {
+    background: #ffffff;
+    border: 1px solid #f1f5f9;
+    border-radius: 1.5rem;
+    padding: 1.5rem;
+    margin-bottom: 2rem;
+    transition: all 0.3s ease;
+}
+
+.form-section-box:hover {
+    border-color: var(--light-green);
+    background: #fcfdfe;
+}
+
+/* ตกแต่งหัวข้อ Section ให้ดูเป็นสัดส่วน */
+.section-header-inline {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    margin-bottom: 2rem;
+    padding-bottom: 1rem;
+    border-bottom: 1px dashed #e2e8f0;
+}
+
+.icon-wrapper {
+    width: 42px;
+    height: 42px;
+    border-radius: 12px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.2rem;
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.05);
+}
+
+/* ตกแต่ง Sidebar Info Box ด้านซ้าย */
+.info-item-card {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 1rem;
+    background: #f8fafc;
+    border-radius: 1.25rem;
+    border: 1px solid transparent;
+    transition: all 0.2s ease;
+}
+
+.info-item-card:hover {
+    background: white;
+    border-color: var(--light-green);
+    transform: translateX(5px);
+}
+
+/* ปรับแต่ง Dropdown (Select) ให้ดูแพงขึ้น */
+select.form-input-profile {
+    cursor: pointer;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 24 24' stroke='%2364748b'%3E%3Cpath stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='C19 9l-7 7-7-7'%3E%3C/path%3E%3C/svg%3E");
+    background-repeat: no-repeat;
+    background-position: right 1rem center;
+    background-size: 1.2rem;
+    padding-right: 2.5rem !important;
+    appearance: none;
+}
+
+/* เพิ่ม Effect ให้รูปโปรไฟล์ดูมีเลเยอร์ */
+.avatar-ring {
+    padding: 8px;
+    background: white;
+    border-radius: 3rem;
+    box-shadow: 0 10px 25px rgba(0,0,0,0.05);
+    display: inline-block;
+    margin-bottom: 1.5rem;
+}
     backdrop-filter: blur(12px);
     align-items: center; 
     justify-content: center;

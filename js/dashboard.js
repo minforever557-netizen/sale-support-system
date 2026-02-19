@@ -12,7 +12,6 @@ const firebaseConfig = {
     appId: "1:840890441207:web:f3a5076d46e963a90de2f2"
 };
 
-// Initialize Firebase
 const app = getApps().length === 0 ? initializeApp(firebaseConfig) : getApps()[0];
 const db = getFirestore(app);
 const auth = getAuth(app);
@@ -22,14 +21,12 @@ onAuthStateChanged(auth, async (user) => {
     if (user) {
         try {
             const userDoc = await getDoc(doc(db, "admin", user.uid));
-            
             if (userDoc.exists()) {
                 const userData = userDoc.data();
                 const userRole = (userData.role || "").toLowerCase();
 
-                // ตรวจสอบ Role (admin, user, staff)
                 if (['admin', 'user', 'staff'].includes(userRole)) {
-                    // เรียกโหลด Layout และรอจนกว่าจะโหลด Component เสร็จจริง
+                    // เรียกโหลดโครงสร้างหน้าเว็บ
                     await initGlobalLayout(userData, user.email);
                     
                     if (typeof loadDashboardStats === 'function') {
@@ -55,14 +52,14 @@ onAuthStateChanged(auth, async (user) => {
     }
 });
 
-// 3. ฟังก์ชันโหลด Sidebar และ Topbar (ปรับปรุงใหม่)
+// 3. ฟังก์ชันโหลด Sidebar และ Topbar
 async function initGlobalLayout(userData, email) {
     const components = [
         { id: 'sidebar-placeholder', url: './components/sidebar.html' },
         { id: 'topbar-placeholder', url: './components/topbar.html' }
     ];
 
-    // 1. โหลด HTML Components (รอให้โหลดเสร็จจริงๆ ก่อนไปต่อ)
+    // โหลดไฟล์ HTML
     for (const comp of components) {
         try {
             const response = await fetch(comp.url);
@@ -71,14 +68,14 @@ async function initGlobalLayout(userData, email) {
             const container = document.getElementById(comp.id);
             if (container) {
                 container.innerHTML = html;
-                console.log(`✅ Loaded Component: ${comp.id}`);
+                console.log(`✅ Loaded: ${comp.id}`);
             }
         } catch (error) {
             console.error(`❌ Error loading ${comp.id}:`, error);
         }
     }
 
-    // 2. ฟังก์ชันฉีดข้อมูลเข้า Topbar (ปรับปรุงให้เช็คถี่ขึ้น)
+    // ฟังก์ชันฉีดข้อมูลเข้า UI (รอจนกว่า Element จะเกิด)
     const renderUserData = (attempts = 0) => {
         const nameEl = document.getElementById('tp-fullname');
         const userEl = document.getElementById('tp-username');
@@ -86,7 +83,6 @@ async function initGlobalLayout(userData, email) {
         const avatarEl = document.getElementById('tp-avatar-circle');
 
         if (nameEl) {
-            // ใส่ข้อมูล (ใช้ค่าจาก userData ใน Firestore: image_0f7262.png)
             nameEl.innerText = userData.name || "user 02";
             if (userEl) userEl.innerText = `@${userData.username || "user02"}`;
             if (emailEl) emailEl.innerText = email || userData.email;
@@ -94,27 +90,18 @@ async function initGlobalLayout(userData, email) {
                 const firstChar = (userData.name || userData.username).charAt(0).toUpperCase();
                 avatarEl.innerText = firstChar;
             }
-            
-            console.log("🚀 Topbar UI Updated Successfully!");
-            // เริ่มระบบนาฬิกาเมื่อ UI พร้อมแล้ว
+            console.log("🚀 Topbar UI Updated!");
             initLiveClock();
-        } else if (attempts < 50) { // ลองใหม่ทุก 20ms รวมสูงสุด 1 วินาที
+        } else if (attempts < 50) {
             setTimeout(() => renderUserData(attempts + 1), 20);
-        } else {
-            console.error("❌ Critical: Topbar elements not found after 1s");
         }
     };
 
-    // 3. เริ่มการอัปเดต UI
     renderUserData();
-
-    // 4. เริ่มทำงานระบบ Sidebar
-    if (typeof initSidebarBehavior === 'function') {
-        initSidebarBehavior(userData);
-    }
+    initSidebarBehavior(userData);
 }
 
-// ฟังก์ชันนาฬิกาแยกออกมาเพื่อความเป็นระเบียบ
+// ระบบนาฬิกา
 function initLiveClock() {
     const clockEl = document.getElementById('tp-clock');
     const dateEl = document.getElementById('tp-date');
@@ -131,58 +118,39 @@ function initLiveClock() {
     }
 }
 
-    // เริ่มทำงานระบบ Sidebar (ลูกศรย่อขยาย)
-    if (typeof initSidebarBehavior === 'function') {
-        initSidebarBehavior(userData);
-    }
-}
-// 4. ระบบควบคุม Sidebar (Toggle, Active Link, Admin Control)
+// 4. ระบบควบคุม Sidebar
 function initSidebarBehavior(userData) {
     const sidebar = document.getElementById('sidebar-placeholder');
-    const toggleBtn = document.getElementById('sidebar-toggle'); // ลูกศร Desktop
+    const toggleBtn = document.getElementById('sidebar-toggle');
     const toggleIcon = document.getElementById('toggle-icon');
     const currentPath = window.location.pathname.split("/").pop() || "dashboard.html";
 
-    // --- 1. ตรวจสอบสิทธิ์จากฟิลด์ role เท่านั้น ---
-const adminSection = document.getElementById('admin-menu-section');
+    // จัดการเมนู Admin
+    const adminSection = document.getElementById('admin-menu-section');
     if (adminSection) {
-        // ปรับให้เช็คเป็น 'admin' (ตัวเล็ก) ตามฐานข้อมูล
         if (userData && userData.role && userData.role.toLowerCase() === 'admin') {
-            adminSection.classList.remove('hidden', 'hidden-secure');
+            adminSection.classList.remove('hidden');
         } else {
             adminSection.remove(); 
         }
     }
 
-    // --- 2. ตั้งค่า Active State (ไฮไลท์เมนูที่เลือก) ---
+    // Active Link
     document.querySelectorAll('.nav-link-modern').forEach(link => {
-        // ลบ active เก่าออกก่อนเพื่อความชัวร์
-        link.classList.remove('active');
         if (link.getAttribute('data-page') === currentPath) {
             link.classList.add('active');
         }
     });
 
-    // --- 3. ระบบพับ Sidebar สำหรับ Desktop (ลูกศรข้าง Sidebar) ---
+    // Desktop Toggle
     if (toggleBtn) {
         toggleBtn.onclick = () => {
-            sidebar.classList.toggle('mini');
+            if (sidebar) sidebar.classList.toggle('mini');
             if (toggleIcon) {
-                if (sidebar.classList.contains('mini')) {
-                    toggleIcon.classList.replace('fa-chevron-left', 'fa-chevron-right');
-                } else {
-                    toggleIcon.classList.replace('fa-chevron-right', 'fa-chevron-left');
-                }
+                const isMini = sidebar.classList.contains('mini');
+                toggleIcon.classList.toggle('fa-chevron-left', !isMini);
+                toggleIcon.classList.toggle('fa-chevron-right', isMini);
             }
-        };
-    }
-
-    // --- 4. ระบบ Mobile Hamburger (ปุ่ม Bars ที่อาจจะมีในหน้าจอเล็ก) ---
-    const mobileBtn = document.getElementById('mobile-menu-btn');
-    if (mobileBtn) {
-        mobileBtn.onclick = () => {
-            // ใช้ class 'active' หรือ 'translate-x-0' ขึ้นอยู่กับ CSS ของคุณ
-            sidebar.classList.toggle('active'); 
         };
     }
 }
@@ -194,7 +162,6 @@ async function loadDashboardStats(userEmail) {
         const snap = await getDocs(q);
         
         let total = 0, progress = 0, closed = 0;
-        
         snap.forEach(docSnap => {
             const data = docSnap.data();
             total++;
@@ -202,13 +169,11 @@ async function loadDashboardStats(userEmail) {
             if (["Success", "Closed", "ปิดงานแล้ว"].includes(data.status)) closed++;
         });
 
-        // อัปเดตตัวเลขการ์ด
         const setVal = (id, val) => { if(document.getElementById(id)) document.getElementById(id).innerText = val; };
         setVal('stat-total', total);
         setVal('stat-progress', progress);
         setVal('stat-closed', closed);
 
-        // คำนวณความสำเร็จ (%)
         if (total > 0) {
             const percent = Math.round((closed / total) * 100);
             setVal('eff-percent', percent + "%");
@@ -220,9 +185,8 @@ async function loadDashboardStats(userEmail) {
     }
 }
 
-// 6. ระบบ Logout (ใช้ Event Delegation)
+// 6. ระบบ Logout
 document.addEventListener('click', (e) => {
-    // เปิด Modal
     if (e.target.closest('#main-logout-btn')) {
         const modal = document.getElementById('logout-modal');
         if(modal) {
@@ -233,13 +197,11 @@ document.addEventListener('click', (e) => {
             }, 10);
         }
     }
-    // ยกเลิก Logout
     if (e.target.id === 'close-logout') {
         document.getElementById('logout-backdrop').classList.remove('opacity-100');
         document.getElementById('logout-content').classList.add('scale-90', 'opacity-0');
         setTimeout(() => document.getElementById('logout-modal').classList.add('hidden'), 300);
     }
-    // ยืนยัน Logout
     if (e.target.id === 'confirm-logout') {
         signOut(auth).then(() => window.location.replace("login.html"));
     }

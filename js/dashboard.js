@@ -26,10 +26,7 @@ onAuthStateChanged(auth, async (user) => {
                 const userRole = (userData.role || "").toLowerCase();
 
                 if (['admin', 'user', 'staff'].includes(userRole)) {
-                    // เรียกโหลด Layout หลัก
                     await initGlobalLayout(userData, user.email);
-                    
-                    // โหลดสถิติ Dashboard
                     if (typeof loadDashboardStats === 'function') {
                         loadDashboardStats(user.email);
                     }
@@ -53,17 +50,17 @@ onAuthStateChanged(auth, async (user) => {
     }
 });
 
-// 3. ฟังก์ชันโหลด Layout และจัดการ UI
+// 3. ฟังก์ชันโหลด Layout
 async function initGlobalLayout(userData, email) {
     const components = [
         { id: 'sidebar-placeholder', url: './components/sidebar.html' },
         { id: 'topbar-placeholder', url: './components/topbar.html' }
     ];
 
-    // โหลดไฟล์ HTML เข้ามาในหน้าเว็บ
     for (const comp of components) {
         try {
             const response = await fetch(comp.url);
+            if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
             const html = await response.text();
             const container = document.getElementById(comp.id);
             if (container) container.innerHTML = html;
@@ -72,15 +69,13 @@ async function initGlobalLayout(userData, email) {
         }
     }
 
-    // ฟังก์ชันฉีดข้อมูล (Retry จนกว่า Element ในไฟล์ HTML ที่โหลดมาจะพร้อม)
     const startUIRender = (attempts = 0) => {
         const nameEl = document.getElementById('topbar-user-name');
         const sidebarWrapper = document.getElementById('sidebar-wrapper');
 
         if (nameEl && sidebarWrapper) {
-            // --- A. อัปเดตข้อมูล Topbar (ใช้ ID จากไฟล์ที่คุณส่งมา) ---
+            // อัปเดตข้อมูลผู้ใช้
             nameEl.innerText = userData.name || "ผู้ใช้งาน";
-            
             const emailEl = document.getElementById('topbar-user-email');
             if (emailEl) emailEl.innerText = email || userData.email;
 
@@ -92,31 +87,30 @@ async function initGlobalLayout(userData, email) {
                 avatarEl.innerText = userData.name.charAt(0).toUpperCase();
             }
 
-            // --- B. ตรวจสอบสิทธิ์ Admin Sidebar ---
+            // ตรวจสอบสิทธิ์ Admin
             const adminSection = document.getElementById('admin-menu-section');
-            const userRole = (userData.role || "").toLowerCase();
             if (adminSection) {
-                if (userRole === 'admin') {
+                if ((userData.role || "").toLowerCase() === 'admin') {
                     adminSection.classList.remove('hidden', 'hidden-secure');
                 } else {
                     adminSection.remove(); 
                 }
             }
 
-            // --- C. รันนาฬิกาและระบบ Sidebar ---
+            // รันระบบ UI (เรียกใช้ตัวเดียวที่รวมมาให้แล้วด้านล่าง)
             initLiveClock();
             attachSidebarEvents();
             
             console.log("🚀 Layout & Data Ready!");
         } else if (attempts < 50) {
-            setTimeout(() => startUIRender(attempts + 1), 30);
+            setTimeout(() => startUIRender(attempts + 1), 50);
         }
     };
 
     startUIRender();
 }
 
-// 4. ระบบนาฬิกา (อิง ID จาก Topbar ใหม่)
+// 4. ระบบนาฬิกา
 function initLiveClock() {
     const clockEl = document.getElementById('topbar-time');
     const dateEl = document.getElementById('topbar-date');
@@ -133,28 +127,41 @@ function initLiveClock() {
     }
 }
 
+// 5. ระบบ Sidebar Toggle และ Active Menu (รวมเป็นฟังก์ชันเดียว)
 function attachSidebarEvents() {
     const placeholder = document.getElementById('sidebar-placeholder');
     const toggleBtn = document.getElementById('sidebar-toggle');
     
     if (!toggleBtn || !placeholder) return;
 
-    // ฟังก์ชันวาดไอคอนใหม่ (ใช้ inline style เพื่อสู้กับ CSS display:none)
+    // --- ส่วนที่ 1: ตรวจสอบหน้า Active (เส้นสีเขียว) ---
+    const currentPath = window.location.pathname.split("/").pop() || "dashboard.html";
+    document.querySelectorAll('.nav-link-modern').forEach(link => {
+        const href = link.getAttribute('href');
+        const linkPage = href ? href.split("/").pop() : "";
+        if (linkPage === currentPath) {
+            link.classList.add('active');
+        } else {
+            link.classList.remove('active');
+        }
+    });
+
+    // --- ส่วนที่ 2: ระบบ Toggle และไอคอนลูกศร ---
     const renderIcon = () => {
         const isMini = placeholder.classList.contains('mini');
         const iconClass = isMini ? 'fa-chevron-right' : 'fa-chevron-left';
         toggleBtn.innerHTML = `<i class="fa-solid ${iconClass}" style="display: block !important; color: white; font-size: 10px;"></i>`;
     };
 
-    // เรียกใช้งานครั้งแรกทันทีที่โหลด
     renderIcon();
 
     toggleBtn.onclick = (e) => {
         e.preventDefault();
         placeholder.classList.toggle('mini');
-        renderIcon(); // อัปเดตไอคอนทุกครั้งที่คลิก
+        renderIcon();
     };
 }
+
 // 6. ฟังก์ชันสถิติ Dashboard
 async function loadDashboardStats(userEmail) {
     try {
@@ -204,38 +211,3 @@ document.addEventListener('click', (e) => {
         signOut(auth).then(() => window.location.replace("login.html"));
     }
 });
-
-
-//8.ระบบ จับหน้าจอ Active
-function attachSidebarEvents() {
-    const placeholder = document.getElementById('sidebar-placeholder');
-    const toggleBtn = document.getElementById('sidebar-toggle');
-    
-    if (!toggleBtn || !placeholder) return;
-
-    // --- ส่วนที่ 1: ระบบตรวจสอบหน้า Active (เพิ่มใหม่) ---
-    const currentPath = window.location.pathname.split("/").pop() || "dashboard.html";
-    document.querySelectorAll('.nav-link-modern').forEach(link => {
-        const linkPage = link.getAttribute('href').split("/").pop();
-        if (linkPage === currentPath) {
-            link.classList.add('active');
-        } else {
-            link.classList.remove('active');
-        }
-    });
-
-    // --- ส่วนที่ 2: ระบบ Toggle เดิมของคุณ ---
-    const renderIcon = () => {
-        const isMini = placeholder.classList.contains('mini');
-        const iconClass = isMini ? 'fa-chevron-right' : 'fa-chevron-left';
-        toggleBtn.innerHTML = `<i class="fa-solid ${iconClass}" style="display: block !important; color: white; font-size: 10px;"></i>`;
-    };
-
-    renderIcon();
-
-    toggleBtn.onclick = (e) => {
-        e.preventDefault();
-        placeholder.classList.toggle('mini');
-        renderIcon();
-    };
-}

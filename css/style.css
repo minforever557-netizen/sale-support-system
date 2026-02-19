@@ -1,4 +1,6 @@
-/* --- 1. Global Setup (Emerald & White Theme) --- */
+/* ==========================================================================
+   1. GLOBAL SETUP & VARIABLES
+   ========================================================================== */
 :root {
     --primary-green: #10b981;    /* Emerald 500 */
     --hover-green: #059669;      /* Emerald 600 */
@@ -7,6 +9,8 @@
     --bg-main: #f8fafc;
     --sidebar-width: 280px;
     --sidebar-mini-width: 80px;
+    --transition-speed: 0.3s;
+    --transition-curve: cubic-bezier(0.4, 0, 0.2, 1);
 }
 
 body { 
@@ -18,21 +22,110 @@ body {
     overflow-x: hidden;
 }
 
-/* --- 2. Card Design (Glassmorphism) --- */
-.glass-card { 
-    background: white; 
-    border-radius: 2.5rem; 
-    box-shadow: 0 4px 20px rgba(0,0,0,0.02); 
-    transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1); 
-    border: 1px solid #f1f5f9; 
+/* ==========================================================================
+   2. LAYOUT COMPONENTS (Sidebar & Content)
+   ========================================================================== */
+#sidebar-placeholder {
+    width: var(--sidebar-width);
+    transition: all var(--transition-speed) var(--transition-curve);
+    background: white;
+    z-index: 1001;
 }
 
-.glass-card:hover { 
-    transform: translateY(-5px); 
-    box-shadow: 0 15px 35px rgba(16, 185, 129, 0.08); 
+/* Content Container Auto-Resize */
+.flex-1 {
+    transition: all var(--transition-speed) ease;
 }
 
-/* --- 3. Interactive Elements (Green & Orange) --- */
+/* ==========================================================================
+   3. SIDEBAR NAVIGATION LINKS
+   ========================================================================== */
+.nav-link-modern {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 12px 16px;
+    color: #64748b;
+    font-weight: 500;
+    border-radius: 16px;
+    transition: all 0.2s ease;
+    text-decoration: none;
+    white-space: nowrap;
+}
+
+.nav-link-modern .nav-icon, 
+.nav-link-modern i {
+    width: 24px;
+    min-width: 24px;
+    font-size: 1.15rem;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+/* Hover & Active States */
+.nav-link-modern:hover {
+    background-color: var(--light-green);
+    color: var(--primary-green);
+}
+
+.nav-link-modern.active {
+    background-color: var(--light-green);
+    color: var(--primary-green);
+    font-weight: 700;
+    border-right: 4px solid var(--primary-green);
+    border-radius: 16px 4px 4px 16px;
+}
+
+/* ==========================================================================
+   4. MINI SIDEBAR MODE (Toggle Logic)
+   ========================================================================== */
+/* Placeholder & Wrapper Scaling */
+#sidebar-placeholder.mini,
+#sidebar-placeholder.mini #sidebar-wrapper {
+    width: var(--sidebar-mini-width) !important;
+}
+
+/* 4.1 Hide Elements (Text, Labels, Arrows) */
+#sidebar-placeholder.mini .sidebar-text, 
+#sidebar-placeholder.mini #sidebar-wrapper p,
+#sidebar-placeholder.mini span.font-medium,
+#sidebar-placeholder.mini .fa-chevron-right {
+    display: none !important;
+    opacity: 0 !important;
+    visibility: hidden !important;
+    width: 0 !important;
+}
+
+/* 4.2 Centering Icons & Adjusting Spacing */
+#sidebar-placeholder.mini .nav-link-modern,
+#sidebar-placeholder.mini #sidebar-wrapper .px-6 {
+    justify-content: center !important;
+    padding-left: 0 !important;
+    padding-right: 0 !important;
+    gap: 0 !important;
+}
+
+/* 4.3 Sidebar Header (Logo) & Toggle Button */
+#sidebar-placeholder.mini .h-20 {
+    justify-content: center !important;
+    padding: 0 !important;
+}
+
+#sidebar-toggle {
+    background-color: var(--primary-green) !important;
+    border: 2px solid white;
+    transition: right var(--transition-speed);
+}
+
+#sidebar-placeholder.mini #sidebar-toggle {
+    right: -12px;
+}
+
+/* ==========================================================================
+   5. BUTTONS & INTERACTIVE ELEMENTS
+   ========================================================================== */
+/* Primary Action Button */
 .btn-primary {
     background-color: var(--primary-green) !important;
     color: white;
@@ -57,76 +150,7 @@ body {
     transform: scale(0.95);
 }
 
-/* --- 4. Sidebar System (Modern Mini & Active) --- */
-#sidebar-placeholder {
-    width: var(--sidebar-width);
-    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-    background: white;
-    z-index: 1001;
-}
-
-/* เมื่อพับเมนู (Mini Mode) */
-#sidebar-placeholder.mini {
-    width: var(--sidebar-mini-width);
-}
-
-/* ซ่อน Text เมื่อเป็น Mini */
-#sidebar-placeholder.mini .sidebar-text,
-#sidebar-placeholder.mini p,
-#sidebar-placeholder.mini .fa-chevron-right {
-    display: none;
-}
-
-/* ลิงก์เมนู */
-.nav-link-modern {
-    display: flex;
-    align-items: center;
-    gap: 12px;
-    padding: 12px 16px;
-    color: #64748b;
-    font-weight: 500;
-    border-radius: 16px;
-    transition: all 0.2s ease;
-    text-decoration: none;
-    white-space: nowrap;
-}
-
-.nav-link-modern .nav-icon, .nav-link-modern i {
-    width: 24px;
-    min-width: 24px;
-    text-align: center;
-    font-size: 1.15rem;
-    display: flex;
-    justify-content: center;
-    align-items: center;
-}
-
-/* Hover & Active (Green Theme) */
-.nav-link-modern:hover {
-    background-color: var(--light-green);
-    color: var(--primary-green);
-}
-
-.nav-link-modern.active {
-    background-color: var(--light-green);
-    color: var(--primary-green);
-    font-weight: 700;
-    border-right: 4px solid var(--primary-green);
-    border-radius: 16px 4px 4px 16px;
-}
-
-/* จัดกึ่งกลางไอคอนเมื่อ Mini */
-#sidebar-placeholder.mini .nav-link-modern {
-    justify-content: center;
-    padding: 12px 0;
-}
-
-/* --- 5. Content Transition --- */
-.flex-1 {
-    transition: all 0.3s ease; /* ให้ Content ขยายตาม Sidebar */
-}
-
-/* --- 6. Logout Button (Soft Orange/Red) --- */
+/* Logout Button Logic */
 .logout-btn-modern {
     width: 100%;
     display: flex;
@@ -135,7 +159,7 @@ body {
     gap: 12px;
     padding: 14px 20px;
     border-radius: 18px;
-    background-color: #fff7ed; /* ส้มอ่อนมาก */
+    background-color: #fff7ed;
     color: var(--primary-orange);
     border: none;
     cursor: pointer;
@@ -149,11 +173,30 @@ body {
 }
 
 #sidebar-placeholder.mini .logout-btn-modern {
-    justify-content: center;
-    padding: 14px 0;
+    justify-content: center !important;
+    padding: 14px 0 !important;
 }
 
-/* --- 7. Modals & Status --- */
+#sidebar-placeholder.mini .logout-btn-modern div {
+    gap: 0 !important;
+}
+
+/* ==========================================================================
+   6. CARDS, MODALS & STATUS BADGES
+   ========================================================================== */
+.glass-card { 
+    background: white; 
+    border-radius: 2.5rem; 
+    box-shadow: 0 4px 20px rgba(0,0,0,0.02); 
+    transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1); 
+    border: 1px solid #f1f5f9; 
+}
+
+.glass-card:hover { 
+    transform: translateY(-5px); 
+    box-shadow: 0 15px 35px rgba(16, 185, 129, 0.08); 
+}
+
 .modal-backdrop-blur { 
     backdrop-filter: blur(8px); 
     background-color: rgba(15, 23, 42, 0.4); 
@@ -166,74 +209,4 @@ body {
     border-radius: 999px;
     font-size: 11px;
     font-weight: 700;
-}
-
-/* --- 8. Sidebar Toggle Button (Floating) --- */
-#sidebar-toggle {
-    background-color: var(--primary-green) !important;
-    border: 2px solid white;
-}
-
-/* เจาะเข้าไปคุม Sidebar Wrapper เมื่อ Placeholder ติดคลาส mini */
-#sidebar-placeholder.mini #sidebar-wrapper {
-    width: var(--sidebar-mini-width) !important;
-}
-
-/* ซ่อนข้อความทั้งหมดภายใต้ Wrapper เมื่อเป็น mini */
-#sidebar-placeholder.mini #sidebar-wrapper .sidebar-text,
-#sidebar-placeholder.mini #sidebar-wrapper p {
-    display: none !important;
-}
-
-/* จัดกึ่งกลาง Logo และไอคอนเมนู */
-#sidebar-placeholder.mini #sidebar-wrapper .px-6,
-#sidebar-placeholder.mini #sidebar-wrapper .nav-link-modern {
-    justify-content: center !important;
-    padding-left: 0 !important;
-    padding-right: 0 !important;
-}
-
-/* เมื่อ Sidebar อยู่ในสถานะ mini (ย่อ) */
-#sidebar-placeholder.mini #sidebar-wrapper {
-    width: var(--sidebar-mini-width) !important;
-}
-
-/* 1. ตัดตัวหนังสือและข้อความ p ออกทั้งหมด */
-#sidebar-placeholder.mini .sidebar-text, 
-#sidebar-placeholder.mini #sidebar-wrapper p,
-#sidebar-placeholder.mini span.font-medium,
-#sidebar-placeholder.mini .sidebar-text.font-medium {
-    display: none !important;
-    opacity: 0 !important;
-    visibility: hidden !important;
-    width: 0 !important;
-}
-
-/* 2. จัดไอคอนให้อยู่กึ่งกลาง และเอา Gap ออก */
-#sidebar-placeholder.mini .nav-link-modern {
-    justify-content: center !important;
-    padding-left: 0 !important;
-    padding-right: 0 !important;
-    gap: 0 !important;
-}
-
-/* 3. จัดตำแหน่ง Logo (SaleSupport) ให้เหลือแต่ไอคอนจรวด */
-#sidebar-placeholder.mini .h-20 {
-    justify-content: center !important;
-    padding: 0 !important;
-}
-
-/* 4. ปรับปุ่ม Logout ให้เหลือแต่ไอคอน */
-#sidebar-placeholder.mini .logout-btn-modern {
-    justify-content: center !important;
-    padding: 14px 0 !important;
-}
-
-#sidebar-placeholder.mini .logout-btn-modern div {
-    gap: 0 !important;
-}
-
-/* ปรับตำแหน่งปุ่ม Toggle ให้ขยับตามเวลาหด */
-#sidebar-placeholder.mini #sidebar-toggle {
-    right: -12px;
 }

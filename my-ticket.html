@@ -3,32 +3,282 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>My Ticket - Sale Support System</title>
+    <title>My Tickets - Sale Support System</title>
+    
+    <link rel="stylesheet" href="./css/style.css"> 
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://fonts.googleapis.com/css2?family=Kanit:wght@300;400;600&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
     
-    <link rel="stylesheet" href="./css/style.css"> 
+    <style>
+        body { font-family: 'Kanit', sans-serif; }
+        .status-badge { @apply px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-widest; }
+        .custom-scroll::-webkit-scrollbar { width: 6px; }
+        .custom-scroll::-webkit-scrollbar-track { background: #f1f1f1; }
+        .custom-scroll::-webkit-scrollbar-thumb { background: #10b981; border-radius: 10px; }
+        .fade-in-up { animation: fadeInUp 0.4s ease-out; }
+        @keyframes fadeInUp {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+    </style>
 </head>
-<body class="flex min-h-screen">
 
-    <aside id="sidebar-placeholder" class="hidden lg:block w-64 sticky top-0 h-screen bg-white border-r border-slate-200"></aside>
-    
-    <div class="flex-1 flex flex-col min-w-0">
-        <div id="topbar-placeholder"></div>
+<body class="flex min-h-screen bg-[#f8fafc] overflow-hidden">
 
-        <main class="p-6 md:p-10 max-w-7xl mx-auto w-full space-y-8">
-            <div>
-                <h2 class="text-3xl font-bold text-slate-800 tracking-tight">ใบงานของฉัน</h2>
-                <p class="text-slate-500 mt-1">Hello! นี่คือเนื้อหาใหม่ในโครงสร้างเดิม</p>
-            </div>
-            
-            <div class="glass-card p-10 text-center">
-                 Content ของคุณจะอยู่ตรงนี้...
+    <aside id="sidebar-placeholder" class="hidden lg:block w-64 sticky top-0 h-screen bg-white border-r border-slate-200 flex-shrink-0"></aside>
+
+    <div class="flex-1 flex flex-col min-w-0 h-screen">
+        
+        <div id="topbar-placeholder" class="sticky top-0 z-40"></div>
+
+        <main class="flex-1 overflow-y-auto p-6 md:p-10 custom-scroll">
+            <div class="max-w-7xl mx-auto w-full space-y-8 fade-in-up">
+                
+                <div class="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+                    <div>
+                        <h2 class="text-3xl font-bold text-slate-800 tracking-tight">ใบงานของฉัน</h2>
+                        <p class="text-emerald-600 font-medium text-sm mt-1">Personal Ticket Monitoring</p>
+                    </div>
+                </div>
+
+                <div class="bg-white p-4 rounded-[2.5rem] shadow-sm border border-slate-100 flex flex-col md:flex-row gap-4 items-center">
+                    <div class="relative flex-1 w-full text-slate-400 focus-within:text-emerald-500">
+                        <i class="fa-solid fa-magnifying-glass absolute left-6 top-1/2 -translate-y-1/2 transition-colors"></i>
+                        <input type="text" id="searchInput" placeholder="ค้นหาหมายเลข Internet หรือหัวข้อ..." 
+                            class="w-full pl-14 pr-6 py-4 bg-slate-50 border border-transparent focus:bg-white focus:border-emerald-500 rounded-[1.8rem] outline-none transition-all text-slate-700">
+                    </div>
+                    <div class="flex items-center gap-3 w-full md:w-auto px-2">
+                        <span class="text-[10px] font-black text-slate-400 uppercase tracking-widest whitespace-nowrap">เรียงตาม</span>
+                        <select id="sortOrder" class="bg-slate-50 border border-slate-100 text-slate-600 px-6 py-4 rounded-[1.5rem] focus:bg-white outline-none font-bold cursor-pointer transition-all">
+                            <option value="createdAt-desc">ล่าสุดไปเก่า</option>
+                            <option value="createdAt-asc">เก่าไปล่าสุด</option>
+                            <option value="status-asc">สถานะ (A-Z)</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div class="bg-white rounded-[3rem] shadow-sm overflow-hidden border border-slate-100 mb-10">
+                    <div class="overflow-x-auto">
+                        <table class="w-full text-left border-collapse">
+                            <thead>
+                                <tr class="bg-slate-50/50 border-b border-slate-100">
+                                    <th class="p-7 text-[10px] font-black text-slate-400 uppercase tracking-widest">Internet No.</th>
+                                    <th class="p-7 text-[10px] font-black text-slate-400 uppercase tracking-widest">Create Date</th>
+                                    <th class="p-7 text-[10px] font-black text-slate-400 uppercase tracking-widest">Topic</th>
+                                    <th class="p-7 text-[10px] font-black text-slate-400 uppercase tracking-widest text-center">Status</th>
+                                    <th class="p-7 text-[10px] font-black text-slate-400 uppercase tracking-widest">Update Date</th>
+                                    <th class="p-7 text-[10px] font-black text-slate-400 uppercase tracking-widest text-right">Action</th>
+                                </tr>
+                            </thead>
+                            <tbody id="ticket-list" class="divide-y divide-slate-50 text-sm">
+                                <tr><td colspan="6" class="p-20 text-center text-emerald-500 font-medium animate-pulse">กำลังโหลดใบงาน...</td></tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
             </div>
         </main>
     </div>
 
-    <script type="module" src="./js/dashboard.js"></script>
+    <div id="detail-modal" class="fixed inset-0 z-[100] hidden flex items-center justify-center p-4">
+        <div class="absolute inset-0 bg-slate-900/40 backdrop-blur-sm" onclick="closeDetailModal()"></div>
+        <div class="relative bg-white w-full max-w-2xl rounded-[3rem] shadow-2xl overflow-hidden flex flex-col max-h-[90vh]">
+            <div class="bg-emerald-600 p-8 text-white flex justify-between items-start">
+                <div>
+                    <h3 class="text-xl font-bold">รายละเอียดใบงาน</h3>
+                    <p class="text-emerald-100 text-[10px] uppercase font-black tracking-widest mt-1" id="det-modal-id">TICKET INFO</p>
+                </div>
+                <button onclick="closeDetailModal()" class="w-10 h-10 flex items-center justify-center bg-white/10 hover:bg-white/20 rounded-full transition text-white">
+                    <i class="fa-solid fa-xmark text-lg"></i>
+                </button>
+            </div>
+            <div class="p-8 overflow-y-auto custom-scroll space-y-6">
+                <div class="grid grid-cols-2 gap-6 bg-slate-50 p-6 rounded-[2rem] border border-slate-100">
+                    <div>
+                        <p class="text-[10px] font-black text-slate-400 uppercase mb-1 tracking-widest">Internet No.</p>
+                        <p id="det-id-number" class="font-bold text-slate-800">-</p>
+                    </div>
+                    <div>
+                        <p class="text-[10px] font-black text-slate-400 uppercase mb-1 tracking-widest">Create Date</p>
+                        <p id="det-create-date" class="text-slate-600">-</p>
+                    </div>
+                </div>
+                <div>
+                    <p class="text-[10px] font-black text-slate-400 uppercase mb-2 px-1 tracking-widest">หัวข้อปัญหา</p>
+                    <div id="det-topic" class="p-5 bg-white rounded-2xl border border-slate-100 font-bold text-emerald-700 shadow-sm">-</div>
+                </div>
+                <div>
+                    <p class="text-[10px] font-black text-slate-400 uppercase mb-2 px-1 tracking-widest">รายละเอียด</p>
+                    <div id="det-detail" class="bg-white p-6 rounded-2xl border border-slate-100 text-slate-600 text-sm leading-relaxed">-</div>
+                </div>
+            </div>
+            <div class="p-6 bg-slate-50 text-right border-t border-slate-100">
+                <button onclick="closeDetailModal()" class="px-10 py-3 bg-white border border-slate-200 text-slate-600 rounded-2xl font-bold hover:bg-slate-50 transition shadow-sm">ปิด</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="logout-modal" class="fixed inset-0 z-[110] hidden flex items-center justify-center p-4">
+        <div class="absolute inset-0 bg-slate-900/40 backdrop-blur-sm" id="logout-backdrop"></div>
+        <div class="relative bg-white w-full max-w-sm rounded-[3rem] p-10 shadow-2xl">
+            <div class="text-center">
+                <div class="w-20 h-20 bg-red-50 rounded-full flex items-center justify-center mx-auto mb-6"><span class="text-3xl">🚪</span></div>
+                <h3 class="text-2xl font-bold text-slate-800 mb-2">Logout?</h3>
+                <p class="text-slate-500 mb-8 text-sm">ต้องการออกจากระบบใช่หรือไม่?</p>
+                <div class="flex gap-3">
+                    <button id="confirm-logout" class="flex-1 py-4 bg-red-500 text-white rounded-2xl font-bold hover:bg-red-600 transition shadow-lg">ยืนยัน</button>
+                    <button id="close-logout" class="flex-1 py-4 bg-slate-100 text-slate-600 rounded-2xl font-bold hover:bg-slate-200">ยกเลิก</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script type="module">
+        import { initializeApp, getApps } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
+        import { getFirestore, collection, query, where, orderBy, onSnapshot, doc, getDoc } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+        import { getAuth, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
+
+        const firebaseConfig = {
+            apiKey: "AIzaSyAa2uSD_tjNqYE2eXnZcn75h_jAVscDG-c",
+            authDomain: "salesupportsystemapp.firebaseapp.com",
+            projectId: "salesupportsystemapp",
+            storageBucket: "salesupportsystemapp.firebasestorage.app",
+            messagingSenderId: "840890441207",
+            appId: "1:840890441207:web:f3a5076d46e963a90de2f2"
+        };
+
+        const app = getApps().length === 0 ? initializeApp(firebaseConfig) : getApps()[0];
+        const db = getFirestore(app);
+        const auth = getAuth(app);
+
+        let currentTickets = [];
+
+        onAuthStateChanged(auth, async (user) => {
+            if (user) {
+                const userDoc = await getDoc(doc(db, "users", user.uid));
+                const adminDoc = await getDoc(doc(db, "admin", user.uid));
+                const userData = adminDoc.exists() ? adminDoc.data() : (userDoc.exists() ? userDoc.data() : {});
+                
+                // โหลด Sidebar/Topbar ผ่านฟังก์ชันที่คุณมี
+                await loadLayout(userData, user.email);
+                initTicketListener(user.email);
+            } else {
+                window.location.replace("login.html");
+            }
+        });
+
+        async function loadLayout(userData, email) {
+            const comps = [
+                { id: 'sidebar-placeholder', url: './components/sidebar.html' },
+                { id: 'topbar-placeholder', url: './components/topbar.html' }
+            ];
+            for (const comp of comps) {
+                const res = await fetch(comp.url);
+                if (res.ok) {
+                    const el = document.getElementById(comp.id);
+                    el.innerHTML = await res.text();
+                    el.classList.remove('hidden');
+                    el.querySelectorAll("script").forEach(s => {
+                        const ns = document.createElement("script");
+                        ns.type = "module";
+                        ns.textContent = s.textContent;
+                        document.head.appendChild(ns);
+                    });
+                }
+            }
+            document.addEventListener('click', (e) => {
+                if (e.target.closest('#main-logout-btn')) {
+                    e.preventDefault();
+                    document.getElementById('logout-modal').classList.remove('hidden');
+                }
+            });
+        }
+
+        function initTicketListener(email) {
+            const [field, direction] = document.getElementById('sortOrder').value.split('-');
+            const q = query(
+                collection(db, "tickets"),
+                where("ownerEmail", "==", email),
+                orderBy(field, direction)
+            );
+            onSnapshot(q, (snapshot) => {
+                currentTickets = snapshot.docs.map(d => ({ id: d.id, ...d.data() }));
+                renderTickets(currentTickets);
+            });
+        }
+
+        function renderTickets(tickets) {
+            const list = document.getElementById('ticket-list');
+            const searchTerm = document.getElementById('searchInput').value.toLowerCase();
+            const filtered = tickets.filter(t => 
+                t.id_number?.toLowerCase().includes(searchTerm) || 
+                t.topic?.toLowerCase().includes(searchTerm)
+            );
+
+            if (filtered.length === 0) {
+                list.innerHTML = `<tr><td colspan="6" class="p-20 text-center text-slate-400">ไม่พบใบงานของคุณ</td></tr>`;
+                return;
+            }
+
+            list.innerHTML = filtered.map(t => {
+                const createDate = t.createdAt?.toDate().toLocaleString('th-TH', {dateStyle:'short', timeStyle:'short'}) || '-';
+                const updateDate = t.updatedAt?.toDate().toLocaleString('th-TH', {dateStyle:'short', timeStyle:'short'}) || '-';
+                
+                let statusClass = "bg-slate-100 text-slate-600";
+                if(t.status === 'Open') statusClass = "bg-blue-50 text-blue-600 border border-blue-100";
+                if(t.status === 'On Progress') statusClass = "bg-orange-50 text-orange-600 border border-orange-100";
+                if(t.status === 'Success') statusClass = "bg-emerald-50 text-emerald-600 border border-emerald-100";
+                if(t.status === 'Reject') statusClass = "bg-red-50 text-red-600 border border-red-100";
+
+                return `
+                    <tr class="hover:bg-slate-50/80 transition-all border-b border-slate-50 last:border-0 group">
+                        <td class="p-7 font-bold text-slate-700 group-hover:text-emerald-600 transition-colors">${t.id_number || '-'}</td>
+                        <td class="p-7 text-slate-500 text-[12px]">${createDate}</td>
+                        <td class="p-7 text-slate-700 font-medium">${t.topic}</td>
+                        <td class="p-7 text-center">
+                            <span class="status-badge ${statusClass}">${t.status}</span>
+                        </td>
+                        <td class="p-7 text-slate-500 text-[12px]">${updateDate}</td>
+                        <td class="p-7 text-right">
+                            <button onclick="viewDetail('${t.id}')" class="bg-white border border-slate-200 text-slate-600 hover:border-emerald-500 hover:text-emerald-500 px-5 py-2.5 rounded-xl text-xs font-black transition-all active:scale-95">
+                                <i class="fa-solid fa-eye mr-2"></i>ดูข้อมูล
+                            </button>
+                        </td>
+                    </tr>
+                `;
+            }).join('');
+        }
+
+        window.viewDetail = async (id) => {
+            const docSnap = await getDoc(doc(db, "tickets", id));
+            if (docSnap.exists()) {
+                const t = docSnap.data();
+                document.getElementById('det-modal-id').innerText = `ID: ${id}`;
+                document.getElementById('det-id-number').innerText = t.id_number || '-';
+                document.getElementById('det-create-date').innerText = t.createdAt?.toDate().toLocaleString('th-TH') || '-';
+                document.getElementById('det-topic').innerText = t.topic;
+                document.getElementById('det-detail').innerText = t.detail;
+                document.getElementById('detail-modal').classList.remove('hidden');
+                document.body.style.overflow = 'hidden';
+            }
+        };
+
+        window.closeDetailModal = () => {
+            document.getElementById('detail-modal').classList.add('hidden');
+            document.body.style.overflow = 'auto';
+        };
+
+        document.getElementById('searchInput').addEventListener('input', () => renderTickets(currentTickets));
+        document.getElementById('sortOrder').addEventListener('change', () => {
+            if (auth.currentUser) initTicketListener(auth.currentUser.email);
+        });
+
+        document.getElementById('close-logout').onclick = () => document.getElementById('logout-modal').classList.add('hidden');
+        document.getElementById('confirm-logout').onclick = async () => {
+            await signOut(auth);
+            window.location.replace("login.html");
+        };
+    </script>
 </body>
 </html>

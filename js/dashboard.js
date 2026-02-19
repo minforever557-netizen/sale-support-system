@@ -24,29 +24,33 @@ onAuthStateChanged(auth, async (user) => {
         console.log("Firebase User Found:", user.uid);
         
         try {
-            // ดึงข้อมูลจากคอลเลกชัน 'admin' (แม้ชื่อคอลเลกชันจะเขียนแบบนั้น แต่เราจะเช็คที่ฟิลด์ role)
+            // ดึงข้อมูลจากคอลเลกชัน 'admin' (ตรวจสอบตาม UID)
             const userDoc = await getDoc(doc(db, "admin", user.uid));
             
             if (userDoc.exists()) {
                 const userData = userDoc.data();
                 
-                // --- จุดที่แก้ไข: เช็คจากฟิลด์ role เท่านั้น ---
-                const userRole = userData.role; // ดึงค่าจากฟิลด์ role ใน Firestore
+                // --- จุดแก้ไขสำคัญ: ใช้ .toLowerCase() เพื่อป้องกันปัญหาตัวพิมพ์เล็ก-ใหญ่ ---
+                const rawRole = userData.role || "";
+                const userRole = rawRole.toLowerCase(); 
                 console.log("User Role identified as:", userRole);
 
-                if (userRole === 'Admin' || userRole === 'User' || userRole === 'Staff') {
+                // ตรวจสอบ Role โดยใช้ตัวพิมพ์เล็กทั้งหมด
+                if (userRole === 'admin' || userRole === 'user' || userRole === 'staff') {
                     // ถ้ามี Role ที่ถูกต้อง ให้เข้าใช้งานได้
+                    console.log("Access Granted for role:", userRole);
                     await initGlobalLayout(userData, user.email);
                     loadDashboardStats(user.email);
                 } else {
-                    // ถ้าไม่มีฟิลด์ role หรือ Role ไม่ได้รับอนุญาต
-                    console.error("Access Denied: Invalid Role");
-                    alert("สิทธิ์การใช้งานของคุณไม่ถูกต้อง (Invalid Role)");
+                    // กรณีมีฟิลด์ role แต่ค่าข้างในไม่ได้รับอนุญาต
+                    console.error("Access Denied: Invalid Role Value ->", rawRole);
+                    alert(`สิทธิ์การใช้งานของคุณไม่ถูกต้อง (Role: ${rawRole})`);
                     await signOut(auth);
                     window.location.replace("login.html");
                 }
 
             } else {
+                // กรณีไม่พบ UID นี้ในคอลเลกชัน 'admin'
                 console.error("Critical: User ID not found in database!");
                 alert("ไม่พบข้อมูลผู้ใช้งานในระบบ");
                 await signOut(auth);
@@ -54,8 +58,10 @@ onAuthStateChanged(auth, async (user) => {
             }
         } catch (error) {
             console.error("Firestore Error:", error);
+            alert("เกิดข้อผิดพลาดในการเชื่อมต่อฐานข้อมูล");
         }
     } else {
+        // ถ้าไม่ได้ Login ให้กลับไปหน้า Login
         if (!window.location.pathname.includes("login.html")) {
             window.location.replace("login.html");
         }

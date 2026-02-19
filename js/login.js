@@ -1,5 +1,5 @@
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
-import { getAuth, signInWithEmailAndPassword } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
+import { getAuth, signInWithEmailAndPassword, setPersistence, browserLocalPersistence } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
 import { getFirestore, collection, query, where, getDocs } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
 
 // Firebase Config
@@ -29,7 +29,10 @@ loginForm.addEventListener('submit', async (e) => {
     loginBtn.innerHTML = "กำลังตรวจสอบ...";
 
     try {
-        // 1. ค้นหาใน Collectionชื่อ 'admin' (ตามภาพที่คุณส่งมา)
+        // 1. ล้างข้อมูลระบบเก่า (localStorage) เพื่อป้องกันการขัดแย้ง
+        localStorage.clear();
+
+        // 2. ค้นหา Email จาก Username ใน Firestore
         const adminRef = collection(db, "admin");
         const q = query(adminRef, where("username", "==", usernameInput));
         const querySnapshot = await getDocs(q);
@@ -45,15 +48,21 @@ loginForm.addEventListener('submit', async (e) => {
             userEmail = doc.data().email;
         });
 
-        // 2. ล็อกอินด้วย Email ที่ค้นพบจาก Firestore
+        // 3. ตั้งค่า Persistence ให้คงสถานะ Login ไว้แม้ปิด Browser (ช่วยแก้ปัญหาเด้ง)
+        await setPersistence(auth, browserLocalPersistence);
+
+        // 4. ล็อกอินด้วย Email
         await signInWithEmailAndPassword(auth, userEmail, passwordInput);
         
-        // 3. ไปหน้า Dashboard
-        window.location.href = "dashboard.html";
+        // 5. ย้ายหน้าโดยใช้ replace (เพื่อไม่ให้กด Back กลับมาหน้า login ได้)
+        window.location.replace("dashboard.html");
 
     } catch (error) {
         console.error("Login Error:", error);
-        alert("รหัสผ่านไม่ถูกต้อง หรือเกิดข้อผิดพลาด");
+        let message = "รหัสผ่านไม่ถูกต้อง หรือเกิดข้อผิดพลาด";
+        if (error.code === 'auth/wrong-password') message = "รหัสผ่านไม่ถูกต้อง";
+        if (error.code === 'auth/user-not-found') message = "ไม่พบผู้ใช้งานนี้";
+        alert(message);
         resetBtn();
     }
 });

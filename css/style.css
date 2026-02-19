@@ -193,36 +193,63 @@ body {
     font-weight: 700;
 }
 
-/* --- 1. เพิ่มแถบบอกตำแหน่งเมนู (Active Indicator) --- */
+/* ==========================================================================
+   2. SIDEBAR NAVIGATION & ACTIVE STATE (แก้ไขแถบซ้อน)
+   ========================================================================== */
+.nav-link-modern {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 12px 16px;
+    color: #64748b;
+    border-radius: 16px;
+    transition: all 0.2s ease;
+    position: relative; /* สำหรับแถบ Indicator */
+}
+
+/* แถบบอกตำแหน่งเมนู (แบบ Indicator เส้นตั้ง) */
 .nav-link-modern.active {
     background-color: var(--light-green) !important;
     color: var(--primary-green) !important;
-    position: relative;
 }
 
-/* สร้างแถบเส้นสีเขียวด้านขวาเมื่อ Active */
+/* สร้างเส้นเขียวด้านขวา เฉพาะตอน Active และลบ border-right ของเก่าออก */
 .nav-link-modern.active::after {
     content: "";
     position: absolute;
     right: 0;
-    top: 15%;
-    height: 70%;
+    top: 0;
+    height: 100%;
     width: 4px;
     background-color: var(--primary-green);
     border-radius: 4px 0 0 4px;
 }
 
-/* --- 2. แก้ไขไอคอนออกจากระบบให้แสดงผลแม้ในโหมด Mini --- */
-.logout-btn-modern i {
-    display: flex !important;
-    visibility: visible !important;
-    opacity: 1 !important;
-    font-size: 1.25rem;
+/* ==========================================================================
+   3. MINI SIDEBAR LOGIC (จัดการไอคอน Logout)
+   ========================================================================== */
+#sidebar-placeholder.mini .sidebar-text,
+#sidebar-placeholder.mini p,
+#sidebar-placeholder.mini .fa-chevron-right {
+    display: none !important;
 }
 
-/* จัดกึ่งกลางปุ่ม Logout เมื่อย่อ */
+/* จัดการปุ่ม Logout: เมื่อย่อ (mini) ให้ซ่อนรูปทั้งหมด */
 #sidebar-placeholder.mini .logout-btn-modern {
-    display: flex !important;
-    justify-content: center !important;
-    padding: 14px 0 !important;
+    display: none !important; 
+}
+
+/* เมื่อไม่ย่อ (ปกติ) ให้แสดงปุ่ม Logout พร้อมไอคอน */
+.logout-btn-modern {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 14px 20px;
+    /* ... สไตล์เดิมของคุณ ... */
+}
+
+/* จัดตำแหน่งปุ่ม Toggle ให้ลอยเหนือกราฟิก */
+#sidebar-toggle {
+    z-index: 1002;
+    cursor: pointer;
 }

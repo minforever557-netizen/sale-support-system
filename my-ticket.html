@@ -8,29 +8,25 @@
     <link href="https://fonts.googleapis.com/css2?family=Kanit:wght@300;400;600&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
     <style>
-        body { font-family: 'Kanit', sans-serif; background-color: #f8fafc; } /* ปรับพื้นหลังให้ดูสะอาดขึ้น */
-        
-        /* Badge Styles */
-        .status-badge { @apply px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-widest; }
-        
-        /* Modal & Layout Transitions */
-        .modal-active { overflow: hidden; }
-        .modal-backdrop-blur { backdrop-filter: blur(8px); background-color: rgba(15, 23, 42, 0.4); }
-        
-        /* Sidebar Placeholder Fix */
-        #sidebar-placeholder { transition: all 0.3s ease; }
-        
-        /* Custom Scrollbar */
-        .custom-scroll::-webkit-scrollbar { width: 6px; }
-        .custom-scroll::-webkit-scrollbar-track { background: #f1f1f1; }
-        .custom-scroll::-webkit-scrollbar-thumb { background: #10b981; border-radius: 10px; }
+      <body class="flex min-h-screen bg-[#f8fafc]"> <aside id="sidebar-placeholder" class="z-[1001] transition-all duration-300"></aside>
 
-        /* Animation */
-        @keyframes fadeIn {
-            from { opacity: 0; transform: translateY(10px); }
-            to { opacity: 1; transform: translateY(0); }
-        }
-        .fade-in-up { animation: fadeIn 0.5s ease-out forwards; }
+    <div class="flex-1 flex flex-col min-w-0">
+        
+        <div id="topbar-placeholder" class="z-50"></div>
+
+        <main class="flex-1 overflow-y-auto p-4 md:p-8 custom-scroll">
+            <div class="max-w-7xl mx-auto w-full fade-in-up">
+                
+                <div class="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-8">
+                    <div>
+                        <h2 class="text-3xl font-bold text-slate-800 tracking-tight">ใบงานของฉัน</h2>
+                        <p class="text-emerald-600 font-medium text-sm mt-1">Personal Ticket Monitoring</p>
+                    </div>
+                </div>
+
+                </div>
+        </main>
+    </div>
     </style>
 </head>
 <body class="flex min-h-screen">

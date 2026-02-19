@@ -139,22 +139,20 @@ function attachSidebarEvents() {
     
     if (!toggleBtn || !placeholder) return;
 
-    // ฟังก์ชันสำหรับอัปเดตไอคอน
-    const updateToggleIcon = () => {
+    // ฟังก์ชันวาดไอคอนใหม่ (ใช้ inline style เพื่อสู้กับ CSS display:none)
+    const renderIcon = () => {
         const isMini = placeholder.classList.contains('mini');
-        // ฉีด HTML ไอคอนเข้าไปใหม่ทุกครั้งเพื่อความชัวร์
-        toggleBtn.innerHTML = isMini 
-            ? '<i class="fa-solid fa-chevron-right text-white text-[10px]"></i>' 
-            : '<i class="fa-solid fa-chevron-left text-white text-[10px]"></i>';
+        const iconClass = isMini ? 'fa-chevron-right' : 'fa-chevron-left';
+        toggleBtn.innerHTML = `<i class="fa-solid ${iconClass}" style="display: block !important; color: white; font-size: 10px;"></i>`;
     };
 
-    // เรียกครั้งแรกเพื่อให้ไอคอนขึ้นทันทีที่โหลดหน้า
-    updateToggleIcon();
+    // เรียกใช้งานครั้งแรกทันทีที่โหลด
+    renderIcon();
 
     toggleBtn.onclick = (e) => {
         e.preventDefault();
         placeholder.classList.toggle('mini');
-        updateToggleIcon(); // อัปเดตรูปเมื่อมีการคลิก
+        renderIcon(); // อัปเดตไอคอนทุกครั้งที่คลิก
     };
 }
 // 6. ฟังก์ชันสถิติ Dashboard

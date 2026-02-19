@@ -223,74 +223,17 @@ body {
     font-size: 11px;
     font-weight: 700;
 }
-/* --- Profile Settings Theme Customization --- */
-/* --- Profile Settings Theme: Green, White, Orange --- */
 
-/* Avatar: สีเขียว Emerald สดใส */
-.profile-avatar-custom {
-    background: linear-gradient(135deg, #10b981 0%, #34d399 100%) !important;
-    border-radius: 2.2rem !important;
-}
-
-/* Input & Select: เน้นความคลีนสะอาดตา */
-.form-input-profile { 
-    width: 100%; 
-    background-color: #fcfdfe; 
-    border: 1.5px solid #f1f5f9 !important; 
-    border-radius: 1.25rem !important; 
-    padding: 1rem 1.25rem !important; 
-    font-size: 0.95rem; 
-    font-weight: 500; 
-    color: #334155;
-    transition: all 0.2s ease;
-}
-
-/* Focus: ใช้สีส้มเพื่อให้เห็นจุดแก้ไขชัดเจน */
-.form-input-profile:focus { 
-    border-color: #f59e0b !important; 
-    background-color: #ffffff;
-    box-shadow: 0 0 0 4px rgba(245, 158, 11, 0.1) !important;
-    outline: none;
-}
-
-.label-profile { 
-    display: block;
-    font-size: 0.75rem !important; 
-    font-weight: 700 !important; 
-    color: #64748b !important; 
-    margin-bottom: 0.75rem !important; 
-    margin-left: 0.25rem;
-}
-
-/* ปุ่มบันทึก: สีส้ม Orange กระแทกตา */
-.btn-save-full {
-    background-color: #f59e0b !important;
-    color: white !important;
-    width: 100%;
-    padding: 1.25rem !important;
-    border-radius: 1.25rem !important;
-    font-weight: 700 !important;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    gap: 0.75rem;
-    transition: all 0.3s ease;
-    box-shadow: 0 10px 15px -3px rgba(245, 158, 11, 0.2);
-}
-
-.btn-save-full:hover {
-    background-color: #d97706 !important;
-    transform: translateY(-2px);
-    box-shadow: 0 15px 25px rgba(245, 158, 11, 0.3);
-}
-
-/* สถานะแอดมิน: สีเขียวอ่อน */
 .status-badge-green {
-    background-color: #ecfdf5;
-    color: #059669;
+    background-color: var(--light-green);
+    color: var(--hover-green);
 }
 
-/* Animation สำหรับการโหลดหน้า Profile */
+/* ==========================================================================
+   6. PROFILE SETTINGS (GREEN-WHITE-ORANGE THEME)
+   ========================================================================== */
+
+/* Animation หน้า Profile */
 .profile-container {
     animation: profileFadeIn 0.5s ease-out;
 }
@@ -300,75 +243,87 @@ body {
     to { opacity: 1; transform: translateY(0); }
 }
 
-/* ปรับแต่ง Input ให้เข้ากับความหรูหราของแผงควบคุม */
-.form-input { 
+/* Avatar: Gradient เขียว Emerald */
+.profile-avatar-custom {
+    background: linear-gradient(135deg, var(--primary-green) 0%, #34d399 100%) !important;
+    border-radius: 2.2rem !important;
+}
+
+/* Label: หัวข้อช่องกรอก */
+.label-profile { 
+    display: block;
+    font-size: 0.75rem !important; 
+    font-weight: 700 !important; 
+    color: #64748b !important; 
+    margin-bottom: 0.75rem !important; 
+    margin-left: 0.25rem;
+}
+
+/* Input & Select: สไตล์โปร่งแสงสะอาดตา */
+.form-input-profile { 
     width: 100%; 
-    background-color: #ffffff; 
-    border: 1px solid #e2e8f0; 
-    border-radius: 1.25rem; 
-    padding: 0.85rem 1.25rem; 
+    background-color: #fcfdfe; 
+    border: 1.5px solid #f1f5f9 !important; 
+    border-radius: 1.25rem !important; 
+    padding: 1rem 1.25rem !important; 
     font-size: 0.95rem; 
     font-weight: 500; 
     color: #334155;
-    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    transition: all 0.2s var(--transition-curve);
 }
 
-.form-input:focus { 
-    border-color: #5c67f2; 
+/* เมื่อคลิก (Focus): ใช้สีส้ม Orange */
+.form-input-profile:focus { 
+    border-color: var(--primary-orange) !important; 
+    background-color: #ffffff;
+    box-shadow: 0 0 0 4px rgba(249, 115, 22, 0.1) !important;
     outline: none;
-    box-shadow: 0 0 0 4px rgba(92, 103, 242, 0.1);
-    background-color: #fff;
 }
 
-/* สำหรับช่องที่ห้ามแก้ไข (Read-only) */
+/* สำหรับช่องห้ามแก้ไข */
 .input-readonly { 
-    background-color: #f8fafc; 
-    color: #94a3b8; 
+    background-color: #f8fafc !important; 
+    color: #94a3b8 !important; 
     cursor: not-allowed; 
-    border-style: dashed; 
+    border-style: dashed !important; 
 }
 
-/* หัวข้อเล็กๆ เหนือช่อง Input */
-.label-title { 
-    display: block; 
-    font-size: 0.7rem; 
-    font-weight: 800; 
-    color: #64748b; 
-    text-transform: uppercase; 
-    margin-bottom: 0.6rem; 
-    margin-left: 0.5rem; 
-    letter-spacing: 0.05em; 
+/* ปุ่มบันทึกข้อมูลหลัก: สีส้ม Orange */
+.btn-save-full {
+    background-color: var(--primary-orange) !important;
+    color: white !important;
+    width: 100%;
+    padding: 1.25rem !important;
+    border-radius: 1.25rem !important;
+    font-weight: 700 !important;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.75rem;
+    border: none;
+    cursor: pointer;
+    transition: all 0.3s var(--transition-curve);
+    box-shadow: 0 10px 15px -3px rgba(249, 115, 22, 0.2);
 }
 
-/* Success Overlay หลังจากกดบันทึก */
+.btn-save-full:hover {
+    background-color: #ea580c !important; /* Orange 600 */
+    transform: translateY(-2px);
+    box-shadow: 0 15px 25px rgba(249, 115, 22, 0.3);
+}
+
+.btn-save-full:active {
+    transform: scale(0.98);
+}
+
+/* Success Overlay หลังบันทึก */
 #success-overlay {
     display: none; 
     position: fixed; 
     inset: 0; 
-    z-index: 200;
+    z-index: 2000;
     background: rgba(255, 255, 255, 0.8); 
     backdrop-filter: blur(12px);
     align-items: center; 
     justify-content: center;
-}
-
-/* ปรับปรุงปุ่มบันทึกให้มีความนูนและเงาที่นุ่มนวลขึ้น */
-.btn-save-profile {
-    background-color: #5c67f2;
-    transition: all 0.3s ease;
-}
-
-.btn-save-profile:hover {
-    background-color: #4a54d1;
-    transform: translateY(-1px);
-    box-shadow: 0 10px 20px -5px rgba(92, 103, 242, 0.4);
-}
-
-.btn-save-profile:active {
-    transform: scale(0.98);
-}
-
-/* ตกแต่ง Avatar Gradient */
-.profile-avatar-gradient {
-    background: linear-gradient(135deg, #5c67f2 0%, #818cf8 100%);
 }

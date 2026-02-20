@@ -42,9 +42,6 @@ async function loadLayout() {
         initSidebarToggle();
 
         console.log("LAYOUT LOADED OK");
-        // ✅ แจ้งว่า layout โหลดเสร็จแล้ว
-document.dispatchEvent(new Event("layoutLoaded"));
-
     } catch (err) {
         console.error("LAYOUT LOAD ERROR:", err);
     }

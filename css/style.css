@@ -680,3 +680,66 @@ body {
     box-shadow: 0 0 0 4px rgba(16, 185, 129, 0.1);
     outline: none;
 }
+/* การจัดการ Layout แยก Scrollbar */
+body {
+    display: flex;
+    height: 100vh;
+    overflow: hidden; /* ล็อกหน้าจอหลักไม่ให้เลื่อนซ้อนกัน */
+    background-color: #f8fafc;
+}
+
+/* Sidebar Scrollbar */
+.sidebar {
+    width: 280px;
+    height: 100vh;
+    overflow-y: auto;
+    border-right: 1px solid #e2e8f0;
+}
+
+/* Main Content Scrollbar (แยกอิสระ) */
+.main-content {
+    flex: 1;
+    height: 100vh;
+    overflow-y: auto;
+    padding-bottom: 50px;
+}
+
+/* ปรับแต่ง Drop Down ให้มีมิติ */
+.dropdown-wrapper {
+    position: relative;
+}
+
+.dropdown-wrapper select {
+    appearance: none; /* ปิดลูกศรเดิมของ Browser */
+    padding-right: 45px !important; /* เว้นที่ให้ไอคอนใหม่ */
+    cursor: pointer;
+}
+
+/* สัญลักษณ์ลูกศร Drop Down */
+.dropdown-icon {
+    position: absolute;
+    right: 18px;
+    top: 50%;
+    transform: translateY(-50%);
+    color: #64748b;
+    pointer-events: none;
+    font-size: 12px;
+    transition: transform 0.2s ease;
+}
+
+.dropdown-wrapper:focus-within .dropdown-icon {
+    transform: translateY(-50%) rotate(180deg); /* หมุนเมื่อกด */
+    color: #10b981;
+}
+
+/* Custom Scrollbar สำหรับ Main Content */
+.main-content::-webkit-scrollbar {
+    width: 6px;
+}
+.main-content::-webkit-scrollbar-thumb {
+    background: #e2e8f0;
+    border-radius: 10px;
+}
+.main-content::-webkit-scrollbar-thumb:hover {
+    background: #10b981;
+}

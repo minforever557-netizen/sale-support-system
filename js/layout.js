@@ -5,12 +5,20 @@ console.log("LAYOUT START");
 // ==============================
 function authGuard() {
 
-    const user = localStorage.getItem("user");
+    const userStr = localStorage.getItem("user");
 
-    console.log("AUTH CHECK:", user);
-    if (!user) {
+    console.log("AUTH CHECK:", userStr);
+
+    if (!userStr) {
         window.location.replace("index.html");
+        return;
     }
+
+    // ⭐ แปลง string → object
+    const userData = JSON.parse(userStr);
+
+    // ⭐ ส่งให้ sidebar-role ใช้
+    window.currentUser = userData;
 }
 
 

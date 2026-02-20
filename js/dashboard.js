@@ -1,3 +1,5 @@
+/* ================= IMPORT (ต้องบนสุด) ================= */
+
 import { db, auth } from "./firebase.js";
 
 import {
@@ -14,7 +16,30 @@ import {
   onAuthStateChanged
 } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
 
+
+/* ================= GLOBAL ================= */
+
 let currentTickets = [];
+
+
+/* ================= WAIT LAYOUT LOAD ================= */
+
+document.addEventListener("layoutLoaded", () => {
+
+  console.log("DASHBOARD READY");
+
+  onAuthStateChanged(auth, (user) => {
+    if (!user) {
+      window.location.replace("login.html");
+      return;
+    }
+
+    initTicketListener(user.email);
+    initEvents();
+  });
+
+});
+
 
 /* ================= AUTH CHECK ================= */
 

@@ -599,56 +599,52 @@ select.profile-input-field {
     }
 /* style.css */
 
-/* การตกแต่ง Scrollbar สำหรับเบราว์เซอร์ตระกูล Chrome/Edge/Safari */
+/* ตกแต่ง Scrollbar ให้เข้ากับธีม Emerald */
 ::-webkit-scrollbar {
     width: 8px;
 }
 ::-webkit-scrollbar-track {
-    background: #f1f5f9;
+    background: #f1f5f9; /* slate-100 */
 }
 ::-webkit-scrollbar-thumb {
-    background: #10b981;
+    background: #10b981; /* emerald-500 */
     border-radius: 10px;
 }
 ::-webkit-scrollbar-thumb:hover {
-    background: #059669;
+    background: #059669; /* emerald-600 */
 }
 
-/* Glassmorphism Card Effect */
+/* ตั้งค่าให้หน้าจอหลักรองรับการเลื่อน */
+body {
+    min-height: 100vh;
+    overflow-y: auto;
+    background-color: #f8fafc;
+}
+
+/* Glassmorphism Card พร้อมจำกัดความสูงกรณีจอเล็ก */
 .glass-card {
     background: rgba(255, 255, 255, 0.95);
     backdrop-filter: blur(10px);
     border: 1px solid rgba(226, 232, 240, 0.8);
     box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.03);
+    /* ป้องกันการขยายตัวจนล้นบนจอที่มีความสูงน้อย */
+    display: flex;
+    flex-direction: column;
 }
 
-/* Input Smooth Transitions */
-input, select, textarea {
-    transition: all 0.2s ease-in-out !important;
-}
-
-/* ปรับแต่งรายละเอียดเพิ่มเติมสำหรับฟอร์ม */
-.input-group-label {
+/* ปรับแต่ง Label ให้ดูเป็นระเบียบ */
+.input-label {
     display: flex;
     align-items: center;
     gap: 0.5rem;
     font-size: 11px;
     font-weight: 900;
-    color: #94a3b8; /* slate-400 */
+    color: #94a3b8;
     text-transform: uppercase;
     letter-spacing: 0.15em;
     margin-left: 0.5rem;
-    transition: color 0.2s;
 }
 
-.group:focus-within .input-group-label {
-    color: #10b981; /* emerald-500 */
+.group:focus-within .input-label {
+    color: #10b981;
 }
-
-/* สำหรับหน้าจอที่เนื้อหายาวเกินไป */
-body {
-    overflow-y: auto;
-    min-height: 100vh;
-    background-color: #f8fafc;
-}
-</style>

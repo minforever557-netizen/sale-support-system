@@ -129,36 +129,10 @@ class="w-64 shrink-0 h-full bg-white border-r border-slate-200">
                 const adminDoc = await getDoc(doc(db, "admin", user.uid));
                 if (adminDoc.exists() && adminDoc.data().role === 'admin') {
                     currentUser = adminDoc.data();
-                    await loadLayout(currentUser);
                     initTicketsListener();
                 } else { window.location.replace("dashboard.html"); }
             } else { window.location.replace("login.html"); }
         });
-
-        async function loadLayout(userData) {
-            const comps = [
-                { id: 'sidebar-placeholder', url: './components/sidebar.html' }, 
-                { id: 'topbar-placeholder', url: './components/topbar.html' }
-            ];
-            for (const comp of comps) {
-                const res = await fetch(comp.url);
-                if (res.ok) {
-                    const el = document.getElementById(comp.id);
-                    el.innerHTML = await res.text();
-                    el.classList.remove('hidden');
-                    // Execute scripts inside loaded components
-                    el.querySelectorAll("script").forEach(s => {
-                        const ns = document.createElement("script"); ns.type = "module"; ns.textContent = s.textContent; document.head.appendChild(ns);
-                    });
-                }
-            }
-            // Update User Name in UI
-            setTimeout(() => {
-                const nameEl = document.querySelector('#topbar-user-name');
-                if (nameEl) nameEl.innerText = userData.name || "Admin";
-            }, 500);
-        }
-
         // 2. Real-time Ticket Logic (คงเดิม)
         function initTicketsListener() {
             const q = query(collection(db, "tickets"), orderBy("createdAt", "asc"));
@@ -282,6 +256,5 @@ class="w-64 shrink-0 h-full bg-white border-r border-slate-200">
     </script>
 <script src="./js/layout.js"></script>
 <script src="./js/sidebar-role.js"></script>
-<script type="module" src="./js/dashboard.js"></script>
 </body>
 </html>

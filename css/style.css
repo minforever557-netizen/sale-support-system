@@ -639,107 +639,39 @@ body {
     --text-label: #334155;  /* Slate-700 สำหรับหัวข้อ */
     --primary-emerald: #10b981;
 }
-/* style.css */
 
-/* style.css */
-
-/* ปรับให้เลื่อนจากหน้าหลัก (ด้านนอก) */
-body {
-    background-color: #f8fafc;
-    overflow-y: auto !important;
-    height: auto !important;
-}
-
-/* หัวข้อสีเข้ม ชัดเจน */
+/* ปรับให้ Label ชัดเจนขึ้น */
 .input-label {
     display: flex;
     align-items: center;
-    gap: 10px;
-    font-size: 14px;
-    font-weight: 800;
-    color: #0f172a !important; /* Slate-900 เข้มสะใจ */
-    margin-bottom: 10px;
+    gap: 0.6rem;
+    font-size: 13px; /* ใหญ่ขึ้นเล็กน้อย */
+    font-weight: 800; /* หนาพิเศษ */
+    color: var(--text-label) !important; /* บังคับสีให้เข้มขึ้น */
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    margin-bottom: 0.4rem;
 }
 
-/* ปรับแต่ง Drop Down และ Input ให้เพรียว */
-.compact-select, .compact-input {
-    width: 100%;
-    padding: 12px 16px 12px 48px !important;
-    background-color: #ffffff !important;
+/* ปรับช่อง Input ให้เพรียวขึ้น */
+.compact-input {
+    padding: 0.75rem 1.25rem 0.75rem 3rem !important; /* เว้นที่ด้านซ้ายสำหรับ Icon */
+    background-color: #f8fafc !important;
     border: 1.5px solid #e2e8f0 !important;
     border-radius: 12px !important;
-    font-size: 14px;
     font-weight: 600;
-    color: #334155;
-    appearance: none; /* เอาลูกศรเดิมออก */
-    transition: all 0.2s;
+    transition: all 0.2s ease;
 }
 
-.compact-select:focus, .compact-input:focus {
-    border-color: #10b981 !important;
+.compact-input:focus {
+    border-color: var(--primary-emerald) !important;
+    background-color: white !important;
     box-shadow: 0 0 0 4px rgba(16, 185, 129, 0.1);
-    outline: none;
 }
-/* การจัดการ Layout แยก Scrollbar */
-body {
+
+/* จัดการความสูงของ Card ไม่ให้ดูอ้วน */
+.glass-card {
+    max-height: 90vh; /* จำกัดไม่ให้ล้นจอ */
     display: flex;
-    height: 100vh;
-    overflow: hidden; /* ล็อกหน้าจอหลักไม่ให้เลื่อนซ้อนกัน */
-    background-color: #f8fafc;
-}
-
-/* Sidebar Scrollbar */
-.sidebar {
-    width: 280px;
-    height: 100vh;
-    overflow-y: auto;
-    border-right: 1px solid #e2e8f0;
-}
-
-/* Main Content Scrollbar (แยกอิสระ) */
-.main-content {
-    flex: 1;
-    height: 100vh;
-    overflow-y: auto;
-    padding-bottom: 50px;
-}
-
-/* ปรับแต่ง Drop Down ให้มีมิติ */
-.dropdown-wrapper {
-    position: relative;
-}
-
-.dropdown-wrapper select {
-    appearance: none; /* ปิดลูกศรเดิมของ Browser */
-    padding-right: 45px !important; /* เว้นที่ให้ไอคอนใหม่ */
-    cursor: pointer;
-}
-
-/* สัญลักษณ์ลูกศร Drop Down */
-.dropdown-icon {
-    position: absolute;
-    right: 18px;
-    top: 50%;
-    transform: translateY(-50%);
-    color: #64748b;
-    pointer-events: none;
-    font-size: 12px;
-    transition: transform 0.2s ease;
-}
-
-.dropdown-wrapper:focus-within .dropdown-icon {
-    transform: translateY(-50%) rotate(180deg); /* หมุนเมื่อกด */
-    color: #10b981;
-}
-
-/* Custom Scrollbar สำหรับ Main Content */
-.main-content::-webkit-scrollbar {
-    width: 6px;
-}
-.main-content::-webkit-scrollbar-thumb {
-    background: #e2e8f0;
-    border-radius: 10px;
-}
-.main-content::-webkit-scrollbar-thumb:hover {
-    background: #10b981;
+    flex-direction: column;
 }

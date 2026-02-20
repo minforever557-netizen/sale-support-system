@@ -87,16 +87,7 @@ class="w-64 shrink-0 h-full bg-white border-r border-slate-200">
         </div>
     </div>
 <script>
-        // 1. Auth & Layout Loading (อ้างอิงวิธีโหลดของ Dashboard)
-        onAuthStateChanged(auth, async (user) => {
-            if (user) {
-                const adminDoc = await getDoc(doc(db, "admin", user.uid));
-                if (adminDoc.exists() && adminDoc.data().role === 'admin') {
-                    currentUser = adminDoc.data();
-                    initTicketsListener();
-                } else { window.location.replace("dashboard.html"); }
-            } else { window.location.replace("login.html"); }
-        });
+       
         // 2. Real-time Ticket Logic (คงเดิม)
         function initTicketsListener() {
             const q = query(collection(db, "tickets"), orderBy("createdAt", "asc"));

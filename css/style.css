@@ -632,19 +632,46 @@ body {
     flex-direction: column;
 }
 
-/* ปรับแต่ง Label ให้ดูเป็นระเบียบ */
+/* style.css เพิ่มเติม/แก้ไข */
+
+:root {
+    --text-header: #1e293b; /* Slate-800 เข้มชัดเจน */
+    --text-label: #334155;  /* Slate-700 สำหรับหัวข้อ */
+    --primary-emerald: #10b981;
+}
+
+/* ปรับให้ Label ชัดเจนขึ้น */
 .input-label {
     display: flex;
     align-items: center;
-    gap: 0.5rem;
-    font-size: 11px;
-    font-weight: 900;
-    color: #94a3b8;
+    gap: 0.6rem;
+    font-size: 13px; /* ใหญ่ขึ้นเล็กน้อย */
+    font-weight: 800; /* หนาพิเศษ */
+    color: var(--text-label) !important; /* บังคับสีให้เข้มขึ้น */
     text-transform: uppercase;
-    letter-spacing: 0.15em;
-    margin-left: 0.5rem;
+    letter-spacing: 0.05em;
+    margin-bottom: 0.4rem;
 }
 
-.group:focus-within .input-label {
-    color: #10b981;
+/* ปรับช่อง Input ให้เพรียวขึ้น */
+.compact-input {
+    padding: 0.75rem 1.25rem 0.75rem 3rem !important; /* เว้นที่ด้านซ้ายสำหรับ Icon */
+    background-color: #f8fafc !important;
+    border: 1.5px solid #e2e8f0 !important;
+    border-radius: 12px !important;
+    font-weight: 600;
+    transition: all 0.2s ease;
+}
+
+.compact-input:focus {
+    border-color: var(--primary-emerald) !important;
+    background-color: white !important;
+    box-shadow: 0 0 0 4px rgba(16, 185, 129, 0.1);
+}
+
+/* จัดการความสูงของ Card ไม่ให้ดูอ้วน */
+.glass-card {
+    max-height: 90vh; /* จำกัดไม่ให้ล้นจอ */
+    display: flex;
+    flex-direction: column;
 }

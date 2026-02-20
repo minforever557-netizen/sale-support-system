@@ -8,6 +8,7 @@ function authGuard() {
     const user = localStorage.getItem("user");
 
     console.log("AUTH CHECK:", user);
+    window.currentUser = userData;
 
     if (!user) {
         window.location.replace("index.html");

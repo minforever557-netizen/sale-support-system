@@ -2,26 +2,26 @@ document.addEventListener("layoutLoaded", () => {
 
   console.log("ROLE CHECK START");
 
-  const userData = JSON.parse(localStorage.getItem("userData"));
+  const user = window.currentUser;
 
-  if (!userData) {
-    console.warn("No userData found");
+  if (!user) {
+    console.warn("currentUser not found");
     return;
   }
 
-  // ✅ กันพังเรื่องตัวใหญ่ตัวเล็ก
-  const role = (userData.role || "").toLowerCase();
+  const role = (user.role || "").toLowerCase();
 
   console.log("USER ROLE =", role);
 
-  // ===== เปิด ADMIN MENU =====
-  const adminSection = document.getElementById("admin-menu-section");
+  const adminSection =
+    document.getElementById("admin-menu-section");
 
   if (!adminSection) {
-    console.warn("admin-menu-section not found");
+    console.warn("admin-menu-section missing");
     return;
   }
 
+  // ✅ รองรับ Admin / admin / ADMIN
   if (role === "admin") {
     adminSection.style.display = "block";
     console.log("ADMIN MENU SHOW");

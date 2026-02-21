@@ -187,88 +187,107 @@ class="w-64 shrink-0 h-full bg-white border-r border-slate-200">
     }
 
     // --- 3. ฟังก์ชันจัดการ Modal (ผูกกับ window เพื่อให้เรียกจาก HTML ได้) ---
-    window.openEditModal = async (uid) => {
-        try {
-            const snap = await getDoc(doc(db, "admin", uid));
-            if (!snap.exists()) return;
-            const u = snap.data();
+    // --- 3. ฟังก์ชันจัดการ Modal (ปรับปรุง UI การแสดงผล) ---
+window.openEditModal = async (uid) => {
+    try {
+        const snap = await getDoc(doc(db, "admin", uid));
+        if (!snap.exists()) return;
+        const u = snap.data();
 
-            document.getElementById('edit-uid').value = uid;
-            document.getElementById('edit-name').value = u.name || "";
-            document.getElementById('edit-username').value = u.username || "";
-            document.getElementById('edit-email').value = u.email || "";
-            document.getElementById('edit-phone').value = u["Phone No."] || u.phone || "";
-            document.getElementById('edit-role').value = u.role || "user";
-            
-            const mainTeam = allTeams.find(t => t.name === u.Team && t.type === "main");
-            if (mainTeam) {
-                document.getElementById('edit-main-team').value = mainTeam.id;
-                renderSubTeams(mainTeam.id, u["Sub Team"]);
-            } else {
-                document.getElementById('edit-main-team').value = "";
-                renderSubTeams(null);
-            }
-            document.getElementById('editModal').classList.remove('hidden');
-            document.body.style.overflow = 'hidden';
-        } catch (error) {
-            console.error("Open Modal Error:", error);
-        }
-    };
-
-    window.closeModal = () => {
-        document.getElementById('editModal').classList.add('hidden');
-        document.body.style.overflow = 'auto';
-    }
-
-    // --- 4. ฟังก์ชันจัดการทีมย่อย ---
-    document.getElementById('edit-main-team').onchange = (e) => renderSubTeams(e.target.value);
-
-    function renderSubTeams(parentId, currentSub = null) {
-        const subSelect = document.getElementById('edit-sub-team');
-        const subs = allTeams.filter(t => t.type === "sub" && t.parentId === parentId);
-        subSelect.innerHTML = '<option value="">-- ไม่มีทีมย่อย --</option>';
-        subSelect.disabled = (subs.length === 0);
-        subs.forEach(t => {
-            const opt = new Option(t.name, t.name);
-            if (t.name === currentSub) opt.selected = true;
-            subSelect.add(opt);
-        });
-    }
-
-    // --- 5. ฟังก์ชันบันทึกข้อมูล ---
-    document.getElementById('edit-user-form').onsubmit = async (e) => {
-        e.preventDefault();
-        const uid = document.getElementById('edit-uid').value;
-        const btn = document.getElementById('saveBtn');
+        // ใส่ข้อมูลลง Form
+        document.getElementById('edit-uid').value = uid;
+        document.getElementById('edit-name').value = u.name || "";
+        document.getElementById('edit-username').value = u.username || "";
+        document.getElementById('edit-email').value = u.email || "";
+        document.getElementById('edit-phone').value = u["Phone No."] || u.phone || "";
+        document.getElementById('edit-role').value = u.role || "user";
         
-        btn.disabled = true;
-        btn.innerHTML = `<i class="fa-solid fa-circle-notch animate-spin"></i> กำลังบันทึก...`;
-
-        try {
-            const mainSelect = document.getElementById('edit-main-team');
-            const mainTeamName = mainSelect.options[mainSelect.selectedIndex].text;
-            const adminRef = doc(db, "admin", uid);
-
-            await updateDoc(adminRef, {
-                "name": document.getElementById('edit-name').value.trim(),
-                "username": document.getElementById('edit-username').value.trim(),
-                "email": document.getElementById('edit-email').value.trim(),
-                "role": document.getElementById('edit-role').value,
-                "Team": mainTeamName.includes("เลือกทีม") ? "" : mainTeamName,
-                "Sub Team": document.getElementById('edit-sub-team').value,
-                "Phone No.": document.getElementById('edit-phone').value.trim()
-            });
-
-            closeModal();
-            Swal.fire({ icon: 'success', title: 'สำเร็จ', text: 'อัปเดตข้อมูลพนักงานเรียบร้อยแล้ว', timer: 2000 });
-        } catch (err) { 
-            console.error(err);
-            Swal.fire({ icon: 'error', title: 'เกิดข้อผิดพลาด', text: err.message });
-        } finally { 
-            btn.disabled = false; 
-            btn.innerHTML = `<i class="fa-solid fa-floppy-disk"></i> บันทึกข้อมูลพนักงาน`; 
+        // จัดการเรื่องทีม (Main & Sub)
+        const mainTeam = allTeams.find(t => t.name === u.Team && t.type === "main");
+        if (mainTeam) {
+            document.getElementById('edit-main-team').value = mainTeam.id;
+            renderSubTeams(mainTeam.id, u["Sub Team"]);
+        } else {
+            document.getElementById('edit-main-team').value = "";
+            renderSubTeams(null);
         }
-    };
+
+        // --- เพิ่มความสวยงาม: แสดงชื่อพนักงานบนหัว Modal ---
+        const modalTitle = document.querySelector('#editModal h3');
+        if(modalTitle) {
+            modalTitle.innerHTML = `
+                <div class="flex flex-col">
+                    <span class="text-xs uppercase tracking-[0.2em] text-indigo-400 font-black mb-1">Account Settings</span>
+                    <span class="text-2xl font-bold">จัดการโปรไฟล์: ${u.name || 'User'}</span>
+                </div>
+            `;
+        }
+
+        // แสดง Modal พร้อม Effect
+        const modal = document.getElementById('editModal');
+        modal.classList.remove('hidden');
+        modal.classList.add('flex'); // มั่นใจว่าเป็น Flex
+        document.body.style.overflow = 'hidden';
+
+    } catch (error) {
+        console.error("Open Modal Error:", error);
+        Swal.fire({ icon: 'error', title: 'ดึงข้อมูลล้มเหลว', text: error.message });
+    }
+};
+
+// --- 5. ฟังก์ชันบันทึกข้อมูล (เพิ่มความนุ่มนวล) ---
+document.getElementById('edit-user-form').onsubmit = async (e) => {
+    e.preventDefault();
+    const uid = document.getElementById('edit-uid').value;
+    const btn = document.getElementById('saveBtn');
+    
+    // UI Feedback ระหว่างบันทึก
+    btn.disabled = true;
+    btn.classList.add('opacity-70', 'cursor-not-allowed');
+    btn.innerHTML = `
+        <svg class="animate-spin h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+            <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+            <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+        </svg>
+        กำลังบันทึกข้อมูล...
+    `;
+
+    try {
+        const mainSelect = document.getElementById('edit-main-team');
+        const mainTeamName = mainSelect.options[mainSelect.selectedIndex].text;
+        const adminRef = doc(db, "admin", uid);
+
+        await updateDoc(adminRef, {
+            "name": document.getElementById('edit-name').value.trim(),
+            "username": document.getElementById('edit-username').value.trim(),
+            "email": document.getElementById('edit-email').value.trim(),
+            "role": document.getElementById('edit-role').value,
+            "Team": mainTeamName.includes("เลือกทีม") ? "" : mainTeamName,
+            "Sub Team": document.getElementById('edit-sub-team').value,
+            "Phone No.": document.getElementById('edit-phone').value.trim()
+        });
+
+        // สำเร็จ
+        closeModal();
+        Swal.fire({
+            icon: 'success',
+            title: 'อัปเดตเรียบร้อย!',
+            text: 'ข้อมูลพนักงานถูกบันทึกลงระบบแล้ว',
+            showConfirmButton: false,
+            timer: 1500,
+            background: '#ffffff',
+            customClass: { title: 'font-bold text-slate-800' }
+        });
+
+    } catch (err) { 
+        console.error(err);
+        Swal.fire({ icon: 'error', title: 'เกิดข้อผิดพลาด', text: err.message });
+    } finally { 
+        btn.disabled = false; 
+        btn.classList.remove('opacity-70', 'cursor-not-allowed');
+        btn.innerHTML = `<i class="fa-solid fa-floppy-disk mr-2"></i> บันทึกข้อมูลพนักงาน`; 
+    }
+};
 
     // --- 6. เริ่มต้นทำงานเมื่อ Auth เปลี่ยนสถานะ ---
     onAuthStateChanged(auth, (user) => {

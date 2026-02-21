@@ -133,20 +133,40 @@ class="w-64 shrink-0 h-full bg-white border-r border-slate-200">
 </div>
 
 <script type="module">
-    // 1. นำเข้า Services จากไฟล์ js/firebase.js ตามโครงสร้างของคุณ
     import { db, auth } from "./js/firebase.js";
-    
-    // 2. ใช้ Version เดียวกับใน firebase.js (10.7.1) เพื่อความเสถียร
     import { 
         collection, query, where, orderBy, onSnapshot, getDoc, doc 
     } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
-    
     import { onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
 
     let currentTickets = [];
-    let unsubscribe = null; // สำหรับหยุดฟังข้อมูลอันเก่าเมื่อเปลี่ยน Sort
+    let unsubscribe = null;
 
-    // --- ฟังก์ชันสำหรับ UI (ผูกกับ Window) ---
+    // --- ฟังก์ชันแปลง Note เป็น Timeline (ใช้ Concept เดียวกับ Admin) ---
+    function formatUserTimeline(note) {
+        if (!note) return '<p class="text-slate-400 italic text-sm">รอดำเนินการ...</p>';
+
+        // แยกข้อความด้วย [วว/ดด/ปป HH:mm]
+        const entries = note.split(/(?=\[\d{2}\/\d{2}\/\d{2}\s\d{2}:\d{2}\])/g);
+
+        return entries.map(entry => {
+            if (!entry.trim()) return '';
+            
+            const dateMatch = entry.match(/\[(.*?)\]/);
+            const dateText = dateMatch ? dateMatch[0] : '';
+            const detailText = entry.replace(dateText, '').trim();
+
+            return `
+                <div class="relative pl-6 pb-5 border-l-2 border-emerald-100 last:border-0 last:pb-0 ml-2">
+                    <div class="absolute -left-[7px] top-0 w-3 h-3 bg-white border-2 border-emerald-500 rounded-full"></div>
+                    <div>
+                        <span class="block text-[10px] font-black text-emerald-600 mb-1 tracking-tight">${dateText}</span>
+                        <p class="text-sm text-slate-700 leading-relaxed">${detailText}</p>
+                    </div>
+                </div>
+            `;
+        }).join('');
+    }
 
     window.closeModal = () => {
         const modal = document.getElementById('detail-modal');
@@ -155,145 +175,93 @@ class="w-64 shrink-0 h-full bg-white border-r border-slate-200">
     };
 
     window.viewDetail = async (id) => {
-    try {
-        const docSnap = await getDoc(doc(db, "tickets", id));
-        if (docSnap.exists()) {
-            const t = docSnap.data();
-            
-            // 1. User ที่เปิด (ใช้ ownerEmail หรือชื่อถ้ามี)
-            document.getElementById('det-user').innerText = t.ownerEmail || '-';
-            
-            // 2. หัวข้อ
-            document.getElementById('det-topic').innerText = t.topic || 'ไม่มีหัวข้อ';
-            
-            // 3. Internet No.
-            document.getElementById('det-id-number').innerText = t.id_number || t.internetNo || '-';
-            
-            // 4. รายละเอียด
-            document.getElementById('det-detail').innerText = t.detail || 'ไม่มีรายละเอียดเพิ่มเติม';
-            
-            // 5. วันเวลาที่เปิด (แปลงจาก Timestamp)
-            document.getElementById('det-created-at').innerText = t.createdAt?.toDate 
-                ? t.createdAt.toDate().toLocaleString('th-TH', { dateStyle: 'medium', timeStyle: 'short' }) 
-                : '-';
-            
-            // 6. Status & Badge Color
-            const status = t.status || 'Pending';
-            const badge = document.getElementById('det-status-badge');
-            badge.innerText = status;
-            
-            // ล้างสีเดิมออกก่อน
-            badge.className = "px-3 py-1 rounded-full text-[10px] font-black uppercase inline-block mt-1";
-            const statusColors = {
-                'Open': 'bg-blue-100 text-blue-700',
-                'On Progress': 'bg-orange-100 text-orange-700',
-                'Success': 'bg-emerald-100 text-emerald-700',
-                'Reject': 'bg-red-100 text-red-700',
-                'Pending': 'bg-slate-100 text-slate-600'
-            };
-            badge.classList.add(...(statusColors[status] || statusColors['Pending']).split(' '));
-
-            // 7. หมายเหตุจาก Admin
-            document.getElementById('det-admin-remark').innerText = t.adminNote || 'รอดำเนินการ...';
-            
-            // 8. วันเวลาที่ปิด/อัปเดตล่าสุด
-            document.getElementById('det-closed-at').innerText = t.updatedAt?.toDate 
-                ? t.updatedAt.toDate().toLocaleString('th-TH', { dateStyle: 'medium', timeStyle: 'short' }) 
-                : '-';
-            
-            // 9. User Admin (ชื่อแอดมินผู้รับงาน)
-            document.getElementById('det-admin-name').innerText = t.adminName || (t.handledBy || 'รอมอบหมาย');
-
-            // ID อ้างอิง
-            document.getElementById('det-modal-id').innerText = `Ticket ID: ${id}`;
-
-            // แสดง Modal
-            document.getElementById('detail-modal').classList.remove('hidden');
-            document.body.style.overflow = 'hidden';
-        }
-    } catch (e) {
-        console.error("View Detail Error:", e);
-        alert("ไม่สามารถดึงข้อมูลได้ โปรดลองอีกครั้ง");
-    }
-};
-
-    // --- ส่วนการจัดการข้อมูล ---
-
-    onAuthStateChanged(auth, async (user) => {
-        const headerName = document.getElementById('userNameHeader');
-        if (!user) {
-            window.location.replace("login.html");
-            return;
-        }
-
         try {
-            const userDoc = await getDoc(doc(db, "users", user.uid));
-            if (headerName) {
-                headerName.innerText = `ผู้แจ้ง: ${userDoc.exists() ? (userDoc.data().displayName || user.email) : user.email}`;
+            const docSnap = await getDoc(doc(db, "tickets", id));
+            if (docSnap.exists()) {
+                const t = docSnap.data();
+                
+                // ใส่ข้อมูลพื้นฐาน
+                document.getElementById('det-topic').innerText = t.topic || 'ไม่มีหัวข้อ';
+                document.getElementById('det-id-number').innerText = t.id_number || t.internetNo || '-';
+                document.getElementById('det-detail').innerText = t.detail || 'ไม่มีรายละเอียดเพิ่มเติม';
+                document.getElementById('det-created-at').innerText = t.createdAt?.toDate 
+                    ? t.createdAt.toDate().toLocaleString('th-TH') : '-';
+                
+                // Status Badge
+                const status = t.status || 'Pending';
+                const badge = document.getElementById('det-status-badge');
+                badge.innerText = status;
+                badge.className = "px-3 py-1 rounded-full text-[10px] font-black uppercase inline-block mt-1";
+                const statusColors = {
+                    'Open': 'bg-blue-100 text-blue-700',
+                    'On Progress': 'bg-orange-100 text-orange-700',
+                    'Success': 'bg-emerald-100 text-emerald-700',
+                    'Reject': 'bg-red-100 text-red-700',
+                    'Pending': 'bg-slate-100 text-slate-600'
+                };
+                badge.classList.add(...(statusColors[status] || statusColors['Pending']).split(' '));
+
+                // ✨ แสดงผลหมายเหตุ Admin แบบ Timeline
+                const remarkBox = document.getElementById('det-admin-remark');
+                if (remarkBox) {
+                    remarkBox.innerHTML = formatUserTimeline(t.adminNote);
+                }
+                
+                document.getElementById('det-closed-at').innerText = t.updatedAt?.toDate 
+                    ? t.updatedAt.toDate().toLocaleString('th-TH') : '-';
+                
+                document.getElementById('det-modal-id').innerText = `Ticket ID: ${id}`;
+
+                document.getElementById('detail-modal').classList.remove('hidden');
+                document.body.style.overflow = 'hidden';
             }
         } catch (e) {
-            if (headerName) headerName.innerText = `ผู้แจ้ง: ${user.email}`;
+            console.error(e);
+            alert("เกิดข้อผิดพลาดในการโหลดข้อมูล");
         }
+    };
 
+    // --- จัดการข้อมูลส่วนตัวของ User ---
+    onAuthStateChanged(auth, (user) => {
+        if (!user) return window.location.replace("login.html");
         initTicketListener(user.email);
     });
 
     function initTicketListener(email) {
-        // หยุด Listener ตัวเก่า (ถ้ามี) ก่อนเริ่มตัวใหม่
         if (unsubscribe) unsubscribe();
-
-        const list = document.getElementById('ticket-list');
         const sortOrderEl = document.getElementById('sortOrder');
-        if (!sortOrderEl) return;
-
         const [field, direction] = sortOrderEl.value.split('-');
 
-        try {
-            const q = query(
-                collection(db, "tickets"),
-                where("ownerEmail", "==", email),
-                orderBy(field, direction)
-            );
+        const q = query(
+            collection(db, "tickets"),
+            where("ownerEmail", "==", email),
+            orderBy(field, direction)
+        );
 
-            unsubscribe = onSnapshot(q, (snapshot) => {
-                currentTickets = snapshot.docs.map(d => ({ id: d.id, ...d.data() }));
-                renderTickets(currentTickets);
-            }, (error) => {
-                console.error("Firestore Error:", error);
-                if (list) {
-                    list.innerHTML = `<tr><td colspan="6" class="p-20 text-center text-red-400">
-                        เกิดข้อผิดพลาด: โปรดตรวจสอบการตั้งค่า Index ใน Firebase Console
-                    </td></tr>`;
-                }
-            });
-        } catch (err) {
-            console.error("Query Error:", err);
-        }
+        unsubscribe = onSnapshot(q, (snapshot) => {
+            currentTickets = snapshot.docs.map(d => ({ id: d.id, ...d.data() }));
+            renderTickets(currentTickets);
+        });
     }
 
     function renderTickets(tickets) {
         const list = document.getElementById('ticket-list');
         if (!list) return;
 
-        const searchInput = document.getElementById('searchInput');
-        const searchTerm = searchInput ? searchInput.value.toLowerCase() : "";
-
+        const searchTerm = document.getElementById('searchInput')?.value.toLowerCase() || "";
         const filtered = tickets.filter(t =>
             (t.id_number && String(t.id_number).toLowerCase().includes(searchTerm)) ||
-            (t.internetNo && String(t.internetNo).toLowerCase().includes(searchTerm)) ||
             (t.topic && t.topic.toLowerCase().includes(searchTerm))
         );
 
         if (filtered.length === 0) {
-            list.innerHTML = `<tr><td colspan="6" class="p-20 text-center text-slate-400 font-medium">ไม่พบรายการใบงาน</td></tr>`;
+            list.innerHTML = `<tr><td colspan="6" class="p-20 text-center text-slate-400">คุณยังไม่มีรายการใบงาน</td></tr>`;
             return;
         }
 
         list.innerHTML = filtered.map(t => {
-            const createDate = t.createdAt?.toDate ? t.createdAt.toDate().toLocaleString('th-TH') : '-';
-            const updateDate = t.updatedAt?.toDate ? t.updatedAt.toDate().toLocaleString('th-TH') : '-';
+            const createDate = t.createdAt?.toDate ? t.createdAt.toDate().toLocaleString('th-TH', {dateStyle:'medium'}) : '-';
             const status = t.status || 'Pending';
-
             const statusClasses = {
                 'Open': 'bg-blue-100 text-blue-700',
                 'On Progress': 'bg-orange-100 text-orange-700',
@@ -306,13 +274,16 @@ class="w-64 shrink-0 h-full bg-white border-r border-slate-200">
                 <tr class="hover:bg-slate-50 transition-all border-b border-slate-50 last:border-0 group">
                     <td class="p-6 font-bold text-slate-700">${t.id_number || t.internetNo || '-'}</td>
                     <td class="p-6 text-slate-400 text-[12px]">${createDate}</td>
-                    <td class="p-6 text-slate-700 font-medium">${t.topic || 'ไม่มีหัวข้อ'}</td>
-                    <td class="p-6 text-center">
-                        <span class="px-3 py-1 rounded-full text-[10px] font-black uppercase ${statusClasses[status] || statusClasses['Pending']}">${status}</span>
+                    <td class="p-6">
+                        <div class="text-slate-700 font-medium">${t.topic || 'ไม่มีหัวข้อ'}</div>
+                        <p class="text-[10px] text-emerald-600 italic mt-1 line-clamp-1">${t.adminNote || 'รอดำเนินการ...'}</p>
                     </td>
-                    <td class="p-6 text-slate-400 text-[12px]">${updateDate}</td>
+                    <td class="p-6 text-center">
+                        <span class="px-3 py-1 rounded-full text-[10px] font-black uppercase ${statusClasses[status]}">${status}</span>
+                    </td>
+                    <td class="p-6 text-slate-400 text-[12px]">${t.updatedAt?.toDate ? t.updatedAt.toDate().toLocaleTimeString('th-TH') : '-'}</td>
                     <td class="p-6 text-right">
-                        <button onclick="viewDetail('${t.id}')" class="bg-white border border-slate-200 text-slate-600 hover:border-emerald-500 hover:text-emerald-600 px-5 py-2.5 rounded-xl text-xs font-black transition-all shadow-sm">
+                        <button onclick="viewDetail('${t.id}')" class="bg-white border border-slate-200 text-slate-600 hover:border-emerald-500 hover:text-emerald-600 px-5 py-2.5 rounded-xl text-xs font-black transition-all shadow-sm active:scale-95">
                             ดูข้อมูล
                         </button>
                     </td>
@@ -321,14 +292,9 @@ class="w-64 shrink-0 h-full bg-white border-r border-slate-200">
         }).join('');
     }
 
-    // --- Event Listeners ---
-
     document.getElementById('searchInput')?.addEventListener('input', () => renderTickets(currentTickets));
-    
     document.getElementById('sortOrder')?.addEventListener('change', () => {
-        if (auth.currentUser) {
-            initTicketListener(auth.currentUser.email);
-        }
+        if (auth.currentUser) initTicketListener(auth.currentUser.email);
     });
 </script>
 <script src="./js/layout.js"></script>

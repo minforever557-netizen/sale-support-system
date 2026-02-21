@@ -110,7 +110,15 @@ class="w-64 shrink-0 h-full bg-white border-r border-slate-200">
         </div>
     </div>
 
-    <script>
+   <script type="module">
+    import { db, auth } from "./js/firebase.js";
+    import { 
+        collection, query, where, orderBy, onSnapshot, getDoc, doc 
+    } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+    import { onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
+
+    let currentTickets = [];
+    let unsubscribe = null;
         let allTeams = [];
 
         async function fetchTeams() {

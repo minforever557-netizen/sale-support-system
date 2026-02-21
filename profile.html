@@ -289,38 +289,53 @@ class="w-64 shrink-0 h-full bg-white border-r border-slate-200">
     }
 
     // 6. บันทึกข้อมูล
-    document.getElementById('profile-form').addEventListener('submit', async (e) => {
-        e.preventDefault();
-        const btn = document.getElementById('saveBtn');
-        const originalHtml = btn.innerHTML;
+   document.getElementById('profile-form').addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const btn = document.getElementById('saveBtn');
+    const originalHtml = btn.innerHTML;
+    
+    btn.disabled = true;
+    btn.innerHTML = `<i class="fa-solid fa-spinner animate-spin"></i> กำลังอัปเดต...`;
+
+    try {
+        const adminRef = doc(db, "admin", currentUserAuth.uid);
         
-        btn.disabled = true;
-        btn.innerHTML = `<i class="fa-solid fa-spinner animate-spin"></i> กำลังอัปเดต...`;
+        // 1. เตรียมข้อมูลใส่ Object ก่อนส่ง (วิธีนี้จะช่วยเลี่ยงปัญหาชื่อ Field ที่มีจุด)
+        const updateData = {};
+        updateData["name"] = document.getElementById('prof-name').value.trim();
+        updateData["Phone No."] = document.getElementById('prof-phone').value.trim();
+        updateData["Team"] = document.getElementById('prof-main').options[document.getElementById('prof-main').selectedIndex].text;
+        updateData["Sub Team"] = document.getElementById('prof-sub').value || "-";
 
-        try {
-            const mainTeamLabel = document.getElementById('prof-main').options[document.getElementById('prof-main').selectedIndex].text;
-            const subTeamValue = document.getElementById('prof-sub').value;
+        // 2. อัปเดต Firestore ด้วย Object ที่เตรียมไว้
+        await updateDoc(adminRef, updateData);
 
-            // อัปเดต Firestore
-            await updateDoc(doc(db, "admin", currentUserAuth.uid), {
-                "name": document.getElementById('prof-name').value.trim(),
-                "Phone No.": document.getElementById('prof-phone').value.trim(),
-                "Team": mainTeamLabel,
-                "Sub Team": subTeamValue
-            });
-
-            // ตรวจสอบการเปลี่ยน Email/Password (ถ้ามี)
-            // ... (โค้ดส่วนเปลี่ยน Email/Pass เหมือนเดิม)
-
+        // 3. ตรวจสอบการเปลี่ยนรหัสผ่าน (ถ้ามีการกรอกมา)
+        const newPass = document.getElementById('prof-pass').value;
+        if (newPass && newPass.trim() !== "") {
+            if (newPass.length < 6) throw new Error("รหัสผ่านใหม่ต้องมีอย่างน้อย 6 ตัวอักษร");
+            await updatePassword(currentUserAuth, newPass);
+            alert("บันทึกข้อมูลและรหัสผ่านใหม่เรียบร้อย!");
+        } else {
             alert("อัปเดตข้อมูลสำเร็จ!");
-            location.reload();
-        } catch (error) {
-            console.error(error);
-            alert("เกิดข้อผิดพลาด: " + error.message);
-            btn.disabled = false;
-            btn.innerHTML = originalHtml;
         }
-    });
+
+        location.reload();
+
+    } catch (error) {
+        console.error("Update Error:", error);
+        let msg = "เกิดข้อผิดพลาด: " + error.message;
+        
+        // กรณี Error เรื่องความปลอดภัย (Login ไว้นานเกินไป)
+        if (error.code === 'auth/requires-recent-login') {
+            msg = "เพื่อความปลอดภัย กรุณาออกจากระบบแล้วเข้าใหม่ก่อนเปลี่ยนรหัสผ่าน";
+        }
+        
+        alert(msg);
+        btn.disabled = false;
+        btn.innerHTML = originalHtml;
+    }
+});
 </script>
 <script src="./js/layout.js"></script>
 <script type="module" src="./js/sidebar-role.js"></script>

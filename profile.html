@@ -294,37 +294,36 @@ class="w-64 shrink-0 h-full bg-white border-r border-slate-200">
     const btn = document.getElementById('saveBtn');
     const originalHtml = btn.innerHTML;
     
-    // 1. เริ่ม Animation ที่ปุ่ม
+    // --- 1. เริ่ม Animation ที่ปุ่ม (Loading State) ---
     btn.disabled = true;
-    btn.innerHTML = `<i class="fa-solid fa-circle-notch animate-spin"></i> กำลังอัปเดต...`;
+    btn.innerHTML = `<i class="fa-solid fa-circle-notch animate-spin"></i> กำลังอัปเดตข้อมูล...`;
 
     try {
         const adminRef = doc(db, "admin", currentUserAuth.uid);
         
-        // ดึงค่าจาก UI
+        // ดึงค่าจากหน้าจอ
         const mainTeamLabel = document.getElementById('prof-main').options[document.getElementById('prof-main').selectedIndex].text;
         const subTeamValue = document.getElementById('prof-sub').value || "-";
+        const phoneValue = document.getElementById('prof-phone').value.trim();
+        const nameValue = document.getElementById('prof-name').value.trim();
 
-        // ✅ วิธีแก้ Error "Phone No.": สร้าง Object แล้วใส่ค่าด้วย Bracket Notation
-        // วิธีนี้จะทำให้ Firebase ยอมรับชื่อฟิลด์ที่มีจุดและเว้นวรรคครับ
-        const dataPayload = {};
-        dataPayload["name"] = document.getElementById('prof-name').value.trim();
-        dataPayload["Team"] = mainTeamLabel;
-        dataPayload["Sub Team"] = subTeamValue;
-        dataPayload["Phone No."] = document.getElementById('prof-phone').value.trim();
+        // --- 2. อัปเดต Firestore ด้วย FieldPath (แก้ Error ในรูป image_5fb25c.png) ---
+        // ใช้ FieldPath ครอบชื่อฟิลด์ "Phone No." เพื่อบอก Firebase ว่านี่คือชื่อตรงๆ ไม่ใช่ Object ย่อย
+        await updateDoc(adminRef, {
+            "name": nameValue,
+            "Team": mainTeamLabel,
+            "Sub Team": subTeamValue,
+            [new FieldPath("Phone No.")]: phoneValue // ✅ แก้จุดบอดชื่อฟิลด์ที่มีจุดตรงนี้ครับ
+        });
 
-        // 2. อัปเดตข้อมูลไปที่ Firestore
-        await updateDoc(adminRef, dataPayload);
-
-        // 3. ตรวจสอบการเปลี่ยนรหัสผ่าน (ถ้ามี)
+        // --- 3. จัดการ Password (ถ้ามีการกรอกใหม่) ---
         const newPass = document.getElementById('prof-pass').value;
         if (newPass && newPass.trim() !== "") {
             try {
                 await updatePassword(currentUserAuth, newPass);
             } catch (authErr) {
-                // จัดการ Error ในรูป image_5f5ba2.png
                 if (authErr.code === 'auth/requires-recent-login') {
-                    alert("⚠️ เพื่อความปลอดภัย กรุณาเข้าสู่ระบบใหม่อีกครั้งก่อนเปลี่ยนรหัสผ่าน");
+                    alert("⚠️ เพื่อความปลอดภัย กรุณา Login ใหม่ก่อนเปลี่ยนรหัสผ่านครับ");
                     signOut(auth).then(() => window.location.replace("login.html"));
                     return;
                 }
@@ -332,21 +331,19 @@ class="w-64 shrink-0 h-full bg-white border-r border-slate-200">
             }
         }
 
-        // --- ✨ ส่วน Animation สำเร็จ ---
-        const successOverlay = document.getElementById('success-overlay');
-        if (successOverlay) {
-            // แสดง Overlay
-            successOverlay.classList.remove('hidden');
-            successOverlay.style.display = 'flex';
-            
-            const content = document.getElementById('success-content');
-            // เล่น Animation Scale จาก CSS เดิม
+        // --- 4. แสดง Animation สำเร็จ (Success Overlay) ---
+        const overlay = document.getElementById('success-overlay');
+        const content = document.getElementById('success-content');
+        
+        if (overlay && content) {
+            overlay.style.display = 'flex'; // แสดงพื้นหลัง
+            // ใส่ Delay เล็กน้อยเพื่อให้ CSS Transition ของ scale ทำงาน
             setTimeout(() => {
                 content.classList.replace('scale-90', 'scale-100');
                 content.classList.add('opacity-100');
             }, 10);
 
-            // รอ 2 วินาทีแล้ว Refresh
+            // รอ 2 วินาทีให้คนดูความสำเร็จก่อน Refresh
             setTimeout(() => {
                 location.reload();
             }, 2000);

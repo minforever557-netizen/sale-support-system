@@ -28,11 +28,7 @@ class="w-64 shrink-0 h-full bg-white border-r border-slate-200">
 
         <!-- MAIN CONTENT -->
        <main class="flex-1 overflow-y-auto custom-scroll p-6 md:p-10">
-            <div class="max-w-7xl mx-auto w-full space-y-8">
-                <div class="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-10">
-                    <div>
-                        <h2 class="text-3xl font-bold text-slate-800 tracking-tight">โครงสร้างทีม (Team Structure)</h2>
-<p class="text-slate-500 mt-1">จัดการทีมหลักและทีมย่อยเพื่อใช้ในการแบ่งกลุ่มพนักงานในระบบ</p>
+            <p class="text-slate-500 mt-1">จัดการทีมหลักและทีมย่อยเพื่อใช้ในการแบ่งกลุ่มพนักงานในระบบ</p>
             </div>
             <button onclick="openTeamModal()" class="bg-[#5d58f0] text-white px-8 py-4 rounded-2xl font-bold hover:bg-indigo-700 transition shadow-xl shadow-indigo-100 flex items-center gap-3 active:scale-95">
                 <i class="fa-solid fa-plus text-sm"></i> 
@@ -51,7 +47,7 @@ class="w-64 shrink-0 h-full bg-white border-r border-slate-200">
 
 <div id="teamModal" class="hidden fixed inset-0 z-[60] flex items-center justify-center p-4">
     <div class="absolute inset-0 bg-slate-900/60 backdrop-blur-sm" onclick="closeTeamModal()"></div>
-    <div class="relative bg-white w-full max-w-md rounded-[3rem] shadow-2xl overflow-hidden modal-animate border-2 border-slate-200">
+    <div class="relative bg-white w-full max-w-md rounded-[3rem] shadow-2xl overflow-hidden modal-animate border-2 border-slate-300">
         <div class="bg-[#5d58f0] p-10 text-white text-center">
             <div class="w-16 h-16 bg-white/20 rounded-2xl flex items-center justify-center mx-auto mb-4 text-2xl">
                 <i class="fa-solid fa-sitemap"></i>
@@ -62,7 +58,7 @@ class="w-64 shrink-0 h-full bg-white border-r border-slate-200">
         <div class="p-10 space-y-6">
             <div>
                 <label class="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2 ml-2">ประเภททีม</label>
-                <select id="team-type" onchange="toggleParentSelect()" class="w-full p-4 bg-slate-50 border-2 border-slate-200 rounded-2xl outline-none focus:border-indigo-500 focus:bg-white transition-all appearance-none cursor-pointer">
+                <select id="team-type" onchange="toggleParentSelect()" class="w-full p-4 bg-white border-2 border-slate-300 rounded-2xl outline-none focus:border-indigo-500 transition-all appearance-none cursor-pointer font-medium text-slate-700">
                     <option value="main">ทีมหลัก (Main Team)</option>
                     <option value="sub">ทีมย่อย (Sub Team)</option>
                 </select>
@@ -70,15 +66,15 @@ class="w-64 shrink-0 h-full bg-white border-r border-slate-200">
             
             <div id="parent-selection-div" class="hidden animate-fadeIn">
                 <label class="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2 ml-2">สังกัดทีมหลัก</label>
-                <select id="parent-team-select" class="w-full p-4 bg-slate-50 border-2 border-slate-200 rounded-2xl outline-none focus:border-indigo-500 focus:bg-white appearance-none cursor-pointer"></select>
+                <select id="parent-team-select" class="w-full p-4 bg-white border-2 border-slate-300 rounded-2xl outline-none focus:border-indigo-500 appearance-none cursor-pointer font-medium text-slate-700"></select>
             </div>
 
             <div>
                 <label class="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2 ml-2">ชื่อทีม</label>
-                <input type="text" id="team-name" placeholder="เช่น ภาคกลาง, Telesale..." class="w-full p-4 bg-slate-50 border-2 border-slate-200 rounded-2xl outline-none focus:border-indigo-500 focus:bg-white transition-all">
+                <input type="text" id="team-name" placeholder="เช่น ภาคกลาง, Telesale..." class="w-full p-4 bg-white border-2 border-slate-300 rounded-2xl outline-none focus:border-indigo-500 transition-all font-medium text-slate-700">
             </div>
         </div>
-        <div class="p-8 bg-slate-50 flex gap-4 border-t-2 border-slate-200">
+        <div class="p-8 bg-slate-50 flex gap-4 border-t-2 border-slate-300">
             <button onclick="closeTeamModal()" class="flex-1 py-4 font-bold text-slate-500 hover:bg-slate-200 rounded-2xl transition">ยกเลิก</button>
             <button onclick="saveTeam()" id="save-team-btn" class="flex-[2] py-4 bg-[#5d58f0] text-white rounded-2xl font-bold hover:bg-indigo-700 shadow-xl shadow-indigo-100 transition-all active:scale-95">บันทึกข้อมูล</button>
         </div>

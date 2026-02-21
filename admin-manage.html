@@ -87,7 +87,7 @@ class="w-64 shrink-0 h-full bg-white border-r border-slate-200">
         </div>
     </div>
 <script>
-  // 1. ฟังก์ชันคำนวณวันเวลาที่ครบกำหนด (Due Date) ตามวันทำการ (จันทร์-ศุกร์)
+ // 1. ฟังก์ชันคำนวณวันเวลาที่ครบกำหนด (Due Date) ตามวันทำการ (จันทร์-ศุกร์)
         function getBusinessDueDate(startDate, hoursToAdd) {
             let date = new Date(startDate);
             let addedHours = 0;
@@ -101,66 +101,7 @@ class="w-64 shrink-0 h-full bg-white border-r border-slate-200">
             return date;
         }
 
-        // 2. Real-time Ticket Logic
-        function initTicketsListener() {
-            const q = query(collection(db, "tickets"), orderBy("createdAt", "asc"));
-            onSnapshot(q, (snapshot) => {
-                const list = document.getElementById('admin-ticket-list');
-                const noData = document.getElementById('no-data-msg');
-                const filtered = snapshot.docs.filter(d => ["Pending", "Open", "On Progress"].includes(d.data().status));
-
-                if (filtered.length === 0) {
-                    list.innerHTML = "";
-                    noData.classList.remove('hidden');
-                    return;
-                }
-
-                noData.classList.add('hidden');
-                list.innerHTML = filtered.map(docSnap => {
-                    const t = docSnap.data();
-                    
-                    // คำนวณวันครบกำหนดและเวลาที่เหลือ
-                    const start = t.createdAt ? t.createdAt.toDate() : new Date();
-                    const due = getBusinessDueDate(start, t.sla_hours || 0);
-                    const sla = calcRemainingSLA(t.createdAt, t.sla_hours || 0);
-                    
-                    let statusColor = t.status === 'On Progress' ? 'bg-orange-100 text-orange-600' : 'bg-indigo-100 text-indigo-600';
-                    if(t.status === 'Pending') statusColor = 'bg-blue-100 text-blue-600 animate-pulse';
-
-                    return `
-                        <tr class="${sla.urgent ? 'sla-urgent' : 'hover:bg-slate-50/50'} transition-all border-b border-slate-50 last:border-0">
-                            <td class="p-6">
-                                <p class="font-bold text-slate-800">${t.owner || '-'}</p>
-                            </td>
-                            <td class="p-6">
-                                <p class="text-[13px] font-bold text-slate-600">${t.internetNo || t.id_number || '-'}</p>
-                            </td>
-                            <td class="p-6">
-                                <p class="font-bold text-slate-700">${t.topic || 'No Topic'}</p>
-                                <div class="flex items-center gap-2 mt-1">
-                                    <span class="text-[10px] text-indigo-400 font-black uppercase">SLA ${t.sla_hours || 0}H</span>
-                                    <span class="text-[11px] ${sla.class} font-bold">(เหลือ ${sla.text})</span>
-                                </div>
-                            </td>
-                            <td class="p-6 text-center">
-                                <span class="px-3 py-1 rounded-full text-[9px] font-black uppercase tracking-widest ${statusColor}">
-                                    ${t.status}
-                                </span>
-                            </td>
-                            <td class="p-6">
-                                <p class="text-[13px] font-bold text-slate-600">${due.toLocaleString('th-TH', { dateStyle: 'short', timeStyle: 'short' })}</p>
-                                <p class="text-[10px] text-slate-400 uppercase font-medium">Business Days Only</p>
-                            </td>
-                            <td class="p-6 text-right">
-                                <button onclick="openManageModal('${docSnap.id}', '${t.status}', '${t.adminNote || ''}')" class="bg-[#5c56f1] text-white px-6 py-2.5 rounded-xl text-xs font-bold shadow-lg hover:bg-indigo-700 transition active:scale-95">จัดการ</button>
-                            </td>
-                        </tr>
-                    `;
-                }).join('');
-            });
-        }
-
-        // 3. ปรับฟังก์ชันคำนวณเวลาที่เหลือให้รับวันหยุดเข้าไปคิดด้วย
+        // 2. ฟังก์ชันคำนวณเวลาที่เหลือ
         function calcRemainingSLA(createdAt, slaH) {
             if (!createdAt) return { text: "-", class: "", urgent: false };
             
@@ -177,6 +118,70 @@ class="w-64 shrink-0 h-full bg-white border-r border-slate-200">
                 class: h < 2 ? "text-orange-500" : "text-green-600", 
                 urgent: h < 1 
             };
+        }
+
+        // 3. Real-time Ticket Logic
+        function initTicketsListener() {
+            // ตรวจสอบว่า db พร้อมใช้งานหรือไม่ (แก้ปัญหา MIME type error)
+            if (typeof db === 'undefined') {
+                console.error("Database connection failed. Please check firebase.js path.");
+                return;
+            }
+
+            const q = query(collection(db, "tickets"), orderBy("createdAt", "asc"));
+            onSnapshot(q, (snapshot) => {
+                const list = document.getElementById('admin-ticket-list');
+                const noData = document.getElementById('no-data-msg');
+                const filtered = snapshot.docs.filter(d => ["Pending", "Open", "On Progress"].includes(d.data().status));
+
+                if (filtered.length === 0) {
+                    list.innerHTML = "";
+                    noData.classList.remove('hidden');
+                    return;
+                }
+
+                noData.classList.add('hidden');
+                list.innerHTML = filtered.map(docSnap => {
+                    const t = docSnap.data();
+                    const start = t.createdAt ? t.createdAt.toDate() : new Date();
+                    const due = getBusinessDueDate(start, t.sla_hours || 0);
+                    const sla = calcRemainingSLA(t.createdAt, t.sla_hours || 0);
+                    
+                    let statusColor = t.status === 'On Progress' ? 'bg-orange-100 text-orange-600' : 'bg-indigo-100 text-indigo-600';
+                    if(t.status === 'Pending') statusColor = 'bg-blue-100 text-blue-600 animate-pulse';
+
+                    return `
+                        <tr class="${sla.urgent ? 'sla-urgent' : 'hover:bg-slate-50/50'} transition-all border-b border-slate-50 last:border-0">
+                            <td class="p-6 font-bold text-slate-800">${t.owner || '-'}</td>
+                            
+                            <td class="p-6 font-bold text-slate-600">${t.internetNo || t.id_number || '-'}</td>
+                            
+                            <td class="p-6">
+                                <p class="font-bold text-slate-700">${t.topic || 'No Topic'}</p>
+                                <p class="text-[10px] text-indigo-400 font-black uppercase">SLA ${t.sla_hours || 0}H (เหลือ ${sla.text})</p>
+                            </td>
+                            
+                            <td class="p-6 text-center">
+                                <span class="px-3 py-1 rounded-full text-[9px] font-black uppercase tracking-widest ${statusColor}">
+                                    ${t.status}
+                                </span>
+                            </td>
+                            
+                            <td class="p-6">
+                                <p class="text-[13px] font-bold text-slate-600">${due.toLocaleString('th-TH')}</p>
+                                <p class="text-[9px] text-slate-400">คำนวณตามวันทำการ</p>
+                            </td>
+                            
+                            <td class="p-6 text-right">
+                                <button onclick="openManageModal('${docSnap.id}', '${t.status}', '${t.adminNote || ''}')" 
+                                    class="bg-[#5c56f1] text-white px-6 py-2.5 rounded-xl text-xs font-bold shadow-lg hover:bg-indigo-700 transition active:scale-95">
+                                    จัดการ
+                                </button>
+                            </td>
+                        </tr>
+                    `;
+                }).join('');
+            });
         }
     </script>
 <script src="./js/layout.js"></script>

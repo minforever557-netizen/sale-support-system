@@ -142,11 +142,11 @@ class="w-64 shrink-0 h-full bg-white border-r border-slate-200">
     let currentTickets = [];
     let unsubscribe = null;
 
-    // --- ฟังก์ชันแปลง Note เป็น Timeline แยกก้อนข้อมูลชัดเจน (Concept เดียวกับ All Ticket) ---
+    // --- ฟังก์ชันแปลง Note เป็น Timeline แยกก้อนข้อมูลชัดเจน (เหมือน All Ticket) ---
     function formatAdminTimeline(note) {
         if (!note) return '<p class="text-slate-400 italic text-sm p-4">รอดำเนินการ...</p>';
 
-        // ใช้ Regex แยกตัวเลข Timestamp เพื่อป้องกันข้อมูลไหลรวมกัน
+        // ใช้ Regex แยกตามโครงสร้าง [วว/ดด/ปป HH:mm]
         const parts = note.split(/(\[\d{2}\/\d{2}\/\d{2}\s\d{2}:\d{2}\])/g);
         let entries = [];
 
@@ -191,7 +191,7 @@ class="w-64 shrink-0 h-full bg-white border-r border-slate-200">
                 document.getElementById('det-id-number').innerText = t.id_number || t.internetNo || '-';
                 document.getElementById('det-detail').innerText = t.detail || 'ไม่มีรายละเอียดเพิ่มเติม';
                 
-                // 🔥 แสดงชื่อผู้ดูแลจากฟิลด์ adminName (ตาม Concept All Ticket)
+                // 🔥 แสดงชื่อผู้ดูแลจากฟิลด์ adminName
                 const adminElement = document.getElementById('det-admin-name');
                 if (adminElement) {
                     adminElement.innerText = t.adminName || 'รอมอบหมาย';
@@ -203,16 +203,18 @@ class="w-64 shrink-0 h-full bg-white border-r border-slate-200">
                 
                 const status = t.status || 'Pending';
                 const badge = document.getElementById('det-status-badge');
-                badge.innerText = status;
-                badge.className = "px-3 py-1 rounded-full text-[10px] font-black uppercase inline-block mt-1";
-                const statusColors = {
-                    'Open': 'bg-blue-100 text-blue-700',
-                    'On Progress': 'bg-orange-100 text-orange-700',
-                    'Success': 'bg-emerald-100 text-emerald-700',
-                    'Reject': 'bg-red-100 text-red-700',
-                    'Pending': 'bg-slate-100 text-slate-600'
-                };
-                badge.classList.add(...(statusColors[status] || statusColors['Pending']).split(' '));
+                if (badge) {
+                    badge.innerText = status;
+                    badge.className = "px-3 py-1 rounded-full text-[10px] font-black uppercase inline-block mt-1";
+                    const statusColors = {
+                        'Open': 'bg-blue-100 text-blue-700',
+                        'On Progress': 'bg-orange-100 text-orange-700',
+                        'Success': 'bg-emerald-100 text-emerald-700',
+                        'Reject': 'bg-red-100 text-red-700',
+                        'Pending': 'bg-slate-100 text-slate-600'
+                    };
+                    badge.classList.add(...(statusColors[status] || statusColors['Pending']).split(' '));
+                }
 
                 const remarkBox = document.getElementById('det-admin-remark');
                 if (remarkBox) {

@@ -294,32 +294,54 @@ class="w-64 shrink-0 h-full bg-white border-r border-slate-200">
     const btn = document.getElementById('saveBtn');
     const originalHtml = btn.innerHTML;
     
+    // เริ่ม Animation ที่ปุ่ม (Loading state)
     btn.disabled = true;
-    btn.innerHTML = `<i class="fa-solid fa-spinner animate-spin"></i> กำลังอัปเดต...`;
+    btn.innerHTML = `<i class="fa-solid fa-circle-notch animate-spin"></i> กำลังประมวลผล...`;
 
     try {
         const adminRef = doc(db, "admin", currentUserAuth.uid);
-        
-        // ดึงข้อมูลจาก UI
         const mainTeamLabel = document.getElementById('prof-main').options[document.getElementById('prof-main').selectedIndex].text;
         const subTeamValue = document.getElementById('prof-sub').value || "-";
 
-        // ✅ ท่าไม้ตาย: ใช้ FieldPath เพื่อจัดการฟิลด์ "Phone No." ที่มีจุด
-        await updateDoc(adminRef, 
-            "name", document.getElementById('prof-name').value.trim(),
-            "Team", mainTeamLabel,
-            "Sub Team", subTeamValue,
-            new FieldPath("Phone No."), document.getElementById('prof-phone').value.trim() // แก้ปัญหาจุดตรงนี้ครับ
-        );
+        // 1. อัปเดตข้อมูลทั่วไปก่อน (ตัวนี้ไม่ต้อง Re-login)
+        await updateDoc(adminRef, {
+            "name": document.getElementById('prof-name').value.trim(),
+            "Team": mainTeamLabel,
+            "Sub Team": subTeamValue,
+            "Phone No.": document.getElementById('prof-phone').value.trim()
+        });
 
-        // จัดการ Password ถ้ามีการกรอก
+        // 2. ตรวจสอบการเปลี่ยนรหัสผ่าน (ตัวนี้แหละที่ทำให้เกิด Error ในรูป image_5f5ba2.png)
         const newPass = document.getElementById('prof-pass').value;
         if (newPass && newPass.trim() !== "") {
-            await updatePassword(currentUserAuth, newPass);
+            try {
+                await updatePassword(currentUserAuth, newPass);
+            } catch (authErr) {
+                if (authErr.code === 'auth/requires-recent-login') {
+                    // แจ้งเตือนสวยๆ ด้วย Animation
+                    alert("⚠️ เพื่อความปลอดภัยสูงสุด กรุณา Logout แล้วเข้าสู่ระบบใหม่ก่อนทำการเปลี่ยนรหัสผ่านครับ");
+                    signOut(auth).then(() => window.location.replace("login.html"));
+                    return;
+                }
+                throw authErr;
+            }
         }
 
-        alert("อัปเดตข้อมูลเรียบร้อยแล้ว!");
-        location.reload();
+        // 3. แสดงผลสำเร็จด้วย Animation (อ้างอิง CSS เดิมของนาย)
+        const successOverlay = document.getElementById('success-overlay');
+        if (successOverlay) {
+            successOverlay.style.display = 'flex';
+            const content = document.getElementById('success-content');
+            // ใช้ animation scale-100 จาก CSS ของนาย
+            setTimeout(() => content.classList.replace('scale-90', 'scale-100'), 10);
+            
+            setTimeout(() => {
+                location.reload();
+            }, 2000);
+        } else {
+            alert("บันทึกข้อมูลเรียบร้อยแล้ว!");
+            location.reload();
+        }
 
     } catch (error) {
         console.error("Update Error:", error);

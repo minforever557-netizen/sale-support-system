@@ -289,37 +289,42 @@ class="w-64 shrink-0 h-full bg-white border-r border-slate-200">
     }
 
     // 6. บันทึกข้อมูล
-   document.getElementById('profile-form').addEventListener('submit', async (e) => {
+  document.getElementById('profile-form').addEventListener('submit', async (e) => {
     e.preventDefault();
     const btn = document.getElementById('saveBtn');
     const originalHtml = btn.innerHTML;
     
-    // เริ่ม Animation ที่ปุ่ม (Loading state)
+    // 1. เริ่ม Animation ที่ปุ่ม
     btn.disabled = true;
-    btn.innerHTML = `<i class="fa-solid fa-circle-notch animate-spin"></i> กำลังประมวลผล...`;
+    btn.innerHTML = `<i class="fa-solid fa-circle-notch animate-spin"></i> กำลังอัปเดต...`;
 
     try {
         const adminRef = doc(db, "admin", currentUserAuth.uid);
+        
+        // ดึงค่าจาก UI
         const mainTeamLabel = document.getElementById('prof-main').options[document.getElementById('prof-main').selectedIndex].text;
         const subTeamValue = document.getElementById('prof-sub').value || "-";
 
-        // 1. อัปเดตข้อมูลทั่วไปก่อน (ตัวนี้ไม่ต้อง Re-login)
-        await updateDoc(adminRef, {
-            "name": document.getElementById('prof-name').value.trim(),
-            "Team": mainTeamLabel,
-            "Sub Team": subTeamValue,
-            "Phone No.": document.getElementById('prof-phone').value.trim()
-        });
+        // ✅ วิธีแก้ Error "Phone No.": สร้าง Object แล้วใส่ค่าด้วย Bracket Notation
+        // วิธีนี้จะทำให้ Firebase ยอมรับชื่อฟิลด์ที่มีจุดและเว้นวรรคครับ
+        const dataPayload = {};
+        dataPayload["name"] = document.getElementById('prof-name').value.trim();
+        dataPayload["Team"] = mainTeamLabel;
+        dataPayload["Sub Team"] = subTeamValue;
+        dataPayload["Phone No."] = document.getElementById('prof-phone').value.trim();
 
-        // 2. ตรวจสอบการเปลี่ยนรหัสผ่าน (ตัวนี้แหละที่ทำให้เกิด Error ในรูป image_5f5ba2.png)
+        // 2. อัปเดตข้อมูลไปที่ Firestore
+        await updateDoc(adminRef, dataPayload);
+
+        // 3. ตรวจสอบการเปลี่ยนรหัสผ่าน (ถ้ามี)
         const newPass = document.getElementById('prof-pass').value;
         if (newPass && newPass.trim() !== "") {
             try {
                 await updatePassword(currentUserAuth, newPass);
             } catch (authErr) {
+                // จัดการ Error ในรูป image_5f5ba2.png
                 if (authErr.code === 'auth/requires-recent-login') {
-                    // แจ้งเตือนสวยๆ ด้วย Animation
-                    alert("⚠️ เพื่อความปลอดภัยสูงสุด กรุณา Logout แล้วเข้าสู่ระบบใหม่ก่อนทำการเปลี่ยนรหัสผ่านครับ");
+                    alert("⚠️ เพื่อความปลอดภัย กรุณาเข้าสู่ระบบใหม่อีกครั้งก่อนเปลี่ยนรหัสผ่าน");
                     signOut(auth).then(() => window.location.replace("login.html"));
                     return;
                 }
@@ -327,19 +332,26 @@ class="w-64 shrink-0 h-full bg-white border-r border-slate-200">
             }
         }
 
-        // 3. แสดงผลสำเร็จด้วย Animation (อ้างอิง CSS เดิมของนาย)
+        // --- ✨ ส่วน Animation สำเร็จ ---
         const successOverlay = document.getElementById('success-overlay');
         if (successOverlay) {
+            // แสดง Overlay
+            successOverlay.classList.remove('hidden');
             successOverlay.style.display = 'flex';
-            const content = document.getElementById('success-content');
-            // ใช้ animation scale-100 จาก CSS ของนาย
-            setTimeout(() => content.classList.replace('scale-90', 'scale-100'), 10);
             
+            const content = document.getElementById('success-content');
+            // เล่น Animation Scale จาก CSS เดิม
+            setTimeout(() => {
+                content.classList.replace('scale-90', 'scale-100');
+                content.classList.add('opacity-100');
+            }, 10);
+
+            // รอ 2 วินาทีแล้ว Refresh
             setTimeout(() => {
                 location.reload();
             }, 2000);
         } else {
-            alert("บันทึกข้อมูลเรียบร้อยแล้ว!");
+            alert("บันทึกข้อมูลสำเร็จ!");
             location.reload();
         }
 

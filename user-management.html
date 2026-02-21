@@ -134,8 +134,10 @@ class="w-64 shrink-0 h-full bg-white border-r border-slate-200">
     // นำเข้าเฉพาะที่จำเป็น และต้องระบุเส้นทางให้ถูกต้อง
     import { db, auth } from "./js/firebase.js";
     import { 
-        collection, query, where, orderBy, onSnapshot, getDoc, getDocs, doc, updateDoc, FieldPath 
-    } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+    collection, query, where, orderBy,
+    onSnapshot, getDoc, getDocs,
+    doc, updateDoc
+} from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
     import { onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
 
     let allTeams = [];
@@ -189,7 +191,7 @@ class="w-64 shrink-0 h-full bg-white border-r border-slate-200">
                             </div>
                             <div class="flex justify-between items-center pb-2 border-b border-slate-50">
                                 <span class="text-slate-400 font-medium">Phone</span>
-                                <span class="text-slate-700 font-bold">${u["Phone No."] || u.phone || '-'}</span>
+                                <span class="text-slate-700 font-bold">${u.phone || '-'}</span>
                             </div>
                         </div>
                         
@@ -216,7 +218,7 @@ class="w-64 shrink-0 h-full bg-white border-r border-slate-200">
             document.getElementById('edit-name').value = u.name || "";
             document.getElementById('edit-username').value = u.username || "";
             document.getElementById('edit-email').value = u.email || "";
-            document.getElementById('edit-phone').value = u["Phone No."] || u.phone || "";
+            document.getElementById('edit-phone').value =u.phone || "";
             document.getElementById('edit-role').value = u.role || "user";
             
             const mainTeam = allTeams.find(t => t.name === u.Team && t.type === "main");
@@ -269,14 +271,14 @@ class="w-64 shrink-0 h-full bg-white border-r border-slate-200">
             const adminRef = doc(db, "admin", uid);
 
             await updateDoc(adminRef, {
-                "name": document.getElementById('edit-name').value.trim(),
-                "username": document.getElementById('edit-username').value.trim(),
-                "email": document.getElementById('edit-email').value.trim(),
-                "role": document.getElementById('edit-role').value,
-                "Team": mainTeamName.includes("เลือกทีม") ? "" : mainTeamName,
-                "Sub Team": document.getElementById('edit-sub-team').value,
-                "Phone No.": document.getElementById('edit-phone').value.trim()
-            });
+    name: document.getElementById('edit-name').value.trim(),
+    username: document.getElementById('edit-username').value.trim(),
+    email: document.getElementById('edit-email').value.trim(),
+    role: document.getElementById('edit-role').value,
+    Team: mainTeamName.includes("เลือกทีม") ? "" : mainTeamName,
+    "Sub Team": document.getElementById('edit-sub-team').value,
+    phone: document.getElementById('edit-phone').value.trim()
+});
 
             closeModal();
             Swal.fire({ icon: 'success', title: 'สำเร็จ', text: 'อัปเดตข้อมูลพนักงานเรียบร้อยแล้ว', timer: 2000 });
@@ -301,6 +303,5 @@ class="w-64 shrink-0 h-full bg-white border-r border-slate-200">
 </script>
             <script src="./js/layout.js"></script>
 <script type="module" src="./js/sidebar-role.js"></script>
-     <script type="module" src="firebase.js"></script>
 </body>
 </html>

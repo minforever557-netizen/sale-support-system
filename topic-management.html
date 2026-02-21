@@ -133,7 +133,7 @@ class="w-64 shrink-0 h-full bg-white border-r border-slate-200">
                             <p class="text-sm text-slate-500 max-w-xs truncate">${d.checklist || '<span class="italic text-slate-300">ไม่มี Checklist</span>'}</p>
                         </td>
                         <td class="p-6 text-right">
-                            <div class="flex justify-end gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
+                            <div class="flex justify-end gap-2 active:scale-95 transition-opacity">
                                 <button onclick="openTopicModal('${docSnap.id}')" class="bg-[#5d58f0] text-white px-4 py-2 rounded-xl text-xs font-bold hover:bg-indigo-700 transition">แก้ไข</button>
                                 <button onclick="deleteTopic('${docSnap.id}')" class="bg-white border border-slate-200 text-slate-400 px-4 py-2 rounded-xl text-xs font-bold hover:text-red-500 transition">ลบ</button>
                             </div>

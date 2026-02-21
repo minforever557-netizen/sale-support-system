@@ -303,7 +303,7 @@ function renderTickets(tickets) {
     );
 
     if (filtered.length === 0) {
-        // ปรับ colspan เป็น 7 เพราะเรามี column เพิ่มขึ้นมา
+        // ปรับ colspan เป็น 7 เพื่อให้ครอบคลุม Column ที่เพิ่มใหม่
         list.innerHTML = `<tr><td colspan="7" class="p-20 text-center text-slate-400 font-medium">ไม่พบรายการใบงาน</td></tr>`;
         return;
     }
@@ -313,8 +313,8 @@ function renderTickets(tickets) {
         const updateDate = t.updatedAt?.toDate ? t.updatedAt.toDate().toLocaleString('th-TH') : '-';
         const status = t.status || 'Pending';
         
-        // ดึงชื่อผู้สร้าง (อ้างอิงจาก field ทั่วไปในระบบของนาย เช่น senderName หรือ name)
-        const creatorName = t.senderName || t.name || t.createdBy || 'ไม่ระบุ';
+        // ใช้ ownerEmail ตามที่นายระบุมาครับ
+        const userEmail = t.ownerEmail || '-';
 
         const statusClasses = {
             'Open': 'bg-blue-100 text-blue-700',
@@ -336,10 +336,10 @@ function renderTickets(tickets) {
                 
                 <td class="p-6">
                     <div class="flex items-center gap-2">
-                        <div class="w-6 h-6 rounded-full bg-slate-100 flex items-center justify-center text-[10px] text-slate-500 font-bold border border-slate-200">
-                            <i class="fa-solid fa-user"></i>
+                        <div class="w-6 h-6 rounded-full bg-indigo-50 flex items-center justify-center text-[10px] text-indigo-500 font-bold border border-indigo-100">
+                            <i class="fa-solid fa-envelope-open-text"></i>
                         </div>
-                        <span class="text-sm font-bold text-slate-600">${creatorName}</span>
+                        <span class="text-[13px] font-bold text-slate-600">${userEmail}</span>
                     </div>
                 </td>
 

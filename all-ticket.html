@@ -119,8 +119,13 @@ class="w-64 shrink-0 h-full bg-white border-r border-slate-200">
     </div>
     <script type="module">
     // 1. Import สิ่งที่จำเป็น (อ้างอิงจาก firebase.js ของนาย)
-    import { db, auth } from "firebase.js";
-    import { collection, query, orderBy, onSnapshot, getDoc, doc } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+        // 1. นำเข้า Services จากไฟล์ js/firebase.js ตามโครงสร้างของคุณ
+    import { db, auth } from "./js/firebase.js";
+    
+    // 2. ใช้ Version เดียวกับใน firebase.js (10.7.1) เพื่อความเสถียร
+    import { 
+        collection, query, where, orderBy, onSnapshot, getDoc, doc 
+    } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
     import { onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
 
     // 2. ประกาศตัวแปร Global ไว้เก็บข้อมูลสำหรับ Search

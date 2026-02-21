@@ -130,35 +130,30 @@ class="w-64 shrink-0 h-full bg-white border-r border-slate-200">
     </div>
 
 <script type="module">
-    // 1. นำเข้า Firebase และฟังก์ชันที่จำเป็นโดยตรงจาก CDN (วิธีที่เสถียรที่สุด)
+    // 1. นำเข้า Firebase Direct จาก CDN เพื่อตัดปัญหา MIME type error
     import { db, auth } from "./js/firebase.js";
     import { signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
     import { 
         collection, onSnapshot, doc, getDoc, query, orderBy 
     } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
 
-    // --- ตัวแปรสำหรับ Logic Dashboard ---
+    // --- State Management ---
     let rawTickets = [];
     let filteredData = [];
     let chart = null;
     let viewLevel = 'MAIN';
     let currentSelection = '';
 
-    // Register Chart.js DataLabels ถ้ามี
-    if (typeof Chart !== 'undefined' && typeof ChartDataLabels !== 'undefined') {
-        Chart.register(ChartDataLabels);
-    }
-
     // --- 1. Auth & Layout Engine ---
     onAuthStateChanged(auth, async (user) => {
         if (user) {
             try {
-                // ดึงข้อมูล Admin (ใช้โครงสร้างเดียวกับ User Management)
+                // ดึงข้อมูล Admin (Ref จากระบบ User Management ที่นายทำสำเร็จแล้ว)
                 const adminDoc = await getDoc(doc(db, "admin", user.uid));
                 const userData = adminDoc.exists() ? adminDoc.data() : { name: "Admin" };
                 
                 await loadLayout(userData, user.email);
-                initTicketData(); // เริ่มดึงข้อมูล Ticket
+                initTicketData(); // เริ่มดึงข้อมูล Tickets
             } catch (err) {
                 console.error("Auth Error:", err);
             }
@@ -175,23 +170,22 @@ class="w-64 shrink-0 h-full bg-white border-r border-slate-200">
         
         for (const comp of comps) {
             const el = document.getElementById(comp.id);
-            if (!el) continue; // ป้องกัน Error "el is null" (image_5e5214.png)
+            if (!el) continue; // ป้องกัน Error "el is null"
 
-            const res = await fetch(comp.url);
-            if (res.ok) {
-                el.innerHTML = await res.text();
-                el.classList.remove('hidden');
-            }
+            try {
+                const res = await fetch(comp.url);
+                if (res.ok) {
+                    el.innerHTML = await res.text();
+                    el.classList.remove('hidden');
+                }
+            } catch (err) { console.error(`Layout Load Error: ${comp.url}`, err); }
         }
 
-        // อัปเดตข้อมูลผู้ใช้ (ใส่ Delay เล็กน้อยเพื่อให้ Element ใน Component โหลดเสร็จ)
+        // อัปเดตข้อมูลผู้ใช้ใน Topbar
         setTimeout(() => {
             const nameEl = document.querySelector('#topbar-user-name');
-            const emailEl = document.querySelector('#topbar-user-email');
             const avatarEl = document.querySelector('#topbar-avatar-text');
-            
             if (nameEl) nameEl.innerText = userData.name || "Admin";
-            if (emailEl) emailEl.innerText = email;
             if (avatarEl && userData.name) avatarEl.innerText = userData.name.charAt(0).toUpperCase();
 
             // ผูกฟังก์ชัน Logout
@@ -200,10 +194,10 @@ class="w-64 shrink-0 h-full bg-white border-r border-slate-200">
         }, 500);
     }
 
-    // --- 2. Real-time Ticket Data ---
+    // --- 2. Data Initialization (Real-time) ---
     function initTicketData() {
-        // ใช้ onSnapshot ที่ Import มาจาก Gstatic โดยตรง
-        const q = query(collection(db, "tickets"));
+        // ใช้ onSnapshot ตรงๆ จาก Firestore เพื่อความ Real-time
+        const q = query(collection(db, "tickets"), orderBy("timestamp", "desc"));
         
         onSnapshot(q, (snapshot) => {
             rawTickets = snapshot.docs.map(doc => {
@@ -211,9 +205,10 @@ class="w-64 shrink-0 h-full bg-white border-r border-slate-200">
                 const ts = d.timestamp?.toDate() || new Date();
                 const keys = Object.keys(d);
                 
+                // Helper ฟังก์ชันดึงค่าแบบยืดหยุ่น (รองรับตัวเล็ก/ใหญ่ และเว้นวรรค)
                 const getVal = (targets) => {
-                    const k = keys.find(key => targets.includes(key.trim().toLowerCase()));
-                    return k ? d[k] : null;
+                    const found = keys.find(k => targets.includes(k.trim().toLowerCase()));
+                    return found ? d[found] : null;
                 };
 
                 return {
@@ -229,12 +224,10 @@ class="w-64 shrink-0 h-full bg-white border-r border-slate-200">
                 };
             });
             window.applyFilters(); 
-        }, (error) => {
-            console.error("Firestore Error:", error);
         });
     }
 
-    // --- 3. Dashboard Logic ---
+    // --- 3. Business Logic (ตารางและกราฟ) ---
     window.applyFilters = () => {
         const mode = document.getElementById('filter-mode')?.value || 'all';
         const d = document.getElementById('val-date')?.value;
@@ -246,20 +239,14 @@ class="w-64 shrink-0 h-full bg-white border-r border-slate-200">
             if (mode === 'quarter') return t.y === y && t.q === q;
             return true;
         });
-        render();
+        renderDashboard();
     };
 
-    function render() {
+    function renderDashboard() {
+        // อัปเดตตัวเลข Stats บน Card
         const total = filteredData.length;
         const statTotal = document.getElementById('stat-total');
-        const statOwners = document.getElementById('stat-owners');
-        const statSla = document.getElementById('stat-sla');
-
         if (statTotal) statTotal.innerText = total.toLocaleString();
-        if (statOwners) statOwners.innerText = new Set(filteredData.map(t => t.owner)).size;
-        
-        const slaOk = filteredData.filter(v => v.status === 'In SLA').length;
-        if (statSla) statSla.innerText = total ? Math.round((slaOk/total)*100) + '%' : '0%';
 
         const tableStats = {}; const topicStats = {};
         filteredData.forEach(t => {
@@ -279,54 +266,19 @@ class="w-64 shrink-0 h-full bg-white border-r border-slate-200">
         if (!tbody) return;
 
         const total = Object.values(stats).reduce((a,b) => a+b, 0);
+        // ปรับเส้นขอบตารางให้เข้ม (border-slate-300) ตาม CSS ของนาย
         tbody.innerHTML = Object.entries(stats).sort((a,b) => b[1]-a[1]).map(([n, c]) => `
-            <tr class="border-b-2 border-slate-300 hover:bg-slate-50 transition-colors cursor-pointer group" onclick="handleRowClick('${n}')">
+            <tr class="border-b-2 border-slate-300 hover:bg-slate-50 transition-colors cursor-pointer" onclick="handleRowClick('${n}')">
                 <td class="p-4 font-bold text-slate-700">${n}</td>
                 <td class="p-4 text-center font-bold text-indigo-600">${c}</td>
                 <td class="p-4 text-right font-medium text-slate-400">${total ? ((c/total)*100).toFixed(1) : 0}%</td>
             </tr>`).join('');
     }
 
-    // --- 4. Window Functions ---
-    window.handleLogout = () => {
-        const logModal = document.getElementById('logout-modal');
-        if (logModal) logModal.classList.remove('hidden');
-    };
-
-    const confirmLogout = document.getElementById('confirm-logout');
-    if (confirmLogout) {
-        confirmLogout.onclick = async () => {
-            await signOut(auth);
-            window.location.replace("login.html");
-        };
-    }
-
-    window.handleRowClick = (name) => {
-        if (viewLevel === 'MAIN') {
-            viewLevel = 'SUB'; currentSelection = name;
-            const path = document.getElementById('nav-path');
-            const title = document.getElementById('table-title');
-            if (path) path.innerText = `Dashboard / ${name}`;
-            if (title) title.innerText = `รายทีมย่อย (ของ ${name})`;
-            render();
-        } else { window.openDetailModal(name); }
-    };
-
-    window.resetView = () => {
-        viewLevel = 'MAIN'; currentSelection = '';
-        const path = document.getElementById('nav-path');
-        const title = document.getElementById('table-title');
-        if (path) path.innerText = 'Dashboard / Main Team';
-        if (title) title.innerText = 'สรุปตามรายทีม (Sender team)';
-        render();
-    };
-
-    window.closeLogoutModal = () => document.getElementById('logout-modal')?.classList.add('hidden');
-    window.closeModal = () => document.getElementById('detail-modal')?.classList.add('hidden');
-
     function updateChart(data) {
         const ctx = document.getElementById('mainChart');
-        if (!ctx) return;
+        if (!ctx || typeof Chart === 'undefined') return; // กัน Error Chart is not defined
+
         if (chart) chart.destroy();
         chart = new Chart(ctx, {
             type: 'doughnut',
@@ -334,7 +286,7 @@ class="w-64 shrink-0 h-full bg-white border-r border-slate-200">
                 labels: Object.keys(data),
                 datasets: [{ 
                     data: Object.values(data), 
-                    backgroundColor: ['#6366f1', '#10b981', '#f59e0b', '#ef4444', '#8b5cf6', '#ec4899'], 
+                    backgroundColor: ['#6366f1', '#10b981', '#f59e0b', '#ef4444', '#8b5cf6', '#ec4899'],
                     borderWidth: 0 
                 }]
             },
@@ -345,6 +297,35 @@ class="w-64 shrink-0 h-full bg-white border-r border-slate-200">
                 cutout: '75%' 
             }
         });
+    }
+
+    // --- 4. Global Window Functions ---
+    window.handleRowClick = (name) => {
+        if (viewLevel === 'MAIN') {
+            viewLevel = 'SUB'; currentSelection = name;
+            document.getElementById('nav-path').innerText = `Dashboard / ${name}`;
+            document.getElementById('table-title').innerText = `รายทีมย่อย (ของ ${name})`;
+            renderDashboard();
+        }
+    };
+
+    window.resetView = () => {
+        viewLevel = 'MAIN'; currentSelection = '';
+        document.getElementById('nav-path').innerText = 'Dashboard / Main Team';
+        document.getElementById('table-title').innerText = 'สรุปตามรายทีม (Sender team)';
+        renderDashboard();
+    };
+
+    window.handleLogout = () => {
+        document.getElementById('logout-modal')?.classList.remove('hidden');
+    };
+
+    const confirmLogoutBtn = document.getElementById('confirm-logout');
+    if (confirmLogoutBtn) {
+        confirmLogoutBtn.onclick = async () => {
+            await signOut(auth);
+            window.location.replace("login.html");
+        };
     }
 </script>
 <script src="./js/layout.js"></script>

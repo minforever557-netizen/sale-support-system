@@ -86,140 +86,172 @@ class="w-64 shrink-0 h-full bg-white border-r border-slate-200">
         </div>
     </div>
 
-    <script>
-        // --- Logout Handling (Fix for dynamic Sidebar) ---
-        window.handleLogout = () => {
-            const logModal = document.getElementById('logout-modal');
-            logModal.classList.remove('hidden');
-            document.body.classList.add('modal-active');
-            setTimeout(() => {
-                document.getElementById('logout-backdrop').classList.add('opacity-100');
-                document.getElementById('logout-content').classList.add('opacity-100', 'scale-100');
-            }, 10);
-        };
+  <script type="module">
+    import { db, auth } from "./js/firebase.js";
+    import { signOut } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
+    import { 
+        collection, query, orderBy, onSnapshot, doc, addDoc, deleteDoc, serverTimestamp 
+    } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
 
-        const closeLogoutModal = () => {
-            document.getElementById('logout-backdrop').classList.remove('opacity-100');
-            document.getElementById('logout-content').classList.remove('opacity-100', 'scale-100');
-            setTimeout(() => {
-                document.getElementById('logout-modal').classList.add('hidden');
-                document.body.classList.remove('modal-active');
-            }, 300);
-        };
+    // --- 1. Logout Handling (คุมโทนเดียวกับหน้าอื่น) ---
+    window.handleLogout = () => {
+        const logModal = document.getElementById('logout-modal');
+        if(!logModal) return;
+        logModal.classList.remove('hidden');
+        document.body.classList.add('modal-active');
+        setTimeout(() => {
+            document.getElementById('logout-backdrop').classList.add('opacity-100');
+            document.getElementById('logout-content').classList.add('opacity-100', 'scale-100');
+        }, 10);
+    };
 
-        document.getElementById('close-logout').onclick = closeLogoutModal;
-        document.getElementById('confirm-logout').onclick = async () => {
+    window.closeLogoutModal = () => {
+        document.getElementById('logout-backdrop').classList.remove('opacity-100');
+        document.getElementById('logout-content').classList.remove('opacity-100', 'scale-100');
+        setTimeout(() => {
+            document.getElementById('logout-modal').classList.add('hidden');
+            document.body.classList.remove('modal-active');
+        }, 300);
+    };
+
+    // Bind Logout Buttons
+    const confirmLogout = document.getElementById('confirm-logout');
+    if(confirmLogout) {
+        confirmLogout.onclick = async () => {
             await signOut(auth);
             window.location.replace("login.html");
         };
+    }
 
-        document.addEventListener('click', (e) => {
-            if (e.target.closest('#logout-btn') || e.target.closest('.logout-link')) {
-                e.preventDefault();
-                window.handleLogout();
+    // --- 2. Team Core Logic (Real-time) ---
+    function listenTeams() {
+        const q = query(collection(db, "teams"), orderBy("createdAt", "asc"));
+        onSnapshot(q, (snapshot) => {
+            const allTeams = snapshot.docs.map(d => ({ id: d.id, ...d.data() }));
+            const mainTeams = allTeams.filter(t => t.type === 'main');
+            const container = document.getElementById('team-display-container');
+            const parentSelect = document.getElementById('parent-team-select');
+
+            if(!container || !parentSelect) return;
+
+            // Update Select Option สำหรับเพิ่มทีมย่อย
+            parentSelect.innerHTML = '<option value="">-- เลือกทีมหลัก --</option>' + 
+                mainTeams.map(t => `<option value="${t.id}">${t.name}</option>`).join('');
+
+            if (mainTeams.length === 0) {
+                container.innerHTML = `
+                    <div class="col-span-full p-20 text-center text-slate-400 italic bg-white rounded-[3rem] border-2 border-dashed border-slate-100">
+                        ยังไม่มีข้อมูลทีมหลักในระบบ กรุณาเพิ่มทีมใหม่
+                    </div>`;
+                return;
             }
+
+            // Render Team Cards
+            container.innerHTML = mainTeams.map(main => {
+                const subs = allTeams.filter(t => t.parentId === main.id);
+                return `
+                    <div class="team-card bg-white rounded-[2.5rem] p-8 shadow-sm border border-slate-100 flex flex-col hover:shadow-md transition-all">
+                        <div class="flex justify-between items-start mb-6">
+                            <div class="w-14 h-14 bg-indigo-50 rounded-2xl flex items-center justify-center text-indigo-600 text-xl shadow-inner">
+                                <i class="fa-solid fa-users-rays"></i>
+                            </div>
+                            <button onclick="deleteTeam('${main.id}')" class="text-slate-300 hover:text-red-500 transition-all p-2 hover:bg-red-50 rounded-xl">
+                                <i class="fa-solid fa-trash-can"></i>
+                            </button>
+                        </div>
+                        <h3 class="text-2xl font-bold text-slate-800 mb-1">${main.name}</h3>
+                        <div class="flex items-center gap-2 mb-6">
+                            <span class="px-2.5 py-0.5 bg-slate-100 text-slate-500 rounded text-[9px] font-black uppercase tracking-widest">Main Unit</span>
+                            <span class="text-xs text-slate-400 font-medium">${subs.length} Sub-teams</span>
+                        </div>
+                        
+                        <div class="space-y-2 mt-auto">
+                            ${subs.map(sub => `
+                                <div class="flex justify-between items-center p-3.5 bg-slate-50/50 rounded-2xl border border-transparent hover:border-indigo-100 hover:bg-white transition-all">
+                                    <span class="text-sm font-semibold text-slate-600">${sub.name}</span>
+                                    <button onclick="deleteTeam('${sub.id}')" class="text-slate-300 hover:text-red-500 transition-all w-8 h-8 flex items-center justify-center rounded-lg hover:bg-red-50">
+                                        <i class="fa-solid fa-xmark text-xs"></i>
+                                    </button>
+                                </div>
+                            `).join('')}
+                            ${subs.length === 0 ? '<div class="text-[11px] text-slate-300 text-center py-4 border-2 border-dashed border-slate-50 rounded-2xl italic">ไม่มีทีมย่อยในสังกัด</div>' : ''}
+                        </div>
+                    </div>
+                `;
+            }).join('');
+        });
+    }
+
+    // --- 3. Window Globals (เพื่อให้ HTML เรียกใช้ได้) ---
+    window.toggleParentSelect = () => {
+        const type = document.getElementById('team-type').value;
+        const parentDiv = document.getElementById('parent-selection-div');
+        if(type === 'sub') parentDiv.classList.remove('hidden');
+        else parentDiv.classList.add('hidden');
+    };
+
+    window.openTeamModal = () => {
+        document.getElementById('teamModal').classList.remove('hidden');
+        document.getElementById('team-name').value = "";
+    };
+
+    window.closeTeamModal = () => document.getElementById('teamModal').classList.add('hidden');
+
+    window.saveTeam = async () => {
+        const name = document.getElementById('team-name').value.trim();
+        const type = document.getElementById('team-type').value;
+        const parentId = document.getElementById('parent-team-select').value;
+        
+        if (!name) return Swal.fire({ icon: 'warning', title: 'กรุณาระบุชื่อทีม' });
+        if (type === 'sub' && !parentId) return Swal.fire({ icon: 'warning', title: 'กรุณาเลือกทีมหลัก' });
+        
+        const btn = document.getElementById('save-team-btn');
+        btn.disabled = true;
+        btn.innerHTML = '<i class="fa-solid fa-circle-notch animate-spin mr-2"></i> กำลังบันทึก...';
+
+        try {
+            await addDoc(collection(db, "teams"), {
+                name, type, parentId: type === 'sub' ? parentId : null, createdAt: serverTimestamp()
+            });
+            window.closeTeamModal();
+            Swal.fire({ icon: 'success', title: 'บันทึกสำเร็จ', timer: 1500, showConfirmButton: false });
+        } catch(e) { 
+            Swal.fire({ icon: 'error', title: 'เกิดข้อผิดพลาด', text: e.message }); 
+        } finally {
+            btn.disabled = false;
+            btn.innerText = "บันทึกข้อมูล";
+        }
+    };
+
+    window.deleteTeam = async (id) => {
+        const result = await Swal.fire({
+            title: 'ยืนยันการลบทีม?',
+            text: "หากลบทีมหลัก ทีมย่อยจะได้รับผลกระทบด้วย",
+            icon: 'warning',
+            showCancelButton: true,
+            confirmButtonColor: '#ef4444',
+            confirmButtonText: 'ลบข้อมูล',
+            cancelButtonText: 'ยกเลิก',
+            customClass: { popup: 'rounded-[2.5rem]' }
         });
 
-        // --- Team Core Logic ---
-        function listenTeams() {
-            const q = query(collection(db, "teams"), orderBy("createdAt", "asc"));
-            onSnapshot(q, (snapshot) => {
-                const allTeams = snapshot.docs.map(d => ({ id: d.id, ...d.data() }));
-                const mainTeams = allTeams.filter(t => t.type === 'main');
-                const container = document.getElementById('team-display-container');
-                const parentSelect = document.getElementById('parent-team-select');
-
-                parentSelect.innerHTML = '<option value="">-- เลือกทีมหลัก --</option>' + 
-                    mainTeams.map(t => `<option value="${t.id}">${t.name}</option>`).join('');
-
-                if (mainTeams.length === 0) {
-                    container.innerHTML = '<div class="col-span-full p-20 text-center text-slate-400 italic bg-white rounded-[3rem] border-2 border-dashed border-slate-100">ยังไม่มีข้อมูลทีมหลักในระบบ กรุณาเพิ่มทีมใหม่</div>';
-                    return;
-                }
-
-                container.innerHTML = mainTeams.map(main => {
-                    const subs = allTeams.filter(t => t.parentId === main.id);
-                    return `
-                        <div class="team-card bg-white rounded-[2.5rem] p-8 shadow-sm border border-slate-100 flex flex-col">
-                            <div class="flex justify-between items-start mb-6">
-                                <div class="w-14 h-14 bg-indigo-50 rounded-2xl flex items-center justify-center text-indigo-600 text-xl shadow-inner">
-                                    <i class="fa-solid fa-users-rays"></i>
-                                </div>
-                                <button onclick="deleteTeam('${main.id}')" class="text-slate-200 hover:text-red-500 transition-all p-2 hover:bg-red-50 rounded-xl">
-                                    <i class="fa-solid fa-trash-can"></i>
-                                </button>
-                            </div>
-                            <h3 class="text-2xl font-bold text-slate-800 mb-1">${main.name}</h3>
-                            <div class="flex items-center gap-2 mb-6">
-                                <span class="px-2.5 py-0.5 bg-slate-100 text-slate-500 rounded text-[9px] font-black uppercase tracking-widest">Main Unit</span>
-                                <span class="text-xs text-slate-400 font-medium">${subs.length} Sub-teams</span>
-                            </div>
-                            
-                            <div class="space-y-2 mt-auto">
-                                ${subs.map(sub => `
-                                    <div class="flex justify-between items-center p-3.5 bg-slate-50/50 rounded-2xl group border border-transparent hover:border-indigo-100 hover:bg-white transition-all">
-                                        <span class="text-sm font-semibold text-slate-600">${sub.name}</span>
-                                        <button onclick="deleteTeam('${sub.id}')" class="opacity-0 group-hover:opacity-100 text-slate-300 hover:text-red-500 transition-all w-8 h-8 flex items-center justify-center rounded-lg hover:bg-red-50">
-                                            <i class="fa-solid fa-xmark text-xs"></i>
-                                        </button>
-                                    </div>
-                                `).join('')}
-                                ${subs.length === 0 ? '<div class="text-[11px] text-slate-300 text-center py-4 border-2 border-dashed border-slate-50 rounded-2xl italic">ไม่มีทีมย่อยในสังกัด</div>' : ''}
-                            </div>
-                        </div>
-                    `;
-                }).join('');
-            });
+        if (result.isConfirmed) {
+            await deleteDoc(doc(db, "teams", id));
+            Swal.fire({ icon: 'success', title: 'ลบสำเร็จ', timer: 1000, showConfirmButton: false });
         }
+    };
 
-        // --- Window Globals ---
-        window.toggleParentSelect = () => {
-            const type = document.getElementById('team-type').value;
-            const parentDiv = document.getElementById('parent-selection-div');
-            if(type === 'sub') {
-                parentDiv.classList.remove('hidden');
-            } else {
-                parentDiv.classList.add('hidden');
-            }
-        };
+    // เริ่มทำงาน
+    listenTeams();
 
-        window.openTeamModal = () => {
-            document.getElementById('teamModal').classList.remove('hidden');
-            document.getElementById('team-name').value = "";
-        };
-
-        window.closeTeamModal = () => document.getElementById('teamModal').classList.add('hidden');
-
-        window.saveTeam = async () => {
-            const name = document.getElementById('team-name').value.trim();
-            const type = document.getElementById('team-type').value;
-            const parentId = document.getElementById('parent-team-select').value;
-            
-            if (!name) return alert("กรุณาระบุชื่อทีม");
-            if (type === 'sub' && !parentId) return alert("กรุณาเลือกทีมหลักที่สังกัด");
-            
-            const btn = document.getElementById('save-team-btn');
-            btn.disabled = true;
-            btn.innerHTML = '<i class="fa-solid fa-circle-notch animate-spin mr-2"></i> กำลังบันทึก...';
-
-            try {
-                await addDoc(collection(db, "teams"), {
-                    name, type, parentId: type === 'sub' ? parentId : null, createdAt: serverTimestamp()
-                });
-                closeTeamModal();
-            } catch(e) { alert("Error: " + e.message); }
-            finally {
-                btn.disabled = false;
-                btn.innerText = "บันทึกข้อมูล";
-            }
-        };
-
-        window.deleteTeam = async (id) => {
-            if (confirm("ยืนยันการลบข้อมูลทีม? การลบทีมหลักอาจทำให้การแสดงผลทีมย่อยผิดพลาดได้")) {
-                await deleteDoc(doc(db, "teams", id));
-            }
-        };
-    </script>
+    // Event Listener สำหรับ Logout Link ทั่วไป
+    document.addEventListener('click', (e) => {
+        if (e.target.closest('#logout-btn') || e.target.closest('.logout-link')) {
+            e.preventDefault();
+            window.handleLogout();
+        }
+    });
+</script>
 <script src="./js/layout.js"></script>
 <script type="module" src="./js/sidebar-role.js"></script>
     <script type="module" src="firebase.js"></script>

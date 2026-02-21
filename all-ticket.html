@@ -43,15 +43,18 @@
                 <div class="overflow-x-auto">
                     <table class="w-full text-left border-collapse min-w-[800px]">
                         <thead>
-                            <tr class="bg-slate-50/50 border-b border-slate-100">
-                                <th class="p-6 text-[10px] font-black text-slate-400 uppercase tracking-widest">Internet No.</th>
-                                <th class="p-6 text-[10px] font-black text-slate-400 uppercase tracking-widest">Create Date</th>
-                                <th class="p-6 text-[10px] font-black text-slate-400 uppercase tracking-widest">Topic</th>
-                                <th class="p-6 text-[10px] font-black text-slate-400 uppercase tracking-widest text-center">Status</th>
-                                <th class="p-6 text-[10px] font-black text-slate-400 uppercase tracking-widest">Update Date</th>
-                                <th class="p-6 text-[10px] font-black text-slate-400 uppercase tracking-widest text-right">Action</th>
-                            </tr>
-                        </thead>
+    <tr class="bg-slate-50/50 border-b border-slate-100">
+        <th class="p-6 text-[10px] font-black text-slate-400 uppercase tracking-widest">Internet No.</th>
+        <th class="p-6 text-[10px] font-black text-slate-400 uppercase tracking-widest">Create Date</th>
+        <th class="p-6 text-[10px] font-black text-slate-400 uppercase tracking-widest">Topic</th>
+        <th class="p-6 text-[10px] font-black text-slate-400 uppercase tracking-widest text-center">SLA</th>
+        <th class="p-6 text-[10px] font-black text-slate-400 uppercase tracking-widest text-center">Status</th>
+        <th class="p-6 text-[10px] font-black text-slate-400 uppercase tracking-widest">Update Date</th>
+        <th class="p-6 text-[10px] font-black text-slate-400 uppercase tracking-widest text-emerald-600">Due Date</th>
+        <th class="p-6 text-[10px] font-black text-slate-400 uppercase tracking-widest">User</th>
+        <th class="p-6 text-[10px] font-black text-slate-400 uppercase tracking-widest text-right">Action</th>
+    </tr>
+</thead>
                         <tbody id="ticket-list" class="divide-y divide-slate-50 text-sm">
                             <tr><td colspan="6" class="p-20 text-center text-slate-300 animate-pulse font-medium">กำลังโหลดใบงาน...</td></tr>
                         </tbody>
@@ -123,127 +126,162 @@
     </div>
 
     <script type="module">
-        import { db, auth } from "./js/firebase.js";
-        import { collection, query, where, orderBy, onSnapshot, getDoc, doc } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
-        import { onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
+    import { db, auth } from "./js/firebase.js";
+    import { collection, query, where, orderBy, onSnapshot, getDoc, doc } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+    import { onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
 
-        let currentTickets = [];
-        let unsubscribe = null;
+    let currentTickets = [];
+    let unsubscribe = null;
 
-        // ฟังก์ชันจัด Format วันที่สวยๆ "วดป เวลา"
-        const formatDateTime = (ts) => {
-            if (!ts) return '-';
-            const date = ts.toDate ? ts.toDate() : new Date(ts);
-            return date.toLocaleString('th-TH', {
-                year: 'numeric', month: 'short', day: 'numeric',
-                hour: '2-digit', minute: '2-digit'
-            });
-        };
+    // --- 1. ฟังก์ชันคำนวณ Due Date (วันเวลาทำการ 08:30-17:30 จ-ศ) ---
+    function calculateDueDate(startDate, slaHours) {
+        if (!startDate || !slaHours) return null;
+        let date = startDate.toDate ? startDate.toDate() : new Date(startDate);
+        let remainingMinutes = parseFloat(slaHours) * 60;
+        
+        // วนลูปเพิ่มทีละนาทีจนกว่าจะหมดชั่วโมง SLA
+        while (remainingMinutes > 0) {
+            date.setMinutes(date.getMinutes() + 1);
+            const day = date.getDay(); // 0=Sun, 6=Sat
+            const hour = date.getHours();
+            const min = date.getMinutes();
+            const timeVal = hour + (min / 60);
 
-        function formatAdminTimeline(note) {
-            if (!note) return '<p class="text-slate-400 italic text-xs p-2">รอดำเนินการ...</p>';
-            const parts = note.split(/(\[\d{2}\/\d{2}\/\d{2}\s\d{2}:\d{2}\])/g);
-            let entries = [];
-            for (let i = 1; i < parts.length; i += 2) {
-                entries.push({ timestamp: parts[i], content: parts[i + 1]?.trim() || "" });
+            // เช็คว่าอยู่ในเวลาทำการหรือไม่ (จ-ศ และ 08:30-17:30)
+            if (day !== 0 && day !== 6 && timeVal > 8.5 && timeVal <= 17.5) {
+                remainingMinutes--;
             }
-            if (entries.length === 0) return `<p class="text-xs p-2">${note}</p>`;
-            return entries.reverse().map(item => `
-                <div class="relative pl-6 pb-4 border-l border-emerald-200 ml-2">
-                    <div class="absolute -left-[5px] top-1 w-2.5 h-2.5 bg-emerald-500 rounded-full"></div>
-                    <div class="bg-white p-3 rounded-xl border border-slate-100 shadow-sm">
-                        <span class="text-[9px] font-bold text-emerald-600 block mb-1">${item.timestamp}</span>
-                        <p class="text-xs text-slate-700">${item.content}</p>
-                    </div>
+        }
+        return date;
+    }
+
+    const formatDateTime = (ts) => {
+        if (!ts) return '-';
+        const date = ts instanceof Date ? ts : (ts.toDate ? ts.toDate() : new Date(ts));
+        return date.toLocaleString('th-TH', {
+            year: '2-digit', month: '2-digit', day: '2-digit',
+            hour: '2-digit', minute: '2-digit'
+        });
+    };
+
+    function formatAdminTimeline(note) {
+        if (!note) return '<p class="text-slate-400 italic text-xs p-2">รอดำเนินการ...</p>';
+        const parts = note.split(/(\[\d{2}\/\d{2}\/\d{2}\s\d{2}:\d{2}\])/g);
+        let entries = [];
+        for (let i = 1; i < parts.length; i += 2) {
+            entries.push({ timestamp: parts[i], content: parts[i + 1]?.trim() || "" });
+        }
+        if (entries.length === 0) return `<p class="text-xs p-2">${note}</p>`;
+        return entries.reverse().map(item => `
+            <div class="relative pl-6 pb-4 border-l border-emerald-200 ml-2">
+                <div class="absolute -left-[5px] top-1 w-2.5 h-2.5 bg-emerald-500 rounded-full shadow-sm"></div>
+                <div class="bg-white p-3 rounded-xl border border-slate-100 shadow-sm">
+                    <span class="text-[9px] font-black text-emerald-600 block mb-1">${item.timestamp}</span>
+                    <p class="text-[12px] text-slate-700 leading-relaxed font-medium">${item.content}</p>
                 </div>
-            `).join('');
-        }
+            </div>
+        `).join('');
+    }
 
-        window.closeModal = () => {
-            document.getElementById('detail-modal').classList.add('hidden');
-            document.body.style.overflow = 'auto';
-        };
+    window.closeModal = () => {
+        document.getElementById('detail-modal').classList.add('hidden');
+        document.body.style.overflow = 'auto';
+    };
 
-        window.viewDetail = async (id) => {
-            try {
-                const docSnap = await getDoc(doc(db, "tickets", id));
-                if (docSnap.exists()) {
-                    const t = docSnap.data();
-                    document.getElementById('det-topic').innerText = t.topic || '-';
-                    document.getElementById('det-user').innerText = t.owner || '-';
-                    document.getElementById('det-id-number').innerText = t.id_number || t.internetNo || '-';
-                    document.getElementById('det-detail').innerText = t.detail || '-';
-                    document.getElementById('det-admin-name').innerText = t.adminName || 'รอมอบหมาย';
-                    document.getElementById('det-created-at').innerText = formatDateTime(t.createdAt);
-                    document.getElementById('det-closed-at').innerText = formatDateTime(t.updatedAt);
-                    document.getElementById('det-admin-remark').innerHTML = formatAdminTimeline(t.adminNote);
-                    document.getElementById('det-modal-id').innerText = `Ticket ID: ${id}`;
-                    
-                    const badge = document.getElementById('det-status-badge');
-                    const status = t.status || 'Pending';
-                    badge.innerText = status;
-                    badge.className = "px-3 py-1 rounded-full text-[10px] font-black uppercase inline-block mt-1 " + 
-                        (status === 'Success' ? 'bg-emerald-100 text-emerald-700' : 'bg-slate-100 text-slate-600');
-                    
-                    document.getElementById('detail-modal').classList.remove('hidden');
-                    document.body.style.overflow = 'hidden';
-                }
-            } catch (e) { console.error(e); }
-        };
-
-        function initTicketListener(email) {
-            if (unsubscribe) unsubscribe();
-            const sortOrderEl = document.getElementById('sortOrder');
-            const [field, direction] = sortOrderEl.value.split('-');
-            const q = query(collection(db, "tickets"), where("ownerEmail", "==", email), orderBy(field, direction));
-            unsubscribe = onSnapshot(q, (snapshot) => {
-                currentTickets = snapshot.docs.map(d => ({ id: d.id, ...d.data() }));
-                renderTickets(currentTickets);
-            });
-        }
-
-        function renderTickets(tickets) {
-            const list = document.getElementById('ticket-list');
-            const searchTerm = document.getElementById('searchInput')?.value.toLowerCase() || "";
-            const filtered = tickets.filter(t => 
-                String(t.id_number || t.internetNo).toLowerCase().includes(searchTerm) || 
-                String(t.topic).toLowerCase().includes(searchTerm)
-            );
-
-            if (filtered.length === 0) {
-                list.innerHTML = `<tr><td colspan="6" class="p-10 text-center text-slate-400">ไม่พบข้อมูล</td></tr>`;
-                return;
+    window.viewDetail = async (id) => {
+        try {
+            const docSnap = await getDoc(doc(db, "tickets", id));
+            if (docSnap.exists()) {
+                const t = docSnap.data();
+                document.getElementById('det-topic').innerText = t.topic || '-';
+                document.getElementById('det-user').innerText = t.owner || '-';
+                document.getElementById('det-id-number').innerText = t.id_number || t.internetNo || '-';
+                document.getElementById('det-detail').innerText = t.detail || '-';
+                document.getElementById('det-admin-name').innerText = t.adminName || 'รอมอบหมาย';
+                document.getElementById('det-created-at').innerText = formatDateTime(t.createdAt);
+                document.getElementById('det-closed-at').innerText = formatDateTime(t.updatedAt);
+                document.getElementById('det-admin-remark').innerHTML = formatAdminTimeline(t.adminNote);
+                document.getElementById('det-modal-id').innerText = `Ticket ID: ${id}`;
+                
+                const badge = document.getElementById('det-status-badge');
+                const status = t.status || 'Pending';
+                badge.innerText = status;
+                badge.className = "px-3 py-1 rounded-full text-[10px] font-black uppercase inline-block mt-1 " + 
+                    (status === 'Success' ? 'bg-emerald-100 text-emerald-700' : 'bg-slate-100 text-slate-600');
+                
+                document.getElementById('detail-modal').classList.remove('hidden');
+                document.body.style.overflow = 'hidden';
             }
+        } catch (e) { console.error("Error modal:", e); }
+    };
 
-            list.innerHTML = filtered.map(t => `
+    function initTicketListener(email) {
+        if (unsubscribe) unsubscribe();
+        const sortOrderEl = document.getElementById('sortOrder');
+        const [field, direction] = sortOrderEl.value.split('-');
+        const q = query(collection(db, "tickets"), where("ownerEmail", "==", email), orderBy(field, direction));
+        unsubscribe = onSnapshot(q, (snapshot) => {
+            currentTickets = snapshot.docs.map(d => ({ id: d.id, ...d.data() }));
+            renderTickets(currentTickets);
+        });
+    }
+
+    function renderTickets(tickets) {
+        const list = document.getElementById('ticket-list');
+        const searchTerm = document.getElementById('searchInput')?.value.toLowerCase() || "";
+        const filtered = tickets.filter(t => 
+            String(t.id_number || t.internetNo).toLowerCase().includes(searchTerm) || 
+            String(t.topic).toLowerCase().includes(searchTerm) ||
+            String(t.owner).toLowerCase().includes(searchTerm)
+        );
+
+        if (filtered.length === 0) {
+            list.innerHTML = `<tr><td colspan="9" class="p-10 text-center text-slate-400">ไม่พบข้อมูล</td></tr>`;
+            return;
+        }
+
+        list.innerHTML = filtered.map(t => {
+            const dueDate = calculateDueDate(t.createdAt, t.sla || 0);
+            const status = t.status || 'Pending';
+            const isOverdue = dueDate && new Date() > dueDate && status !== 'Success';
+
+            return `
                 <tr class="hover:bg-slate-50 transition-all border-b border-slate-50">
                     <td class="p-6 font-bold text-slate-700">${t.id_number || t.internetNo || '-'}</td>
                     <td class="p-6 text-slate-400 text-[11px]">${formatDateTime(t.createdAt)}</td>
                     <td class="p-6">
-                        <div class="text-slate-700 font-medium">${t.topic || '-'}</div>
+                        <div class="text-slate-700 font-medium line-clamp-1">${t.topic || '-'}</div>
                     </td>
+                    <td class="p-6 text-center font-bold text-slate-500">${t.sla ? t.sla + 'h' : '-'}</td>
                     <td class="p-6 text-center">
-                        <span class="px-3 py-1 rounded-full text-[10px] font-black uppercase ${t.status === 'Success' ? 'bg-emerald-100 text-emerald-700' : 'bg-slate-100 text-slate-600'}">${t.status || 'Pending'}</span>
+                        <span class="px-3 py-1 rounded-full text-[10px] font-black uppercase ${status === 'Success' ? 'bg-emerald-100 text-emerald-700' : 'bg-slate-100 text-slate-600'}">${status}</span>
                     </td>
                     <td class="p-6 text-slate-400 text-[11px]">${formatDateTime(t.updatedAt)}</td>
+                    <td class="p-6">
+                        <span class="text-[11px] font-bold ${isOverdue ? 'text-red-500 animate-pulse' : 'text-emerald-600'}">
+                            ${dueDate ? formatDateTime(dueDate) : '-'}
+                        </span>
+                    </td>
+                    <td class="p-6 text-[11px] font-bold text-slate-600">${t.owner || '-'}</td>
                     <td class="p-6 text-right">
-                        <button onclick="viewDetail('${t.id}')" class="bg-white border border-slate-200 px-4 py-2 rounded-xl text-xs font-black shadow-sm">ดูข้อมูล</button>
+                        <button onclick="viewDetail('${t.id}')" class="bg-white border border-slate-200 px-4 py-2 rounded-xl text-xs font-black shadow-sm hover:border-emerald-500 transition-all">ดูข้อมูล</button>
                     </td>
                 </tr>
-            `).join('');
-        }
+            `;
+        }).join('');
+    }
 
-        onAuthStateChanged(auth, (user) => {
-            if (!user) return window.location.replace("login.html");
-            document.getElementById('userNameHeader').innerText = `User: ${user.email}`;
-            initTicketListener(user.email);
-        });
+    onAuthStateChanged(auth, (user) => {
+        if (!user) return window.location.replace("login.html");
+        document.getElementById('userNameHeader').innerText = `User: ${user.email}`;
+        initTicketListener(user.email);
+    });
 
-        document.getElementById('searchInput')?.addEventListener('input', () => renderTickets(currentTickets));
-        document.getElementById('sortOrder')?.addEventListener('change', () => {
-            if (auth.currentUser) initTicketListener(auth.currentUser.email);
-        });
-    </script>
+    document.getElementById('searchInput')?.addEventListener('input', () => renderTickets(currentTickets));
+    document.getElementById('sortOrder')?.addEventListener('change', () => {
+        if (auth.currentUser) initTicketListener(auth.currentUser.email);
+    });
+</script>
     <script src="./js/layout.js"></script>
 </body>
 </html>

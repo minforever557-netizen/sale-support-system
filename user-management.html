@@ -112,102 +112,144 @@ class="w-64 shrink-0 h-full bg-white border-r border-slate-200">
     </div>
 
   <script type="module">
+    // นำเข้าเฉพาะที่จำเป็น และต้องระบุเส้นทางให้ถูกต้อง
     import { db, auth } from "./js/firebase.js";
     import { 
-        collection, getDoc, getDocs, doc, updateDoc, onSnapshot 
+        collection, query, where, orderBy, onSnapshot, getDoc, getDocs, doc, updateDoc, FieldPath 
     } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+    import { onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
 
     let allTeams = [];
 
-    // --- 1. ดึงข้อมูลทีมทั้งหมดเก็บไว้ก่อน ---
+    // --- 1. ฟังก์ชันดึงข้อมูลทีม (ใช้ getDocs) ---
     async function fetchTeams() {
         try {
             const snap = await getDocs(collection(db, "teams"));
             allTeams = snap.docs.map(d => ({ id: d.id, ...d.data() }));
-            
             const mainSelect = document.getElementById('edit-main-team');
             if (mainSelect) {
                 mainSelect.innerHTML = '<option value="">-- เลือกทีมหลัก --</option>';
-                // กรองเฉพาะ type: "main" ตาม Database ของนาย
-                allTeams.filter(t => t.type === "main").forEach(t => {
-                    mainSelect.add(new Option(t.name, t.id));
+                allTeams.filter(t => t.type === "main").forEach(t => { 
+                    mainSelect.add(new Option(t.name, t.id)); 
                 });
             }
-        } catch (e) { console.error("Teams Load Error:", e); }
+        } catch (error) {
+            console.error("Fetch Teams Error:", error);
+        }
     }
 
-    // --- 2. ฟังก์ชัน Render ทีมย่อย (Bind เข้า window แก้ปัญหา Error) ---
-    window.renderSubTeams = (parentId, currentSubName = null) => {
-        const subSelect = document.getElementById('edit-sub-team');
-        if (!subSelect) return;
+    // --- 2. ฟังก์ชันดึงข้อมูลพนักงานแบบ Real-time (ใช้ onSnapshot) ---
+    function listenToUsers() {
+        const container = document.getElementById('user-list');
+        
+        onSnapshot(collection(db, "admin"), (snapshot) => {
+            if (snapshot.empty) {
+                container.innerHTML = `<div class="col-span-full py-20 text-center text-slate-400">ไม่พบข้อมูลพนักงานในระบบ</div>`;
+                return;
+            }
 
-        // กรองเฉพาะทีมที่มี type: "sub" และ parentId ตรงกับทีมหลักที่เลือก
-        const subs = allTeams.filter(t => t.type === "sub" && t.parentId === parentId);
-        
-        subSelect.innerHTML = '<option value="">-- ไม่มีทีมย่อย --</option>';
-        subSelect.disabled = (subs.length === 0);
-        
-        subs.forEach(t => {
-            const opt = new Option(t.name, t.name); // เก็บ value เป็นชื่อตามฟิลด์ Sub Team เดิม
-            if (t.name === currentSubName) opt.selected = true;
-            subSelect.add(opt);
+            container.innerHTML = snapshot.docs.map(docSnap => {
+                const u = docSnap.data();
+                const initial = (u.name || "U")[0];
+                const roleColor = u.role === 'admin' ? 'bg-indigo-100 text-indigo-600' : 'bg-slate-100 text-slate-600';
+                
+                return `
+                    <div class="user-card bg-white p-6 rounded-[2.5rem] flex flex-col items-center border border-slate-100 hover:shadow-xl hover:shadow-slate-200/50 transition-all duration-300">
+                        <div class="w-20 h-20 ${roleColor} rounded-[1.8rem] flex items-center justify-center text-2xl font-bold mb-4 shadow-inner">
+                            ${initial}
+                        </div>
+                        <h3 class="font-bold text-slate-800 text-lg">${u.name || 'ไม่ระบุชื่อ'}</h3>
+                        <span class="px-3 py-1 bg-slate-50 text-[10px] text-slate-400 rounded-full uppercase tracking-tighter font-black mt-1 mb-6 border border-slate-100">
+                            ${u.role || 'user'}
+                        </span>
+                        
+                        <div class="w-full text-[13px] space-y-3 mb-6 px-2">
+                            <div class="flex justify-between items-center pb-2 border-b border-slate-50">
+                                <span class="text-slate-400 font-medium">Team</span>
+                                <span class="text-slate-700 font-bold">${u.Team || '-'}</span>
+                            </div>
+                            <div class="flex justify-between items-center pb-2 border-b border-slate-50">
+                                <span class="text-slate-400 font-medium">Phone</span>
+                                <span class="text-slate-700 font-bold">${u["Phone No."] || u.phone || '-'}</span>
+                            </div>
+                        </div>
+                        
+                        <button onclick="openEditModal('${docSnap.id}')" class="w-full py-4 bg-slate-900 text-white rounded-2xl text-[12px] font-bold hover:bg-indigo-600 transition shadow-lg active:scale-95">
+                            <i class="fa-solid fa-pen-to-square mr-2"></i>แก้ไขข้อมูล
+                        </button>
+                    </div>
+                `;
+            }).join('');
+        }, (error) => {
+            console.error("Listen Users Error:", error);
+            container.innerHTML = `<div class="col-span-full py-20 text-center text-red-400">เกิดข้อผิดพลาดในการโหลดข้อมูล</div>`;
         });
-    };
+    }
 
-    // --- 3. ฟังก์ชันเปิด Modal แก้ไข ---
+    // --- 3. ฟังก์ชันจัดการ Modal (ผูกกับ window เพื่อให้เรียกจาก HTML ได้) ---
     window.openEditModal = async (uid) => {
         try {
             const snap = await getDoc(doc(db, "admin", uid));
             if (!snap.exists()) return;
             const u = snap.data();
 
-            // Set ข้อมูลทั่วไป
             document.getElementById('edit-uid').value = uid;
             document.getElementById('edit-name').value = u.name || "";
             document.getElementById('edit-username').value = u.username || "";
             document.getElementById('edit-email').value = u.email || "";
-            document.getElementById('edit-phone').value = u["Phone No."] || "";
+            document.getElementById('edit-phone').value = u["Phone No."] || u.phone || "";
             document.getElementById('edit-role').value = u.role || "user";
-
-            // หา ID ของทีมหลักจากชื่อที่เก็บใน User (ฟิลด์ Team)
+            
             const mainTeam = allTeams.find(t => t.name === u.Team && t.type === "main");
-            const mainSelect = document.getElementById('edit-main-team');
-
             if (mainTeam) {
-                mainSelect.value = mainTeam.id;
-                window.renderSubTeams(mainTeam.id, u["Sub Team"]);
+                document.getElementById('edit-main-team').value = mainTeam.id;
+                renderSubTeams(mainTeam.id, u["Sub Team"]);
             } else {
-                mainSelect.value = "";
-                window.renderSubTeams(null);
+                document.getElementById('edit-main-team').value = "";
+                renderSubTeams(null);
             }
-
             document.getElementById('editModal').classList.remove('hidden');
             document.body.style.overflow = 'hidden';
-        } catch (e) {
-            Swal.fire('Error', 'ไม่สามารถโหลดข้อมูลได้: ' + e.message, 'error');
+        } catch (error) {
+            console.error("Open Modal Error:", error);
         }
     };
 
-    // --- 4. Event เมื่อเปลี่ยนทีมหลัก ---
-    const mainTeamEl = document.getElementById('edit-main-team');
-    if (mainTeamEl) {
-        mainTeamEl.onchange = (e) => window.renderSubTeams(e.target.value);
+    window.closeModal = () => {
+        document.getElementById('editModal').classList.add('hidden');
+        document.body.style.overflow = 'auto';
     }
 
-    // --- 5. บันทึกข้อมูล ---
+    // --- 4. ฟังก์ชันจัดการทีมย่อย ---
+    document.getElementById('edit-main-team').onchange = (e) => renderSubTeams(e.target.value);
+
+    function renderSubTeams(parentId, currentSub = null) {
+        const subSelect = document.getElementById('edit-sub-team');
+        const subs = allTeams.filter(t => t.type === "sub" && t.parentId === parentId);
+        subSelect.innerHTML = '<option value="">-- ไม่มีทีมย่อย --</option>';
+        subSelect.disabled = (subs.length === 0);
+        subs.forEach(t => {
+            const opt = new Option(t.name, t.name);
+            if (t.name === currentSub) opt.selected = true;
+            subSelect.add(opt);
+        });
+    }
+
+    // --- 5. ฟังก์ชันบันทึกข้อมูล ---
     document.getElementById('edit-user-form').onsubmit = async (e) => {
         e.preventDefault();
-        const btn = document.getElementById('saveBtn');
         const uid = document.getElementById('edit-uid').value;
+        const btn = document.getElementById('saveBtn');
         
         btn.disabled = true;
-        btn.innerHTML = `<i class="fa-solid fa-circle-notch animate-spin mr-2"></i>กำลังบันทึก...`;
+        btn.innerHTML = `<i class="fa-solid fa-circle-notch animate-spin"></i> กำลังบันทึก...`;
 
         try {
             const mainSelect = document.getElementById('edit-main-team');
             const mainTeamName = mainSelect.options[mainSelect.selectedIndex].text;
-            
-            await updateDoc(doc(db, "admin", uid), {
+            const adminRef = doc(db, "admin", uid);
+
+            await updateDoc(adminRef, {
                 "name": document.getElementById('edit-name').value.trim(),
                 "username": document.getElementById('edit-username').value.trim(),
                 "email": document.getElementById('edit-email').value.trim(),
@@ -217,18 +259,26 @@ class="w-64 shrink-0 h-full bg-white border-r border-slate-200">
                 "Phone No.": document.getElementById('edit-phone').value.trim()
             });
 
-            window.closeModal();
-            Swal.fire({ icon: 'success', title: 'สำเร็จ', text: 'ปรับปรุงข้อมูลเรียบร้อย', timer: 1500 });
-        } catch (err) {
-            Swal.fire('Error', err.message, 'error');
-        } finally {
-            btn.disabled = false;
-            btn.innerHTML = `<i class="fa-solid fa-floppy-disk mr-2"></i>บันทึกข้อมูลพนักงาน`;
+            closeModal();
+            Swal.fire({ icon: 'success', title: 'สำเร็จ', text: 'อัปเดตข้อมูลพนักงานเรียบร้อยแล้ว', timer: 2000 });
+        } catch (err) { 
+            console.error(err);
+            Swal.fire({ icon: 'error', title: 'เกิดข้อผิดพลาด', text: err.message });
+        } finally { 
+            btn.disabled = false; 
+            btn.innerHTML = `<i class="fa-solid fa-floppy-disk"></i> บันทึกข้อมูลพนักงาน`; 
         }
     };
 
-    // เริ่มโหลดข้อมูล
-    fetchTeams();
+    // --- 6. เริ่มต้นทำงานเมื่อ Auth เปลี่ยนสถานะ ---
+    onAuthStateChanged(auth, (user) => {
+        if (user) {
+            fetchTeams();
+            listenToUsers();
+        } else {
+            window.location.replace("login.html");
+        }
+    });
 </script>
             <script src="./js/layout.js"></script>
 <script type="module" src="./js/sidebar-role.js"></script>

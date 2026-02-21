@@ -245,28 +245,29 @@ class="w-64 shrink-0 h-full bg-white border-r border-slate-200">
     };
 
     // ฟังก์ชันบันทึกข้อมูลพร้อม Animation และอัปเดตสถานะเรื่อยๆ
-    window.saveAdminAction = async () => {
-        const note = document.getElementById('admin-note-input').value;
-        const btn = document.getElementById('save-btn');
-        const modalContent = document.querySelector('#adminActionModal > div');
+   // แก้ไขเฉพาะส่วนในฟังก์ชัน saveAdminAction
+window.saveAdminAction = async () => {
+    const rawNote = document.getElementById('admin-note-input').value; // ข้อความเดิมที่ Admin พิมพ์
+    const btn = document.getElementById('save-btn');
+    
+    if (!rawNote) {
+        alert("กรุณาระบุรายละเอียดการดำเนินงาน");
+        return;
+    }
 
-        if (!note) {
-            alert("กรุณาระบุรายละเอียดการดำเนินงานหรือความคืบหน้า");
-            return;
-        }
+    // ✨ Stamp เวลาปัจจุบันลงไปข้างหน้า (เช่น [14:30] ข้อความของคุณ)
+    const now = new Date();
+    const timeStamp = `[${now.getHours().toString().padStart(2, '0')}:${now.getMinutes().toString().padStart(2, '0')}] `;
+    const noteWithTime = timeStamp + rawNote;
 
-        if (!window.currentId) return;
-
-        btn.disabled = true;
-        btn.innerHTML = `<i class="fas fa-spinner fa-spin mr-2"></i> กำลังอัปเดต...`;
-
-        try {
-            const ticketRef = doc(db, "tickets", window.currentId);
-            const updateData = {
-                status: window.selectedStatus,
-                adminNote: note,
-                updatedAt: serverTimestamp() // บันทึกเวลาที่อัปเดตล่าสุดเสมอ
-            };
+    try {
+        const ticketRef = doc(db, "tickets", window.currentId);
+        const updateData = {
+            status: window.selectedStatus,
+            adminNote: noteWithTime, // ใช้ตัวแปรที่มีการ Stamp เวลาแล้ว
+            updatedAt: serverTimestamp()
+        };
+        // ... (Logic การบันทึกที่เหลือเหมือนเดิม)
 
             // หากสถานะเปลี่ยนเป็นจบงาน
             if (window.selectedStatus === 'Success' || window.selectedStatus === 'Reject') {

@@ -92,7 +92,7 @@ class="w-64 shrink-0 h-full bg-white border-r border-slate-200">
         </div>
     </div>
   <script type="module">
-    // 1. แก้ไข Path ของ firebase.js ให้ถูกต้อง (ลองตรวจสอบว่าไฟล์อยู่ที่ ./js/ หรือ ../js/)
+    // 1. ใช้ Relative Path ให้ถูกหลัก GitHub Pages
     import { db, auth } from "./js/firebase.js"; 
     import { 
         collection, query, orderBy, onSnapshot, getDoc, doc, updateDoc, serverTimestamp 
@@ -102,7 +102,7 @@ class="w-64 shrink-0 h-full bg-white border-r border-slate-200">
     let currentTickets = [];
     let unsubscribe = null;
 
-    // --- ฟังก์ชัน SLA ---
+    // --- ฟังก์ชันคำนวณ SLA ---
     function getBusinessDueDate(startDate, hoursToAdd) {
         let date = new Date(startDate);
         let addedHours = 0;
@@ -113,20 +113,15 @@ class="w-64 shrink-0 h-full bg-white border-r border-slate-200">
         return date;
     }
 
-    // --- ดึงข้อมูลจาก Firebase ---
+    // --- ดึงข้อมูล Real-time ---
     function initTicketsListener() {
         if (unsubscribe) unsubscribe();
-        // ตรวจสอบว่า db โหลดมาได้จริงหรือไม่
-        if (!db) {
-            console.error("Firebase DB not found. Check your firebase.js path.");
-            return;
-        }
         const q = query(collection(db, "tickets"), orderBy("createdAt", "asc"));
         unsubscribe = onSnapshot(q, (snapshot) => {
             currentTickets = snapshot.docs.map(d => ({ id: d.id, ...d.data() }));
             renderAdminTickets(currentTickets);
         }, (error) => {
-            console.error("Snapshot error:", error);
+            console.error("Firebase Error:", error);
         });
     }
 
@@ -144,17 +139,18 @@ class="w-64 shrink-0 h-full bg-white border-r border-slate-200">
 
         if (filtered.length === 0) {
             list.innerHTML = '<tr><td colspan="6" class="p-10 text-center text-slate-400">ไม่พบข้อมูลใบงาน</td></tr>';
-            document.getElementById('no-data-msg')?.classList.remove('hidden');
             return;
         }
-        document.getElementById('no-data-msg')?.classList.add('hidden');
 
         list.innerHTML = filtered.map(t => {
             const start = t.createdAt ? t.createdAt.toDate() : new Date();
             const due = getBusinessDueDate(start, t.sla_hours || 0);
             
-            // ✨ ป้องกัน SyntaxError: ล้างค่าตัวอักษรพิเศษที่ทำให้ JavaScript พัง
-            const cleanNote = (t.adminNote || "").replace(/['"\n\r]/g, " ").trim();
+            // 🔥 [FIX] ป้องกัน SyntaxError: ลบอักขระที่ทำให้ JS พัง (การขึ้นบรรทัดใหม่ และ Single Quote)
+            const cleanNoteForJS = (t.adminNote || "")
+                .replace(/[']/g, "\\'")     // ป้องกัน Single Quote
+                .replace(/[\r\n]+/g, " ")   // ป้องกันการขึ้นบรรทัดใหม่ (Unescaped line break)
+                .trim();
             
             let statusColor = t.status === 'On Progress' ? 'bg-orange-100 text-orange-600' : 'bg-indigo-100 text-indigo-600';
             if(t.status === 'Pending') statusColor = 'bg-blue-100 text-blue-600 animate-pulse';
@@ -172,7 +168,7 @@ class="w-64 shrink-0 h-full bg-white border-r border-slate-200">
                     </td>
                     <td class="p-6 text-[13px] font-bold text-slate-600">${due.toLocaleString('th-TH')}</td>
                     <td class="p-6 text-right">
-                        <button onclick="openManageModal('${t.id}', '${t.status}', '${cleanNote}')" 
+                        <button onclick="openManageModal('${t.id}', '${t.status}', '${cleanNoteForJS}')" 
                                 class="bg-[#5c56f1] text-white px-6 py-2.5 rounded-xl text-xs font-bold shadow-lg hover:bg-indigo-700 transition active:scale-95">
                             จัดการ
                         </button>
@@ -182,15 +178,54 @@ class="w-64 shrink-0 h-full bg-white border-r border-slate-200">
         }).join('');
     }
 
-    // --- ระบบบันทึก ---
+    // --- ระบบ Modal ---
+    window.openManageModal = (id, status, note) => {
+        const modal = document.getElementById('adminActionModal');
+        if (modal) {
+            modal.classList.remove('hidden');
+            // คืนค่าความชัดเจนให้ Modal (แก้ปัญหาหายตัว)
+            const box = modal.querySelector('div');
+            if (box) box.style.opacity = "1";
+
+            document.getElementById('admin-note-input').value = note || "";
+            window.currentId = id;
+            
+            // Reset ปุ่มบันทึก
+            const btn = document.getElementById('save-btn');
+            if(btn) {
+                btn.disabled = false;
+                btn.innerHTML = "บันทึกข้อมูล";
+                btn.className = "flex-1 bg-[#5c56f1] text-white py-4 rounded-2xl font-black text-sm shadow-xl";
+            }
+
+            const initialStatus = (status === 'Pending' || status === 'Open') ? 'On Progress' : status;
+            window.updateSelectedStatus(initialStatus);
+        }
+    };
+
+    window.closeAdminModal = () => {
+        document.getElementById('adminActionModal').classList.add('hidden');
+    };
+
+    window.updateSelectedStatus = (st) => {
+        window.selectedStatus = st;
+        document.querySelectorAll('.status-btn').forEach(btn => {
+            btn.classList.remove('ring-4', 'ring-indigo-200', 'border-indigo-500', 'bg-indigo-50');
+        });
+        const activeBtn = document.getElementById(`btn-status-${st}`);
+        if (activeBtn) activeBtn.classList.add('ring-4', 'ring-indigo-200', 'border-indigo-500', 'bg-indigo-50');
+    };
+
+    // --- บันทึกข้อมูล ---
     window.saveAdminAction = async () => {
         const noteInput = document.getElementById('admin-note-input');
         const btn = document.getElementById('save-btn');
         if (!noteInput.value.trim()) return alert("กรุณาระบุรายละเอียด");
 
         btn.disabled = true;
-        btn.innerHTML = `<i class="fas fa-spinner fa-spin mr-2"></i> บันทึก...`;
+        btn.innerHTML = `<i class="fas fa-spinner fa-spin mr-2"></i>...`;
 
+        // Stamp วันที่/เวลา
         const now = new Date();
         const d = now.getDate().toString().padStart(2, '0');
         const mo = (now.getMonth() + 1).toString().padStart(2, '0');
@@ -216,7 +251,6 @@ class="w-64 shrink-0 h-full bg-white border-r border-slate-200">
         } catch (error) {
             alert("Error: " + error.message);
             btn.disabled = false;
-            btn.innerHTML = "บันทึกข้อมูล";
         }
     };
 

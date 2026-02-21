@@ -126,11 +126,15 @@ class="w-64 shrink-0 h-full bg-white border-r border-slate-200">
         </div>
     </div>
 
-   <script type="module">
-    // 1. นำเข้า Firebase และฟังก์ชันที่จำเป็น
-    import { auth, db, doc, getDoc, collection, onSnapshot, signOut, onAuthStateChanged } from "./js/firebase.js";
+<script type="module">
+    // 1. นำเข้า Firebase โดยตรงจาก CDN (วิธีเดียวกับหน้า Team/User Management ที่ใช้งานได้)
+    import { db, auth } from "./js/firebase.js";
+    import { signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
+    import { 
+        collection, onSnapshot, doc, getDoc, query, orderBy 
+    } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
 
-    // --- คง Logic เดิมของนายไว้ 100% ---
+    // --- คง Logic Dashboard เดิมของนายไว้ ---
     let rawTickets = [];
     let filteredData = [];
     let chart = null;
@@ -141,7 +145,20 @@ class="w-64 shrink-0 h-full bg-white border-r border-slate-200">
         Chart.register(ChartDataLabels);
     }
 
-    // --- 1. Layout Engine (คงเดิม) ---
+    // --- 1. Auth & Layout Engine ---
+    onAuthStateChanged(auth, async (user) => {
+        if (user) {
+            // ดึงข้อมูล Admin เพื่อแสดงชื่อใน Topbar
+            const adminDoc = await getDoc(doc(db, "admin", user.uid));
+            const userData = adminDoc.exists() ? adminDoc.data() : { name: "Admin" };
+            
+            await loadLayout(userData, user.email);
+            initData(); // เริ่มโหลดข้อมูล Tickets
+        } else { 
+            window.location.replace("login.html"); 
+        }
+    });
+
     async function loadLayout(userData, email) {
         const comps = [
             { id: 'sidebar-placeholder', url: './components/sidebar.html' },
@@ -154,16 +171,10 @@ class="w-64 shrink-0 h-full bg-white border-r border-slate-200">
                 const el = document.getElementById(comp.id);
                 el.innerHTML = await res.text();
                 el.classList.remove('hidden');
-
-                el.querySelectorAll("script").forEach(oldScript => {
-                    const newScript = document.createElement("script");
-                    newScript.type = "module";
-                    newScript.textContent = oldScript.textContent;
-                    document.head.appendChild(newScript);
-                });
             }
         }
 
+        // อัปเดตข้อมูลผู้ใช้บน Topbar
         setTimeout(() => {
             const nameEl = document.querySelector('#topbar-user-name');
             const emailEl = document.querySelector('#topbar-user-email');
@@ -172,28 +183,24 @@ class="w-64 shrink-0 h-full bg-white border-r border-slate-200">
             if (emailEl) emailEl.innerText = email;
             if (avatarEl && userData.name) avatarEl.innerText = userData.name.charAt(0).toUpperCase();
 
-            const logoutBtn = document.querySelector('#main-logout-btn');
-            if (logoutBtn) logoutBtn.onclick = (e) => { e.preventDefault(); window.openLogoutModal(); };
+            // ผูกปุ่ม Logout (ใช้ handleLogout แบบเดียวกับหน้าอื่น)
+            const logoutBtn = document.querySelector('#main-logout-btn') || document.querySelector('.logout-link');
+            if (logoutBtn) logoutBtn.onclick = (e) => { e.preventDefault(); window.handleLogout(); };
         }, 600);
     }
 
-    // --- 2. Auth & Data Init (เชื่อม Firebase เข้ากับระบบ) ---
-    onAuthStateChanged(auth, async (user) => {
-        if (user) {
-            const adminDoc = await getDoc(doc(db, "admin", user.uid));
-            if (adminDoc.exists()) {
-                await loadLayout(adminDoc.data(), user.email);
-                initData(); 
-            }
-        } else { window.location.replace("login.html"); }
-    });
-
+    // --- 2. Data Init (Real-time ดึงข้อมูลจาก Firestore) ---
     function initData() {
-        onSnapshot(collection(db, "tickets"), (snapshot) => {
+        // ใช้ query เพื่อเรียงลำดับข้อมูล (ถ้าต้องการ)
+        const q = query(collection(db, "tickets"), orderBy("timestamp", "desc"));
+        
+        onSnapshot(q, (snapshot) => {
             rawTickets = snapshot.docs.map(doc => {
                 const d = doc.data();
                 const ts = d.timestamp?.toDate() || new Date();
                 const keys = Object.keys(d);
+                
+                // ฟังก์ชันดึงค่าแบบยืดหยุ่น (รองรับชื่อ Field ที่หลากหลาย)
                 const getVal = (targets) => {
                     const k = keys.find(key => targets.includes(key.trim().toLowerCase()));
                     return k ? d[k] : null;
@@ -215,13 +222,7 @@ class="w-64 shrink-0 h-full bg-white border-r border-slate-200">
         });
     }
 
-    // --- 3. Business Logic (รักษา Logic เดิม + ปรับ CSS ขอบให้เข้ม) ---
-    window.toggleFilterUI = () => {
-        const mode = document.getElementById('filter-mode').value;
-        document.getElementById('ui-daily').classList.toggle('hidden', mode !== 'daily');
-        document.getElementById('ui-quarter').classList.toggle('hidden', mode !== 'quarter');
-    };
-
+    // --- 3. Business Logic (ตารางและกราฟ) ---
     window.applyFilters = () => {
         const mode = document.getElementById('filter-mode').value;
         const d = document.getElementById('val-date').value;
@@ -237,10 +238,12 @@ class="w-64 shrink-0 h-full bg-white border-r border-slate-200">
     };
 
     function render() {
-        document.getElementById('stat-total').innerText = filteredData.length.toLocaleString();
+        // อัปเดตตัวเลขสถิติบน Card
+        const total = filteredData.length;
+        document.getElementById('stat-total').innerText = total.toLocaleString();
         document.getElementById('stat-owners').innerText = new Set(filteredData.map(t => t.owner)).size;
         const slaOk = filteredData.filter(v => v.status === 'In SLA').length;
-        document.getElementById('stat-sla').innerText = filteredData.length ? Math.round((slaOk/filteredData.length)*100) + '%' : '0%';
+        document.getElementById('stat-sla').innerText = total ? Math.round((slaOk/total)*100) + '%' : '0%';
 
         const tableStats = {}; const topicStats = {};
         filteredData.forEach(t => {
@@ -255,34 +258,9 @@ class="w-64 shrink-0 h-full bg-white border-r border-slate-200">
         updateTable(tableStats);
     }
 
-    function updateChart(data) {
-        const ctx = document.getElementById('mainChart');
-        if (!ctx) return;
-        if (chart) chart.destroy();
-        chart = new Chart(ctx, {
-            type: 'doughnut',
-            data: {
-                labels: Object.keys(data),
-                datasets: [{ 
-                    data: Object.values(data), 
-                    backgroundColor: ['#6366f1', '#10b981', '#f59e0b', '#ef4444', '#8b5cf6', '#ec4899'], 
-                    borderWidth: 0 
-                }]
-            },
-            options: {
-                responsive: true, maintainAspectRatio: false,
-                plugins: { 
-                    legend: { display: false }, 
-                    datalabels: { color: '#fff', font: { weight: 'bold', size: 10 } } 
-                },
-                cutout: '75%'
-            }
-        });
-    }
-
     function updateTable(stats) {
         const total = Object.values(stats).reduce((a,b) => a+b, 0);
-        // ปรับขอบเส้นคั่นตารางให้เข้มชัดเจน (border-slate-300)
+        // ปรับเส้นขอบตาราง (border-slate-300) ตามที่นายต้องการ
         document.getElementById('table-body').innerHTML = Object.entries(stats).sort((a,b) => b[1]-a[1]).map(([n, c]) => `
             <tr class="border-b-2 border-slate-300 hover:bg-slate-50 transition-colors cursor-pointer group" onclick="handleRowClick('${n}')">
                 <td class="p-4 font-bold text-slate-700">${n}</td>
@@ -308,15 +286,12 @@ class="w-64 shrink-0 h-full bg-white border-r border-slate-200">
             ts[x.topic] = (ts[x.topic] || 0) + 1;
             os[x.owner] = (os[x.owner] || 0) + 1;
         });
-        // ปรับขอบกล่องรายการใน Modal (border-slate-300)
+
+        const cardStyle = "flex justify-between p-3 bg-white rounded-xl text-xs font-bold border-2 border-slate-300 shadow-sm";
         document.getElementById('modal-topics').innerHTML = Object.entries(ts).map(([n,c]) => `
-            <div class="flex justify-between p-3 bg-white rounded-xl text-xs font-bold border-2 border-slate-300">
-                <span>${n}</span><span class="text-indigo-600">${c}</span>
-            </div>`).join('');
+            <div class="${cardStyle}"><span>${n}</span><span class="text-indigo-600">${c}</span></div>`).join('');
         document.getElementById('modal-owners').innerHTML = Object.entries(os).map(([n,c]) => `
-            <div class="flex justify-between p-3 bg-white rounded-xl text-xs font-bold border-2 border-slate-300">
-                <span>${n}</span><span class="text-emerald-600">${c} เคส</span>
-            </div>`).join('');
+            <div class="${cardStyle}"><span>${n}</span><span class="text-emerald-600">${c} เคส</span></div>`).join('');
         document.getElementById('detail-modal').classList.remove('hidden');
     }
 
@@ -327,18 +302,55 @@ class="w-64 shrink-0 h-full bg-white border-r border-slate-200">
         render();
     };
 
-    window.closeModal = () => document.getElementById('detail-modal').classList.add('hidden');
+    // --- 4. System Logout & UI ---
+    window.handleLogout = () => {
+        document.getElementById('logout-modal').classList.remove('hidden');
+    };
 
-    // --- 4. System Modals ---
-    window.openLogoutModal = () => { document.getElementById('logout-modal').classList.remove('hidden'); };
-    window.closeLogoutModal = () => { document.getElementById('logout-modal').classList.add('hidden'); };
-    
+    window.closeLogoutModal = () => {
+        document.getElementById('logout-modal').classList.add('hidden');
+    };
+
     const confirmLogout = document.getElementById('confirm-logout');
     if (confirmLogout) {
         confirmLogout.onclick = async () => {
             await signOut(auth);
             window.location.replace("login.html");
         };
+    }
+
+    // ฟังก์ชันย่อยอื่นๆ
+    window.closeModal = () => document.getElementById('detail-modal').classList.add('hidden');
+    window.toggleFilterUI = () => {
+        const mode = document.getElementById('filter-mode').value;
+        document.getElementById('ui-daily').classList.toggle('hidden', mode !== 'daily');
+        document.getElementById('ui-quarter').classList.toggle('hidden', mode !== 'quarter');
+    };
+
+    function updateChart(data) {
+        const ctx = document.getElementById('mainChart');
+        if (!ctx || Object.keys(data).length === 0) return;
+        if (chart) chart.destroy();
+        chart = new Chart(ctx, {
+            type: 'doughnut',
+            data: {
+                labels: Object.keys(data),
+                datasets: [{ 
+                    data: Object.values(data), 
+                    backgroundColor: ['#6366f1', '#10b981', '#f59e0b', '#ef4444', '#8b5cf6', '#ec4899'], 
+                    borderWidth: 0 
+                }]
+            },
+            options: { 
+                responsive: true, 
+                maintainAspectRatio: false, 
+                plugins: { 
+                    legend: { display: false },
+                    datalabels: { color: '#fff', font: { weight: 'bold', size: 10 } }
+                }, 
+                cutout: '75%' 
+            }
+        });
     }
 </script>
 <script src="./js/layout.js"></script>

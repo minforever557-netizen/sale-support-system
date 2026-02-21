@@ -269,9 +269,11 @@ class="w-64 shrink-0 h-full bg-white border-r border-slate-200">
     };
 
     // --- 3. ฟังก์ชันบันทึกข้อมูลลง Firebase ---
+   // --- ฟังก์ชันบันทึกข้อมูลพร้อม Animation ---
     window.saveAdminAction = async () => {
         const note = document.getElementById('admin-note-input').value;
         const btn = document.getElementById('save-btn');
+        const modalContent = document.querySelector('#adminActionModal > div'); // เลือกตัวกล่อง Modal
 
         if (!note) {
             alert("กรุณาระบุรายละเอียดการดำเนินงาน");
@@ -280,36 +282,55 @@ class="w-64 shrink-0 h-full bg-white border-r border-slate-200">
 
         if (!window.currentId) return;
 
-        // เปลี่ยนสถานะปุ่มขณะกำลังบันทึก
+        // 1. เริ่มสถานะบันทึก
         btn.disabled = true;
-        btn.innerText = "กำลังบันทึก...";
+        btn.innerHTML = `<i class="fas fa-spinner fa-spin mr-2"></i> กำลังบันทึก...`;
 
         try {
             const ticketRef = doc(db, "tickets", window.currentId);
-            
-            // เตรียมข้อมูลสำหรับอัปเดต
             const updateData = {
                 status: window.selectedStatus,
                 adminNote: note,
                 updatedAt: serverTimestamp()
             };
 
-            // ถ้าสถานะเป็น Success หรือ Reject ให้บันทึกเวลาปิดงาน
             if (window.selectedStatus === 'Success' || window.selectedStatus === 'Reject') {
                 updateData.closedAt = serverTimestamp();
             }
 
+            // 2. ส่งข้อมูลไป Firebase
             await updateDoc(ticketRef, updateData);
             
-            alert("บันทึกข้อมูลสำเร็จ!");
-            window.closeAdminModal();
-            
+            // 3. ✨ แสดง Animation เมื่อสำเร็จ (Ref จาก CSS เดิม)
+            // เพิ่ม Class animate-bounce หรือ transition scale เพื่อให้ดูมีการตอบสนอง
+            if (modalContent) {
+                modalContent.classList.add('scale-110', 'duration-300'); // ขยายตัวเล็กน้อย
+                btn.classList.replace('bg-[#5c56f1]', 'bg-green-500'); // เปลี่ยนสีปุ่มเป็นเขียว
+                btn.innerHTML = `<i class="fas fa-check-circle mr-2"></i> บันทึกสำเร็จ!`;
+            }
+
+            // 4. หน่วงเวลาเล็กน้อยเพื่อให้เห็น Animation ก่อนปิด Modal
+            setTimeout(() => {
+                if (modalContent) {
+                    modalContent.classList.remove('scale-110');
+                    modalContent.classList.add('opacity-0', 'scale-95'); // ค่อยๆ จางลงและเล็กลง
+                }
+                
+                setTimeout(() => {
+                    window.closeAdminModal();
+                    // Reset สถานะปุ่มและ Modal สำหรับการใช้งานครั้งหน้า
+                    btn.disabled = false;
+                    btn.classList.replace('bg-green-500', 'bg-[#5c56f1]');
+                    btn.innerHTML = `บันทึกข้อมูล`;
+                    if (modalContent) modalContent.classList.remove('opacity-0', 'scale-95', 'duration-300');
+                }, 300); // รอให้ Animation หายไปเสร็จสิ้น
+            }, 1000); // ให้ User เห็นเครื่องหมายถูก 1 วินาที
+
         } catch (error) {
             console.error("Save Error:", error);
             alert("เกิดข้อผิดพลาด: " + error.message);
-        } finally {
             btn.disabled = false;
-            btn.innerText = "บันทึกข้อมูล";
+            btn.innerHTML = `บันทึกข้อมูล`;
         }
     };
     </script>

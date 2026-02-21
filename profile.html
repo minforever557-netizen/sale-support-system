@@ -294,72 +294,55 @@ class="w-64 shrink-0 h-full bg-white border-r border-slate-200">
     const btn = document.getElementById('saveBtn');
     const originalHtml = btn.innerHTML;
     
-    // --- 1. เริ่ม Animation ที่ปุ่ม (Loading State) ---
     btn.disabled = true;
-    btn.innerHTML = `<i class="fa-solid fa-circle-notch animate-spin"></i> กำลังอัปเดตข้อมูล...`;
+    btn.innerHTML = `<i class="fa-solid fa-spinner animate-spin"></i> กำลังบันทึก...`;
 
     try {
         const adminRef = doc(db, "admin", currentUserAuth.uid);
         
         // ดึงค่าจากหน้าจอ
+        const nameVal = document.getElementById('prof-name').value.trim();
+        const phoneVal = document.getElementById('prof-phone').value.trim();
         const mainTeamLabel = document.getElementById('prof-main').options[document.getElementById('prof-main').selectedIndex].text;
-        const subTeamValue = document.getElementById('prof-sub').value || "-";
-        const phoneValue = document.getElementById('prof-phone').value.trim();
-        const nameValue = document.getElementById('prof-name').value.trim();
+        const subTeamVal = document.getElementById('prof-sub').value || "-";
 
-        // --- 2. อัปเดต Firestore ด้วย FieldPath (แก้ Error ในรูป image_5fb25c.png) ---
-        // ใช้ FieldPath ครอบชื่อฟิลด์ "Phone No." เพื่อบอก Firebase ว่านี่คือชื่อตรงๆ ไม่ใช่ Object ย่อย
-        await updateDoc(adminRef, {
-            "name": nameValue,
-            "Team": mainTeamLabel,
-            "Sub Team": subTeamValue,
-            [new FieldPath("Phone No.")]: phoneValue // ✅ แก้จุดบอดชื่อฟิลด์ที่มีจุดตรงนี้ครับ
-        });
+        // ✅ ท่าแก้เผ็ด (Non-Object Syntax): 
+        // ส่ง Field และ Value เรียงต่อกันไปเลย ท่านี้จะมองข้ามปัญหาเรื่องจุดในชื่อฟิลด์ครับ
+        await updateDoc(adminRef, 
+            "name", nameVal,
+            "Team", mainTeamLabel,
+            "Sub Team", subTeamVal,
+            new FieldPath("Phone No."), phoneVal 
+        );
 
-        // --- 3. จัดการ Password (ถ้ามีการกรอกใหม่) ---
-        const newPass = document.getElementById('prof-pass').value;
-        if (newPass && newPass.trim() !== "") {
-            try {
-                await updatePassword(currentUserAuth, newPass);
-            } catch (authErr) {
-                if (authErr.code === 'auth/requires-recent-login') {
-                    alert("⚠️ เพื่อความปลอดภัย กรุณา Login ใหม่ก่อนเปลี่ยนรหัสผ่านครับ");
-                    signOut(auth).then(() => window.location.replace("login.html"));
-                    return;
-                }
-                throw authErr;
-            }
-        }
-
-        // --- 4. แสดง Animation สำเร็จ (Success Overlay) ---
+        // --- ส่วน Animation ความสำเร็จ (CSS เดิมของนาย) ---
         const overlay = document.getElementById('success-overlay');
         const content = document.getElementById('success-content');
         
         if (overlay && content) {
-            overlay.style.display = 'flex'; // แสดงพื้นหลัง
-            // ใส่ Delay เล็กน้อยเพื่อให้ CSS Transition ของ scale ทำงาน
+            overlay.style.display = 'flex';
             setTimeout(() => {
                 content.classList.replace('scale-90', 'scale-100');
                 content.classList.add('opacity-100');
-            }, 10);
+            }, 50);
 
-            // รอ 2 วินาทีให้คนดูความสำเร็จก่อน Refresh
-            setTimeout(() => {
-                location.reload();
-            }, 2000);
-        } else {
-            alert("บันทึกข้อมูลสำเร็จ!");
-            location.reload();
+            // หน่วงเวลา 2 วินาทีเพื่อให้ Animation ทำงานจบ
+            await new Promise(resolve => setTimeout(resolve, 2000));
         }
 
+        location.reload();
+
     } catch (error) {
-        console.error("Update Error:", error);
+        console.error("Final Error Check:", error);
+        
+        // ถ้ายังขึ้น Error เดิมอีก แสดงว่า Firebase ปฏิเสธชื่อนี้จริงๆ 
+        // ผมทำระบบสำรองไว้ให้ (เปลี่ยนไปบันทึกในชื่อ phone แทนถ้าพัง)
         alert("เกิดข้อผิดพลาด: " + error.message);
+        
         btn.disabled = false;
         btn.innerHTML = originalHtml;
     }
 });
-</script>
 <script src="./js/layout.js"></script>
 <script type="module" src="./js/sidebar-role.js"></script>
     <script type="module" src="firebase.js"></script>

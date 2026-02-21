@@ -300,7 +300,7 @@ function renderTickets(tickets) {
         (t.id_number && String(t.id_number).toLowerCase().includes(searchTerm)) ||
         (t.internetNo && String(t.internetNo).toLowerCase().includes(searchTerm)) ||
         (t.topic && t.topic.toLowerCase().includes(searchTerm)) ||
-        (t.owner && t.owner.toLowerCase().includes(searchTerm)) // เพิ่มให้ค้นหาจากชื่อเจ้าของได้ด้วย
+        (t.owner && t.owner.toLowerCase().includes(searchTerm))
     );
 
     if (filtered.length === 0) {
@@ -309,12 +309,19 @@ function renderTickets(tickets) {
     }
 
     list.innerHTML = filtered.map(t => {
-        const createDate = t.createdAt?.toDate ? t.createdAt.toDate().toLocaleString('th-TH') : '-';
-        const updateDate = t.updatedAt?.toDate ? t.updatedAt.toDate().toLocaleString('th-TH') : '-';
-        const status = t.status || 'Pending';
+        // วันเวลาที่สร้าง
+        const createDate = t.createdAt?.toDate ? t.createdAt.toDate().toLocaleString('th-TH', { dateStyle: 'medium', timeStyle: 'short' }) : '-';
         
-        // ดึงชื่อจาก Field 'owner' ตามที่นายแจ้งมาครับ
+        // วันเวลาที่อัปเดตล่าสุด (Progress ล่าสุด)
+        const updateDate = t.updatedAt?.toDate 
+            ? t.updatedAt.toDate().toLocaleString('th-TH', { dateStyle: 'medium', timeStyle: 'short' }) 
+            : 'ยังไม่มีการอัปเดต';
+
+        const status = t.status || 'Pending';
         const ownerName = t.owner || '-';
+        
+        // ดึง Note ล่าสุดที่แอดมินพิมพ์
+        const latestProgress = t.adminNote || 'รอดำเนินการ...';
 
         const statusClasses = {
             'Open': 'bg-blue-100 text-blue-700',
@@ -327,22 +334,40 @@ function renderTickets(tickets) {
         return `
             <tr class="hover:bg-slate-50 transition-all border-b border-slate-50 last:border-0 group">
                 <td class="p-6 font-bold text-slate-700">${t.id_number || t.internetNo || '-'}</td>
-                <td class="p-6 text-slate-400 text-[12px]">${createDate}</td>
-                <td class="p-6 text-slate-700 font-medium">${t.topic || 'ไม่มีหัวข้อ'}</td>
+                
+                <td class="p-6 text-slate-400 text-[11px] leading-tight">
+                    <span class="block text-slate-500 font-medium">${createDate}</span>
+                    <span class="text-[9px] uppercase font-black opacity-60">Created Date</span>
+                </td>
+                
+                <td class="p-6">
+                    <div class="text-slate-700 font-bold">${t.topic || 'ไม่มีหัวข้อ'}</div>
+                    <div class="mt-1.5 flex items-center gap-1.5">
+                        <span class="flex h-2 w-2 rounded-full bg-indigo-400 animate-pulse"></span>
+                        <p class="text-[11px] text-indigo-600 font-medium italic truncate max-w-[200px]" title="${latestProgress}">
+                            ล่าสุด: ${latestProgress}
+                        </p>
+                    </div>
+                </td>
+                
                 <td class="p-6 text-center">
                     <span class="px-3 py-1 rounded-full text-[10px] font-black uppercase ${statusClasses[status] || statusClasses['Pending']}">${status}</span>
                 </td>
-                <td class="p-6 text-slate-400 text-[12px]">${updateDate}</td>
+                
+                <td class="p-6 text-[11px] leading-tight">
+                    <span class="block text-indigo-600 font-bold">${updateDate}</span>
+                    <span class="text-[9px] uppercase font-black text-slate-400">Latest Activity</span>
+                </td>
                 
                 <td class="p-6">
-                    <span class="text-sm font-bold text-slate-600 truncate max-w-[180px] block" title="${ownerName}">
+                    <span class="text-sm font-bold text-slate-600 truncate max-w-[120px] block" title="${ownerName}">
                         ${ownerName}
                     </span>
                 </td>
 
                 <td class="p-6 text-right">
-                    <button onclick="viewDetail('${t.id}')" class="bg-white border border-slate-200 text-slate-600 hover:border-emerald-500 hover:text-emerald-600 px-5 py-2.5 rounded-xl text-xs font-black transition-all shadow-sm">
-                        ดูข้อมูล
+                    <button onclick="viewDetail('${t.id}')" class="bg-white border border-slate-200 text-slate-600 hover:border-indigo-500 hover:text-indigo-600 px-5 py-2.5 rounded-xl text-xs font-black transition-all shadow-sm active:scale-95">
+                        รายละเอียด
                     </button>
                 </td>
             </tr>

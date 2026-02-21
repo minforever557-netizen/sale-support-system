@@ -26,45 +26,37 @@ class="w-64 shrink-0 h-full bg-white border-r border-slate-200">
         <div id="topbar-container"></div>
 
         <!-- MAIN CONTENT -->
-       <main class="flex-1 overflow-y-auto custom-scroll p-6 md:p-10">
-            <div class="max-w-7xl mx-auto w-full space-y-8">
-                <div class="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-10">
-                    <div>
-                        <h2 class="text-3xl font-bold text-slate-800 tracking-tight">จัดการหัวข้อและ SLA</h2>
-                        <p class="text-slate-500 mt-1">กำหนดหัวข้อปัญหา, ระยะเวลาดำเนินการ และ Checklist สำหรับเจ้าหน้าที่</p>
-                    </div>
-                    <button onclick="openTopicModal()" class="bg-[#5d58f0] text-white px-8 py-4 rounded-2xl font-bold hover:bg-emerald-700 transition shadow-xl shadow-emerald-100 flex items-center gap-3 active:scale-95">
-                        <i class="fa-solid fa-plus text-sm"></i> 
-                        <span>เพิ่มหัวข้อใหม่</span>
-                    </button>
-                </div>
-
-                <div class="bg-white rounded-[2.5rem] shadow-sm border border-slate-100 overflow-hidden">
-                    <div class="overflow-x-auto">
-                        <table class="w-full text-left border-collapse">
-                            <thead>
-                                <tr class="bg-slate-50/50 border-b border-slate-100">
-                                    <th class="p-6 text-[10px] font-black text-slate-400 uppercase tracking-widest">ชื่อหัวข้อ</th>
-                                    <th class="p-6 text-[10px] font-black text-slate-400 uppercase tracking-widest text-center">SLA (ชั่วโมง)</th>
-                                    <th class="p-6 text-[10px] font-black text-slate-400 uppercase tracking-widest">Checklist / คำแนะนำ</th>
-                                    <th class="p-6 text-[10px] font-black text-slate-400 uppercase tracking-widest text-right">จัดการ</th>
-                                </tr>
-                            </thead>
-                            <tbody id="topic-list" class="divide-y divide-slate-50">
-                                <tr>
-                                    <td colspan="4" class="p-12 text-center">
-                                        <div class="flex flex-col items-center gap-3">
-                                            <i class="fa-solid fa-circle-notch animate-spin text-emerald-500 text-2xl"></i>
-                                            <p class="text-slate-400 text-sm">กำลังโหลดข้อมูลหัวข้อ...</p>
-                                        </div>
-                                    </td>
-                                </tr>
-                            </tbody>
-                        </table>
-                    </div>
-                </div>
+      <main class="flex-1 overflow-hidden p-6 md:p-10">
+    <div class="max-w-7xl mx-auto h-full flex flex-col">
+        
+        <div class="flex flex-col md:flex-row justify-between items-start md:items-center gap-6 mb-10 shrink-0">
+            <div>
+                <h2 class="text-3xl font-bold text-slate-800 tracking-tight">จัดการหัวข้อและ SLA</h2>
+                <p class="text-slate-500 mt-1 font-medium">กำหนดหัวข้อปัญหา, ระยะเวลาดำเนินการ และ Checklist</p>
             </div>
-        </main>
+            <button onclick="openTopicModal()" class="bg-[#5d58f0] text-white px-8 py-4 rounded-2xl font-bold hover:bg-indigo-700 transition shadow-xl shadow-indigo-100 flex items-center gap-3 active:scale-95">
+                <i class="fa-solid fa-plus text-sm"></i> 
+                <span>เพิ่มหัวข้อใหม่</span>
+            </button>
+        </div>
+
+        <div class="flex-1 min-h-0 bg-white rounded-[2.5rem] shadow-sm border border-slate-100 overflow-hidden flex flex-col">
+            <div class="flex-1 overflow-y-auto custom-scroll"> <table class="w-full text-left border-collapse sticky-header">
+                    <thead class="sticky top-0 z-10 bg-slate-50/90 backdrop-blur-md">
+                        <tr class="border-b border-slate-100">
+                            <th class="p-6 text-[10px] font-black text-slate-400 uppercase tracking-widest">ชื่อหัวข้อ</th>
+                            <th class="p-6 text-[10px] font-black text-slate-400 uppercase tracking-widest text-center">SLA (ชั่วโมง)</th>
+                            <th class="p-6 text-[10px] font-black text-slate-400 uppercase tracking-widest">Checklist / คำแนะนำ</th>
+                            <th class="p-6 text-[10px] font-black text-slate-400 uppercase tracking-widest text-right">จัดการ</th>
+                        </tr>
+                    </thead>
+                    <tbody id="topic-list" class="divide-y divide-slate-50">
+                        </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</main>
     </div>
 
     <div id="topicModal" class="hidden fixed inset-0 z-[60] flex items-center justify-center p-4">
@@ -100,13 +92,11 @@ class="w-64 shrink-0 h-full bg-white border-r border-slate-200">
 
     <script type="module">
     import { db } from "./js/firebase.js";
-    import { 
-        collection, query, orderBy, onSnapshot, getDoc, doc, setDoc, deleteDoc, serverTimestamp 
-    } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+    import { collection, query, orderBy, onSnapshot, getDoc, doc, setDoc, deleteDoc, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
 
     let editId = null;
 
-    // --- 1. ฟังการอัปเดตข้อมูล Real-time (Logic เดิม) ---
+    // --- 1. ฟังข้อมูลแบบ Real-time และปรับให้ปุ่มขึ้นตลอด ---
     function listenTopics() {
         const q = query(collection(db, "topics"), orderBy("updatedAt", "desc"));
         onSnapshot(q, (snapshot) => {
@@ -121,21 +111,20 @@ class="w-64 shrink-0 h-full bg-white border-r border-slate-200">
             list.innerHTML = snapshot.docs.map(docSnap => {
                 const d = docSnap.data();
                 return `
-                    <tr class="hover:bg-slate-50/80 transition-all border-b border-slate-50 last:border-0 group">
+                    <tr class="hover:bg-slate-50/50 transition-colors border-b border-slate-50 last:border-0">
                         <td class="p-6">
-                            <span class="font-bold text-slate-800 block">${d.name}</span>
+                            <span class="font-bold text-slate-700 block text-base">${d.name}</span>
                             <span class="text-[10px] text-slate-400 font-medium tracking-wider">ID: ${docSnap.id}</span>
                         </td>
                         <td class="p-6 text-center">
-                            <span class="px-4 py-1.5 bg-indigo-50 text-indigo-600 rounded-full font-black text-xs">${d.sla} ชม.</span>
+                            <span class="px-5 py-2 bg-indigo-50 text-[#5d58f0] rounded-2xl font-black text-xs">${d.sla} ชม.</span>
                         </td>
                         <td class="p-6">
-                            <p class="text-sm text-slate-500 max-w-xs truncate">${d.checklist || '<span class="italic text-slate-300">ไม่มี Checklist</span>'}</p>
+                            <p class="text-sm text-slate-500 max-w-xs truncate font-medium">${d.checklist || '<span class="italic text-slate-300 font-normal">ไม่มี Checklist</span>'}</p>
                         </td>
                         <td class="p-6 text-right">
-                            <div class="flex justify-end gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
-                                <button onclick="openTopicModal('${docSnap.id}')" class="bg-[#5d58f0] text-white px-4 py-2 rounded-xl text-xs font-bold hover:bg-indigo-700 transition">แก้ไข</button>
-                                <button onclick="deleteTopic('${docSnap.id}')" class="bg-white border border-slate-200 text-slate-400 px-4 py-2 rounded-xl text-xs font-bold hover:text-red-500 transition">ลบ</button>
+                            <div class="flex justify-end gap-2"> <button onclick="openTopicModal('${docSnap.id}')" class="bg-[#5d58f0] text-white px-4 py-2 rounded-xl text-xs font-bold hover:bg-indigo-700 shadow-lg shadow-indigo-100/50 transition active:scale-95">แก้ไข</button>
+                                <button onclick="deleteTopic('${docSnap.id}')" class="bg-white border border-slate-200 text-slate-400 px-4 py-2 rounded-xl text-xs font-bold hover:text-red-500 hover:border-red-100 transition active:scale-95">ลบ</button>
                             </div>
                         </td>
                     </tr>
@@ -144,18 +133,18 @@ class="w-64 shrink-0 h-full bg-white border-r border-slate-200">
         });
     }
 
-    // --- 2. ฟังก์ชัน Modal (เรียกใช้ window. เพื่อให้ HTML มองเห็น) ---
+    // --- 2. Global Functions (Binding to window) ---
     window.openTopicModal = async (id = null) => {
         editId = id;
-        const modal = document.getElementById('topicModal');
         document.getElementById('modal-title').innerText = id ? "แก้ไขหัวข้อ" : "เพิ่มหัวข้อใหม่";
+        document.getElementById('topicModal').classList.remove('hidden');
         
         if (id) {
             const d = await getDoc(doc(db, "topics", id));
             if (d.exists()) {
                 const data = d.data();
-                document.getElementById('topic-name').value = data.name || "";
-                document.getElementById('topic-sla').value = data.sla || "";
+                document.getElementById('topic-name').value = data.name;
+                document.getElementById('topic-sla').value = data.sla;
                 document.getElementById('topic-checklist').value = data.checklist || "";
             }
         } else {
@@ -163,17 +152,10 @@ class="w-64 shrink-0 h-full bg-white border-r border-slate-200">
             document.getElementById('topic-sla').value = "";
             document.getElementById('topic-checklist').value = "";
         }
-        
-        modal.classList.remove('hidden');
-        document.body.classList.add('overflow-hidden'); // ใช้ class แทน style โดยตรงถ้ามีใน CSS
     };
 
-    window.closeTopicModal = () => {
-        document.getElementById('topicModal').classList.add('hidden');
-        document.body.classList.remove('overflow-hidden');
-    };
+    window.closeTopicModal = () => document.getElementById('topicModal').classList.add('hidden');
 
-    // --- 3. บันทึกข้อมูล (Logic เดิม) ---
     window.saveTopic = async () => {
         const name = document.getElementById('topic-name').value.trim();
         const sla = document.getElementById('topic-sla').value;
@@ -184,34 +166,35 @@ class="w-64 shrink-0 h-full bg-white border-r border-slate-200">
         const btn = document.getElementById('save-btn');
         const topicId = editId || name.toLowerCase().replace(/\s+/g, '-');
         
-        btn.disabled = true;
-        btn.innerHTML = "กำลังบันทึก...";
-
         try {
+            btn.disabled = true;
+            btn.innerText = "กำลังบันทึก...";
             await setDoc(doc(db, "topics", topicId), {
                 name, sla: parseInt(sla), checklist, updatedAt: serverTimestamp()
             }, { merge: true });
-            window.closeTopicModal();
-            Swal.fire({ icon: 'success', title: 'บันทึกสำเร็จ', timer: 1500 });
+            closeTopicModal();
+            Swal.fire({ icon: 'success', title: 'สำเร็จ', timer: 1500, showConfirmButton: false });
         } catch(e) { 
-            Swal.fire({ icon: 'error', title: 'เกิดข้อผิดพลาด', text: e.message }); 
+            Swal.fire({ icon: 'error', title: 'Error', text: e.message }); 
         } finally {
             btn.disabled = false;
             btn.innerText = "บันทึกข้อมูล";
         }
     };
 
-    // --- 4. ลบข้อมูล ---
     window.deleteTopic = async (id) => {
-        const res = await Swal.fire({
+        const result = await Swal.fire({
             title: 'ยืนยันการลบ?',
             icon: 'warning',
             showCancelButton: true,
-            confirmButtonText: 'ลบ',
-            cancelButtonText: 'ยกเลิก'
+            confirmButtonColor: '#5d58f0',
+            cancelButtonColor: '#f1f5f9',
+            confirmButtonText: 'ลบข้อมูล',
+            cancelButtonText: 'ยกเลิก',
+            customClass: { popup: 'rounded-[2rem]' }
         });
 
-        if (res.isConfirmed) {
+        if (result.isConfirmed) {
             await deleteDoc(doc(db, "topics", id));
         }
     };

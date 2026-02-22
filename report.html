@@ -118,24 +118,58 @@ class="w-64 shrink-0 h-full bg-white border-r border-slate-200">
 
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     </div>
+<!-- ================= MODAL ================= -->
+<div id="detail-modal"
+class="fixed inset-0 z-[150] hidden items-center justify-center
+bg-slate-900/40 backdrop-blur-sm p-6"
+onclick="if(event.target.id==='detail-modal') closeModal()">
 
-   <div id="detail-modal"
-onclick="if(event.target.id==='detail-modal') closeModal()"
-        <div class="bg-white w-full max-w-4xl rounded-[2.5rem] p-8 shadow-2xl overflow-y-auto max-h-[85vh]">
-            <div class="flex justify-between items-center mb-6">
-                <h3 id="modal-head" class="text-2xl font-bold text-slate-800"></h3>
-            </div>
-            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <div class="bg-slate-50 p-6 rounded-3xl border border-slate-100">
-                    <p class="text-[10px] font-black text-indigo-600 uppercase mb-4 tracking-widest">Topic Summary</p>
-                    <div id="modal-topics" class="space-y-2"></div>
-                </div>
-                <div class="bg-slate-50 p-6 rounded-3xl border border-slate-100">
-                    <p class="text-[10px] font-black text-emerald-600 uppercase mb-4 tracking-widest">Owner List</p>
-                    <div id="modal-owners" class="space-y-4"></div>
-                </div>
-            </div>
+    <div class="bg-white w-full max-w-5xl rounded-[32px]
+    shadow-2xl overflow-hidden animate-[fadeIn_.25s_ease]">
+
+        <!-- HEADER -->
+        <div class="px-10 py-6 border-b bg-gradient-to-r
+        from-indigo-50 to-white">
+
+            <h3 id="modal-head"
+            class="text-2xl font-black text-slate-800"></h3>
+
+            <p class="text-xs text-slate-400 mt-1">
+                Team activity breakdown
+            </p>
+
         </div>
+
+        <!-- CONTENT -->
+        <div class="p-10 grid grid-cols-1 lg:grid-cols-2 gap-8
+        max-h-[75vh] overflow-y-auto">
+
+            <!-- TOPIC -->
+            <div>
+                <p class="text-xs font-black text-indigo-600
+                uppercase tracking-widest mb-4">
+                    Topic Overview
+                </p>
+
+                <div id="modal-topics"
+                class="space-y-3"></div>
+            </div>
+
+            <!-- OWNER -->
+            <div>
+                <p class="text-xs font-black text-emerald-600
+                uppercase tracking-widest mb-4">
+                    Team Members
+                </p>
+
+                <div id="modal-owners"
+                class="space-y-4"></div>
+            </div>
+
+        </div>
+
+    </div>
+</div>
     </div>
 <script type="module">
 
@@ -366,6 +400,7 @@ window.drillDown=(main)=>{
 
 
 // ================= SHOW MODAL (USER DETAIL) =================
+// ================= SHOW MODAL (USER DETAIL) =================
 window.showDetail = (sub)=>{
 
     selectedSub = sub;
@@ -380,13 +415,15 @@ window.showDetail = (sub)=>{
 
     const totalTickets = related.length;
 
-    // ===== GROUP BY OWNER =====
+    // ================= GROUP OWNER =================
     const ownerMap = {};
+    const topicMap = {};
 
     related.forEach(t=>{
 
         const owner = t.owner || t.ownerEmail || "Unknown";
 
+        // owner summary
         if(!ownerMap[owner]){
             ownerMap[owner]={
                 total:0,
@@ -397,43 +434,82 @@ window.showDetail = (sub)=>{
         ownerMap[owner].total++;
 
         if(t.topic){
+
             ownerMap[owner].topics[t.topic] =
                 (ownerMap[owner].topics[t.topic]||0)+1;
+
+            topicMap[t.topic] =
+                (topicMap[t.topic]||0)+1;
         }
     });
 
-    // ===== RENDER OWNER DETAIL =====
+
+    // ================= RENDER OWNER =================
     document.getElementById("modal-owners").innerHTML =
         Object.entries(ownerMap).map(([owner,data])=>{
 
             const percent =
                 Math.round((data.total/totalTickets)*100);
 
-            const topicList =
-                Object.entries(data.topics)
-                .map(([t,c])=>`• ${t} (${c})`)
-                .join("<br>");
+            return `
+<div class="bg-gradient-to-br from-white to-slate-50
+border rounded-2xl p-5 shadow-sm hover:shadow-md transition">
+
+    <div class="flex justify-between items-center mb-3">
+
+        <div class="font-bold text-slate-800 text-base">
+            ${owner}
+        </div>
+
+        <div class="text-sm font-black text-indigo-600
+        bg-indigo-50 px-3 py-1 rounded-full">
+            ${data.total} cases • ${percent}%
+        </div>
+
+    </div>
+
+    <div class="text-sm text-slate-500 space-y-1">
+        ${
+            Object.entries(data.topics)
+            .map(([t,c])=>`
+                <div class="flex justify-between">
+                    <span>${t}</span>
+                    <span class="font-semibold">${c}</span>
+                </div>
+            `).join("")
+        }
+    </div>
+
+</div>`;
+        }).join("");
+
+
+    // ================= RENDER TOPIC SUMMARY =================
+    document.getElementById("modal-topics").innerHTML =
+        Object.entries(topicMap).map(([t,c])=>{
+
+            const pct =
+                Math.round((c/totalTickets)*100);
 
             return `
-            <div class="bg-white border rounded-2xl p-4 shadow-sm">
+<div>
+    <div class="flex justify-between text-sm mb-1">
+        <span class="font-semibold text-slate-700">${t}</span>
+        <span class="text-indigo-600 font-bold">${pct}%</span>
+    </div>
 
-                <div class="flex justify-between items-center mb-2">
-                    <div class="font-bold text-slate-800">
-                        ${owner}
-                    </div>
-
-                    <div class="text-sm font-black text-indigo-600">
-                        ${data.total} tickets (${percent}%)
-                    </div>
-                </div>
-
-                <div class="text-sm text-slate-500 leading-relaxed">
-                    ${topicList}
-                </div>
-
-            </div>
-            `;
+    <div class="w-full h-2 bg-slate-200 rounded-full overflow-hidden">
+        <div class="h-full bg-indigo-500"
+            style="width:${pct}%"></div>
+    </div>
+</div>`;
         }).join("");
+
+
+    // ================= OPEN MODAL =================
+    document.getElementById("detail-modal")
+        .classList.remove("hidden");
+};
 
     // ===== TOPIC SUMMARY =====
     const topicMap={};

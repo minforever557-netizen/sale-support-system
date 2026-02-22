@@ -84,22 +84,20 @@ async function startNotificationSystem(role, email) {
     const notiBtn = document.getElementById('noti-btn');
     const notiDrop = document.getElementById('noti-dropdown');
 
-    if (!notiList) return; // ป้องกัน Error ถ้าหน้านั้นไม่มีปุ่มกระดิ่ง
+    if (!notiList) return; 
 
-    // 1. ตั้งค่า Query ตาม Role
     let q;
     if (role === 'admin') {
-        // Admin: แจ้งเตือนเมื่อมีใบงานใหม่ (Pending)
-        q = query(collection(db, "tickets"), where("status", "==", "Pending"), orderBy("createdAt", "desc"), limit(5));
+        q = query(collection(db, "tickets"), orderBy("createdAt", "desc"), limit(10));
     } else {
-        // User/Sale/Support: แจ้งเตือนเมื่อใบงานตัวเองมีการอัปเดต
-        q = query(collection(db, "tickets"), where("ownerEmail", "==", email), orderBy("updatedAt", "desc"), limit(5));
+        q = query(collection(db, "tickets"), where("ownerEmail", "==", email), orderBy("updatedAt", "desc"), limit(10));
     }
 
-    // 2. Listen แบบ Real-time
     onSnapshot(q, (snapshot) => {
         if (snapshot.empty) {
-            notiList.innerHTML = `<div class="p-4 text-center text-slate-400 text-xs">ไม่มีการแจ้งเตือน</div>`;
+            if (notiList.innerHTML === "" || notiList.innerText.includes("ไม่มีรายการ")) {
+                notiList.innerHTML = `<div class="p-6 text-center text-slate-400 text-xs font-medium">ไม่มีรายการแจ้งเตือน</div>`;
+            }
             if (notiDot) notiDot.classList.add('hidden');
             return;
         }
@@ -110,38 +108,68 @@ async function startNotificationSystem(role, email) {
         snapshot.docChanges().forEach((change) => {
             const data = change.doc.data();
             
+            // ✅ ประกาศตัวแปรตรงนี้ เพื่อให้ทั้ง Admin และ User เรียกใช้ได้ไม่พัง
+            const internetNo = data.internetNo || data.id_number || '-';
+            const topic = data.topic || 'ไม่มีหัวข้อ';
+
+            // --- [ADMIN CASE] ---
             if (role === 'admin' && change.type === "added") {
                 hasNewChange = true;
                 html += `
-                    <div class="p-4 border-b border-slate-50 hover:bg-emerald-50/50 transition cursor-pointer">
-                        <div class="font-bold text-emerald-600">🆕 ใบงานใหม่!</div>
-                        <div class="text-slate-600 text-[11px] mt-1 line-clamp-2">คุณ ${data.owner} เปิดใบงาน: ${data.topic}</div>
+                    <div onclick="window.location.href='user-management.html'" 
+                         class="p-4 border-b border-slate-50 hover:bg-emerald-50/50 transition cursor-pointer group">
+                        <div class="flex items-center gap-2 font-bold text-emerald-600 mb-1">
+                            <span class="w-2 h-2 bg-emerald-500 rounded-full animate-pulse"></span>
+                            <span class="text-[13px]">ใบงานใหม่จาก Sale</span>
+                        </div>
+                        <div class="text-slate-600 text-[11px] leading-relaxed">
+                            <b>Internet No:</b> <span class="text-slate-900">${internetNo}</span><br>
+                            <b>ผู้แจ้ง:</b> ${data.owner || 'ไม่ระบุชื่อ'}<br>
+                            <b>หัวข้อ:</b> ${topic}
+                        </div>
+                        <div class="text-[9px] text-slate-400 mt-2 italic text-right group-hover:text-emerald-500 transition-colors">คลิกเพื่อจัดการงาน</div>
                     </div>`;
             } 
-            else if (role !== 'admin' && change.type === "modified") {
+            
+            // --- [USER CASE] ---
+            else if (role !== 'admin' && (change.type === "modified" || (change.type === "added" && data.status !== "Pending"))) {
                 hasNewChange = true;
                 html += `
-                    <div class="p-4 border-b border-slate-50 hover:bg-blue-50/50 transition cursor-pointer">
-                        <div class="font-bold text-blue-600">🔔 อัปเดตใบงาน!</div>
-                        <div class="text-slate-600 text-[11px] mt-1 line-clamp-2">${data.topic} ถูกเปลี่ยนเป็นสถานะ: ${data.status}</div>
+                    <div onclick="window.location.href='my-ticket.html'" 
+                         class="p-4 border-b border-slate-50 hover:bg-blue-50/50 transition cursor-pointer group">
+                        <div class="flex items-center gap-2 font-bold text-blue-600 mb-1">
+                            <i class="fas fa-bell text-[10px]"></i>
+                            <span class="text-[13px]">อัปเดตสถานะใบงาน</span>
+                        </div>
+                        <div class="text-slate-600 text-[11px] leading-relaxed">
+                            <b>Internet No:</b> <span class="text-slate-900">${internetNo}</span><br>
+                            <b>หัวข้อ:</b> ${topic}<br>
+                            <b>สถานะล่าสุด:</b> <span class="text-orange-600 font-bold">${data.status}</span>
+                        </div>
+                        <div class="text-[9px] text-blue-400 mt-2 font-medium italic text-right group-hover:underline">ดูรายละเอียดคลิกที่นี่</div>
                     </div>`;
             }
         });
 
         if (hasNewChange) {
-            notiList.innerHTML = html || notiList.innerHTML; 
+            if (notiList.innerText.includes("ไม่มีรายการ")) {
+                notiList.innerHTML = "";
+            }
+            notiList.insertAdjacentHTML('afterbegin', html);
             if (notiDot) notiDot.classList.remove('hidden');
         }
     });
 
-    // 3. ระบบเปิด/ปิด Dropdown
     if (notiBtn && notiDrop) {
         notiBtn.onclick = (e) => {
             e.stopPropagation();
             notiDrop.classList.toggle('hidden');
             if (notiDot) notiDot.classList.add('hidden');
         };
-        // คลิกข้างนอกแล้วปิด
-        window.addEventListener('click', () => notiDrop.classList.add('hidden'));
+        window.addEventListener('click', () => {
+            if (!notiDrop.classList.contains('hidden')) {
+                notiDrop.classList.add('hidden');
+            }
+        });
     }
 }

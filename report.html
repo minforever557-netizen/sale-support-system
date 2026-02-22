@@ -137,167 +137,264 @@ class="w-64 shrink-0 h-full bg-white border-r border-slate-200">
             </div>
         </div>
     </div>
-
 <script type="module">
 
 import { db, auth } from "/Sale-Support-System/js/firebase.js";
-import {
-    collection,
-    onSnapshot
-} from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
-import {
-    onAuthStateChanged
-} from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
-
+import { collection, onSnapshot }
+from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+import { onAuthStateChanged }
+from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
 
 let allTickets = [];
+let filteredTickets = [];
 let myChart = null;
-let currentLevel = 'MAIN';
-let selectedMain = '';
+
+let currentLevel = "MAIN";
+let selectedMain = "";
+let activeMonths = [];
 
 
-// ================= REALTIME LISTENER =================
+// ================= REALTIME =================
 function startListening() {
 
-    const ticketRef = collection(db, "tickets");
+    const ticketRef = collection(db,"tickets");
 
-    onSnapshot(ticketRef, (snapshot) => {
+    onSnapshot(ticketRef,(snapshot)=>{
 
-        // ✅ IMPORTANT — include doc id
-        allTickets = snapshot.docs.map(doc => ({
-            id: doc.id,
+        allTickets = snapshot.docs.map(doc=>({
+            id:doc.id,
             ...doc.data()
         }));
-
-        console.log("Tickets Loaded:", allTickets);
 
         renderUI();
     });
 }
 
 
-// ================= RENDER UI =================
-function renderUI() {
+// ================= FILTER =================
+function applyMonthFilter(){
 
-    const tableBody = document.getElementById('table-body');
-    if (!tableBody) return;
+    if(!activeMonths.length){
+        filteredTickets = allTickets;
+        return;
+    }
 
-    const stats = {};
+    filteredTickets = allTickets.filter(t=>{
+        if(!t.createdAt) return false;
 
-    allTickets.forEach(t => {
+        const d = t.createdAt.toDate();
+        const ym =
+            `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}`;
 
-        // ✅ FIX FIELD NAME (Firestore จริง)
+        return activeMonths.includes(ym);
+    });
+}
+
+
+// ================= KPI =================
+function updateKPI(){
+
+    document.getElementById("kpi-total").innerText =
+        filteredTickets.length;
+
+    const teams=new Set();
+    const topics=new Set();
+
+    filteredTickets.forEach(t=>{
+        if(t.sender_team) teams.add(t.sender_team);
+        if(t.topic) topics.add(t.topic);
+    });
+
+    document.getElementById("kpi-team").innerText=teams.size;
+    document.getElementById("kpi-topic").innerText=topics.size;
+}
+
+
+// ================= MAIN RENDER =================
+function renderUI(){
+
+    applyMonthFilter();
+    updateKPI();
+
+    const stats={};
+
+    filteredTickets.forEach(t=>{
+
         const key =
-            (currentLevel === 'MAIN')
-                ? t.sender_team
-                : t.sender_subteam;
+            (currentLevel==="MAIN")
+            ? t.sender_team
+            : t.sender_subteam;
 
-        if (
-            currentLevel === 'MAIN' ||
-            t.sender_team === selectedMain
-        ) {
-            if (key) {
-                stats[key] = (stats[key] || 0) + 1;
+        if(
+            currentLevel==="MAIN" ||
+            t.sender_team===selectedMain
+        ){
+
+            if(!key) return;
+
+            if(!stats[key]){
+                stats[key]={
+                    total:0,
+                    topics:{},
+                    owners:{}
+                };
             }
+
+            stats[key].total++;
+
+            stats[key].topics[t.topic] =
+                (stats[key].topics[t.topic]||0)+1;
+
+            stats[key].owners[t.ownerEmail] =
+                (stats[key].owners[t.ownerEmail]||0)+1;
         }
     });
 
-    // ===== TABLE =====
-    tableBody.innerHTML = Object.entries(stats)
-        .map(([name, count]) => `
+    const tableBody=document.getElementById("table-body");
+
+    tableBody.innerHTML=
+    Object.entries(stats).map(([team,data])=>`
+
         <tr class="hover:bg-slate-50 cursor-pointer"
-            onclick="window.drillDown('${name}')">
-            <td class="py-4 font-bold text-slate-700">${name}</td>
-            <td class="py-4 text-center font-black text-indigo-600">${count}</td>
+            onclick="showDetail('${team}')">
+
+            <td class="py-4 font-bold text-slate-700">
+                ${team}
+                <div class="text-xs text-slate-400 mt-1">
+                    ${
+                        Object.entries(data.topics)
+                        .map(([t,c])=>`${t}(${c})`)
+                        .join(" • ")
+                    }
+                </div>
+            </td>
+
+            <td class="text-center font-black text-indigo-600">
+                ${data.total}
+            </td>
+
         </tr>
-    `).join('');
+    `).join("");
 
     updateChart();
 }
 
 
-// ================= CHART =================
-function updateChart() {
+// ================= CHART TOP5 =================
+function updateChart(){
 
-    const canvas = document.getElementById('mainChart');
-    if (!canvas) return;
+    const ctx=document.getElementById("mainChart").getContext("2d");
 
-    const ctx = canvas.getContext('2d');
+    const topicStats={};
 
-    const topicStats = {};
-
-    allTickets.forEach(t => {
-        // ✅ FIX FIELD NAME
-        if (t.topic) {
-            topicStats[t.topic] =
-                (topicStats[t.topic] || 0) + 1;
-        }
+    filteredTickets.forEach(t=>{
+        if(t.topic)
+            topicStats[t.topic]=(topicStats[t.topic]||0)+1;
     });
 
-    if (myChart) myChart.destroy();
+    const sorted=
+        Object.entries(topicStats)
+        .sort((a,b)=>b[1]-a[1])
+        .slice(0,5);
 
-    myChart = new Chart(ctx, {
-        type: 'doughnut',
-        data: {
-            labels: Object.keys(topicStats),
-            datasets: [{
-                data: Object.values(topicStats),
-                backgroundColor: [
-                    '#6366f1',
-                    '#10b981',
-                    '#f59e0b',
-                    '#ef4444'
+    const total=sorted.reduce((s,v)=>s+v[1],0);
+
+    if(myChart) myChart.destroy();
+
+    myChart=new Chart(ctx,{
+        type:"doughnut",
+        data:{
+            labels:sorted.map(([n,c])=>{
+                const pct=Math.round(c/total*100);
+                return `${n} ${pct}%`;
+            }),
+            datasets:[{
+                data:sorted.map(v=>v[1]),
+                backgroundColor:[
+                    "#6366f1",
+                    "#10b981",
+                    "#f59e0b",
+                    "#ef4444",
+                    "#8b5cf6"
                 ]
             }]
         },
-        options: {
-            cutout: '75%',
-            plugins: {
-                legend: { position: 'bottom' }
+        options:{
+            cutout:"70%",
+            plugins:{
+                legend:{
+                    position:"right",
+                    labels:{font:{size:13}}
+                }
             }
         }
     });
 }
 
 
-// ================= DRILL DOWN =================
-window.drillDown = (name) => {
+// ================= MODAL =================
+window.showDetail=(team)=>{
 
-    if (currentLevel === 'MAIN') {
+    document.getElementById("modal-head").innerText=team;
 
-        currentLevel = 'SUB';
-        selectedMain = name;
+    const related=filteredTickets.filter(t=>
+        t.sender_team===team ||
+        t.sender_subteam===team
+    );
 
-        document.getElementById('nav-path').innerText =
-            `Dashboard / ${name}`;
+    const topicMap={};
+    const ownerMap={};
 
-        renderUI();
-    }
+    related.forEach(t=>{
+        topicMap[t.topic]=(topicMap[t.topic]||0)+1;
+        ownerMap[t.ownerEmail]=(ownerMap[t.ownerEmail]||0)+1;
+    });
+
+    document.getElementById("modal-topics").innerHTML=
+        Object.entries(topicMap)
+        .map(([t,c])=>`<div>${t} : <b>${c}</b></div>`)
+        .join("");
+
+    document.getElementById("modal-owners").innerHTML=
+        Object.entries(ownerMap)
+        .map(([o,c])=>`<div>${o} : <b>${c}</b></div>`)
+        .join("");
+
+    document.getElementById("detail-modal")
+        .classList.remove("hidden");
+};
+
+window.closeModal=()=>{
+    document.getElementById("detail-modal")
+        .classList.add("hidden");
 };
 
 
-// ================= RESET =================
-window.resetView = () => {
+// ================= DRILL =================
+window.drillDown=(name)=>{
 
-    currentLevel = 'MAIN';
-    selectedMain = '';
+    currentLevel="SUB";
+    selectedMain=name;
 
-    document.getElementById('nav-path').innerText =
-        'Dashboard / Overall';
+    document.getElementById("nav-path").innerText=
+        `Dashboard / ${name}`;
 
     renderUI();
 };
 
+window.resetView=()=>{
+    currentLevel="MAIN";
+    selectedMain="";
+    document.getElementById("nav-path").innerText=
+        "Dashboard / Overall";
+    renderUI();
+};
 
-// ================= AUTH CHECK =================
-onAuthStateChanged(auth, (user) => {
 
-    if (user) {
-        startListening();
-    } else {
-        window.location.replace("login.html");
-    }
-
+// ================= AUTH =================
+onAuthStateChanged(auth,(user)=>{
+    if(user) startListening();
+    else window.location.replace("login.html");
 });
 
 </script>

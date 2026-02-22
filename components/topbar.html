@@ -16,7 +16,12 @@
         ?
     </div>
             
-            <div class="flex flex-col">
+
+        </div>
+
+        <div class="flex flex-row md:flex-col items-center md:items-end bg-slate-50 px-6 py-2.5 rounded-[1.5rem] border border-slate-100 gap-3 md:gap-1">
+            <div class="flex items-center gap-2">
+                            <div class="flex flex-col">
                 <div class="flex items-center gap-2">
                     <span id="topbar-user-name" class="text-slate-800 font-bold leading-tight text-lg">กำลังโหลด...</span>
                     <span class="text-slate-300 text-xs">|</span>
@@ -24,11 +29,6 @@
                 </div>
                 <span id="topbar-user-email" class="text-slate-400 text-xs font-medium mt-0.5">email@loading.com</span>
             </div>
-        </div>
-
-        <div class="flex flex-row md:flex-col items-center md:items-end bg-slate-50 px-6 py-2.5 rounded-[1.5rem] border border-slate-100 gap-3 md:gap-1">
-            <div class="flex items-center gap-2">
-                <span class="w-2 h-2 bg-emerald-500 rounded-full animate-pulse"></span>
                     <div class="relative ml-2">
     <button id="noti-btn" class="w-10 h-10 rounded-xl bg-slate-50 text-slate-400 flex items-center justify-center hover:bg-emerald-50 hover:text-emerald-600 transition relative">
         <span id="noti-dot" class="absolute top-2 right-2 w-2 h-2 bg-red-500 rounded-full hidden"></span>
@@ -43,6 +43,7 @@
         </div>
     </div>
 </div>
+                 <span class="w-2 h-2 bg-emerald-500 rounded-full animate-pulse"></span>
                 <div id="topbar-time" class="text-2xl font-black text-slate-700 tracking-tighter leading-none min-w-[100px] text-right">00:00:00</div>
             </div>
             <div id="topbar-date" class="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] mt-0.5 text-right">กำลังโหลดวันเวลา...</div>

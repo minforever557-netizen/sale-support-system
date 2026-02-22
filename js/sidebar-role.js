@@ -10,34 +10,10 @@ import {
   onAuthStateChanged
 } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
 
+
 console.log("ROLE CHECK START");
 
-
-// ================= HELPER : WAIT ELEMENT =================
-function waitForElement(id, callback) {
-
-  const el = document.getElementById(id);
-
-  if (el) {
-    callback(el);
-    return;
-  }
-
-  const observer = new MutationObserver(() => {
-    const el = document.getElementById(id);
-    if (el) {
-      observer.disconnect();
-      callback(el);
-    }
-  });
-
-  observer.observe(document.body, {
-    childList: true,
-    subtree: true
-  });
-}
-
-window.addEventListener("layoutLoaded", () => {
+document.addEventListener("layoutLoaded", () => {
 
   onAuthStateChanged(auth, async (user) => {
 
@@ -63,33 +39,24 @@ window.addEventListener("layoutLoaded", () => {
 
       console.log("USER ROLE =", role);
 
-      waitForElement("admin-menu-section", () => {
+      const adminMenu =
+        document.getElementById("admin-menu-section");
 
-  const adminMenu =
-    document.getElementById("admin-menu-section");
+      // ✅ เช็คจาก FIELD role โดยตรง
+      if (role === "admin") {
 
-  if (role === "admin") {
+        console.log("ADMIN MENU SHOW");
 
-    console.log("ADMIN MENU SHOW");
-    adminMenu.style.display = "block";
+        if (adminMenu)
+          adminMenu.style.display = "block";
 
-  } else {
+      } else {
 
-    console.log("NORMAL USER");
-    adminMenu.style.display = "none";
-  }
+        console.log("NORMAL USER");
 
-});
-      
-
-  // ================= START NOTIFICATION =================
-waitForElement("noti-btn", () => {
-
-  console.log("START NOTIFICATION");
-
-  startNotificationSystem(role, user.email);
-
-});
+        if (adminMenu)
+          adminMenu.style.display = "none";
+      }
 
     } catch (err) {
       console.error("ROLE LOAD ERROR:", err);
@@ -106,131 +73,87 @@ import {
     onSnapshot, orderBy, limit 
 } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
 
-// ==========================================================
-// ✅ NOTIFICATION SYSTEM (FINAL STABLE VERSION)
-// ==========================================================
 async function startNotificationSystem(role, email) {
-
-    const notiDot  = document.getElementById('noti-dot');
+    const notiDot = document.getElementById('noti-dot');
     const notiList = document.getElementById('noti-list');
-    const notiBtn  = document.getElementById('noti-btn');
+    const notiBtn = document.getElementById('noti-btn');
     const notiDrop = document.getElementById('noti-dropdown');
-    const clearBtn = document.getElementById('clear-all-noti');
 
-    if (!notiList || !notiBtn || !notiDrop) {
-    console.warn("Notification elements not ready");
-    return;
-}
+    if (!notiList) return; // ป้องกัน Error ถ้าหน้านั้นไม่มีปุ่มกระดิ่ง
 
-    // ✅ ป้องกัน listener ซ้อน (สำคัญมาก)
-    if (window.notiUnsubscribe) {
-        window.notiUnsubscribe();
-    }
-
-    // ================= QUERY BY ROLE =================
+    // 1. ตั้งค่า Query ตาม Role
     let q;
-
-    if (role === "admin") {
-
-        // 👑 ADMIN เห็นทุก ticket ใหม่
-        q = query(
-            collection(db, "tickets"),
-            orderBy("createdAt", "desc"),
-            limit(10)
-        );
-
+    if (role === 'admin') {
+        // Admin: แจ้งเตือนเมื่อมีใบงานใหม่ (Pending)
+        q = query(collection(db, "tickets"), where("status", "==", "Pending"), orderBy("createdAt", "desc"), limit(5));
     } else {
-
-        // 👤 USER เห็นเฉพาะของตัวเอง
-        q = query(
-            collection(db, "tickets"),
-            where("ownerEmail", "==", email),
-            orderBy("updatedAt", "desc"),
-            limit(10)
-        );
+        // User/Sale/Support: แจ้งเตือนเมื่อใบงานตัวเองมีการอัปเดต
+        q = query(collection(db, "tickets"), where("ownerEmail", "==", email), orderBy("updatedAt", "desc"), limit(5));
     }
 
-    // ================= REALTIME LISTENER =================
-    window.notiUnsubscribe = onSnapshot(q, (snapshot) => {
-
+    // 2. Listen แบบ Real-time
+    onSnapshot(q, (snapshot) => {
         if (snapshot.empty) {
-            notiList.innerHTML =
-                `<div class="p-4 text-center text-slate-400 text-xs">
-                    ไม่มีการแจ้งเตือน
-                </div>`;
-            notiDot?.classList.add("hidden");
+            notiList.innerHTML = `<div class="p-4 text-center text-slate-400 text-xs">ไม่มีการแจ้งเตือน</div>`;
+            if (notiDot) notiDot.classList.add('hidden');
             return;
         }
 
         let html = "";
-        let hasNew = false;
+        let hasNewChange = false;
 
         snapshot.docChanges().forEach((change) => {
-
             const data = change.doc.data();
-
-            // ===== ADMIN : ticket ใหม่ =====
-            if (role === "admin" && change.type === "added") {
-
+            
+            if (role === 'admin' && change.type === "added") {
+                hasNewChange = true;
                 html += `
-                <div class="p-4 border-b hover:bg-emerald-50 cursor-pointer">
-                    <div class="font-bold text-emerald-600">🆕 ใบงานใหม่</div>
-                    <div class="text-[11px] text-slate-600">
-                        ${data.owner} เปิดใบงาน : ${data.topic}
-                    </div>
-                </div>`;
-
-                hasNew = true;
-            }
-
-            // ===== USER : ticket ถูกอัปเดต =====
-            if (role !== "admin" && change.type === "modified") {
-
+                    <div class="p-4 border-b border-slate-50 hover:bg-emerald-50/50 transition cursor-pointer">
+                        <div class="font-bold text-emerald-600">🆕 ใบงานใหม่!</div>
+                        <div class="text-slate-600 text-[11px] mt-1 line-clamp-2">คุณ ${data.owner} เปิดใบงาน: ${data.topic}</div>
+                    </div>`;
+            } 
+            else if (role !== 'admin' && change.type === "modified") {
+                hasNewChange = true;
                 html += `
-                <div class="p-4 border-b hover:bg-blue-50 cursor-pointer">
-                    <div class="font-bold text-blue-600">🔔 อัปเดตใบงาน</div>
-                    <div class="text-[11px] text-slate-600">
-                        ${data.topic} → ${data.status}
-                    </div>
-                </div>`;
-
-                hasNew = true;
+                    <div class="p-4 border-b border-slate-50 hover:bg-blue-50/50 transition cursor-pointer">
+                        <div class="font-bold text-blue-600">🔔 อัปเดตใบงาน!</div>
+                        <div class="text-slate-600 text-[11px] mt-1 line-clamp-2">${data.topic} ถูกเปลี่ยนเป็นสถานะ: ${data.status}</div>
+                    </div>`;
             }
-
         });
 
-        if (hasNew) {
-            notiList.innerHTML = html + notiList.innerHTML;
-            notiDot?.classList.remove("hidden");
+        if (hasNewChange) {
+            notiList.innerHTML = html || notiList.innerHTML; 
+            if (notiDot) notiDot.classList.remove('hidden');
         }
     });
 
-    // ================= DROPDOWN =================
+    // 3. ระบบเปิด/ปิด Dropdown
     if (notiBtn && notiDrop) {
-
         notiBtn.onclick = (e) => {
             e.stopPropagation();
-            notiDrop.classList.toggle("hidden");
-            notiDot?.classList.add("hidden");
+            notiDrop.classList.toggle('hidden');
+            if (notiDot) notiDot.classList.add('hidden');
         };
-
-        window.addEventListener("click", () => {
-            notiDrop.classList.add("hidden");
-        });
-    }
-
-    // ================= CLEAR ALL =================
-    if (clearBtn) {
-        clearBtn.onclick = () => {
-
-            notiList.innerHTML =
-                `<div class="p-4 text-center text-slate-400 text-xs">
-                    ไม่มีการแจ้งเตือน
-                </div>`;
-
-            notiDot?.classList.add("hidden");
-        };
+        // คลิกข้างนอกแล้วปิด
+        window.addEventListener('click', () => notiDrop.classList.add('hidden'));
     }
 }
 
-
+// เชื่อมต่อระบบแจ้งเตือนเข้ากับ Auth ของ Script เดิม
+document.addEventListener("layoutLoaded", () => {
+    onAuthStateChanged(auth, async (user) => {
+        if (!user) return;
+        
+        // รอให้ Database อ่าน Role เสร็จก่อน (ใช้ Query เหมือน Script เดิมเป๊ะ)
+        const q = query(collection(db, "admin"), where("email", "==", user.email));
+        const snap = await getDocs(q);
+        if (!snap.empty) {
+            const userData = snap.docs[0].data();
+            const role = (userData.role || "").toLowerCase();
+            // เริ่มการแจ้งเตือน
+            startNotificationSystem(role, user.email);
+        }
+    });
+});

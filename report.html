@@ -543,6 +543,12 @@ window.showDetail = (sub) => {
 
     selectedSub = sub;
 
+    // ✅ เพิ่มบรรทัดนี้เพื่อเปลี่ยนชื่อหัวข้อให้เป็น "Team หลัก / Sub Team"
+    const modalHead = document.getElementById("modal-head");
+    if (modalHead) {
+        modalHead.innerText = `${selectedMain} / ${sub}`;
+    }
+
     const related = filteredTickets.filter(t =>
         t.sender_team === selectedMain &&
         t.sender_subteam === sub

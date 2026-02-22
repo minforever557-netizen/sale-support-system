@@ -178,48 +178,51 @@ onclick="if(event.target.id==='detail-modal') closeModal()">
 
         </div>
 
-       <div class="p-10
+       <!-- CONTENT -->
+<div class="p-10
 flex flex-col lg:flex-row
 items-start justify-center
-gap-12
+gap-16
 max-h-[75vh] overflow-y-auto">
-           <!-- LEFT : TOPIC -->
+
+    <!-- ================= LEFT : CHART ================= -->
     <div class="w-full lg:w-1/2 flex justify-center">
 
-        <div class="w-full max-w-md">
+        <div class="w-full max-w-md text-center">
 
-                     <div class="bg-slate-50 rounded-2xl p-6
-            flex items-center justify-center">
+            <p class="text-xs font-black text-indigo-600
+            uppercase tracking-widest mb-6">
+                Topic Distribution
+            </p>
+
+            <div class="bg-slate-50 rounded-2xl p-8
+            flex items-center justify-center shadow-inner">
 
                 <canvas id="detailChart"
-                class="max-h-[320px]"></canvas>
+                class="max-h-[340px]"></canvas>
 
             </div>
 
         </div>
     </div>
 
-            <!-- TOPIC -->
-            <div class="grid grid-cols-1 lg:grid-cols-2 gap-10 px-10 py-8">
 
-    <!-- ================= TOPIC OVERVIEW (CHART) ================= -->
-    <div>
+    <!-- ================= RIGHT : OWNERS ================= -->
+    <div class="w-full lg:w-1/2">
 
-        <p class="text-xs font-black text-indigo-600
-        uppercase tracking-widest mb-5">
-            Topic Overview
+        <p class="text-xs font-black text-emerald-600
+        uppercase tracking-widest mb-6">
+            Team Members
         </p>
 
-        <div class="bg-slate-50 rounded-2xl p-6
-        flex items-center justify-center">
-
-            <!-- กราฟ -->
-            <canvas id="detailChart"
-            class="max-h-[320px]"></canvas>
-
+        <div id="modal-owners"
+        class="space-y-4 max-h-[420px]
+        overflow-y-auto pr-2">
         </div>
 
     </div>
+
+</div>
 
 
     <!-- ================= TEAM MEMBERS ================= -->

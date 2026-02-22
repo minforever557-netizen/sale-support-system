@@ -639,10 +639,8 @@ window.modalBack = () => {
     const topicBox = document.getElementById("owner-topic-box");
     if (topicBox) topicBox.classList.add("hidden");
 
-    // แสดง owner list
-    document
-        .getElementById("modal-owners")
-        .classList.remove("hidden");
+    // ✅ สำคัญ — render OWNER ใหม่
+    showDetail(selectedSub);
 };
 // ================= RESET =================
 window.resetView=()=>{

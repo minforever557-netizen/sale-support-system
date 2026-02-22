@@ -177,33 +177,44 @@ onclick="if(event.target.id==='detail-modal') closeModal()">
             </p>
 
         </div>
-
-       <div class="p-10
+<!-- CONTENT -->
+<div class="p-10
 flex flex-col lg:flex-row
-items-start justify-center
-gap-12
+justify-center items-start gap-14
 max-h-[75vh] overflow-y-auto">
-           <!-- LEFT : TOPIC -->
+
+    <!-- LEFT : TEAM GRAPH -->
     <div class="w-full lg:w-1/2 flex justify-center">
 
         <div class="w-full max-w-md">
-
             <p class="text-xs font-black text-indigo-600
             uppercase tracking-widest mb-5 text-center">
-                Topic Overview
+                Topic Distribution
             </p>
 
-            <div class="bg-slate-50 rounded-2xl p-6
-            flex items-center justify-center">
-
-                <canvas id="detailChart"
-                class="max-h-[320px]"></canvas>
-
+            <div class="bg-slate-50 rounded-2xl p-6">
+                <canvas id="detailChart"></canvas>
             </div>
-
         </div>
+
     </div>
 
+
+    <!-- CENTER : OWNER LIST -->
+    <div class="w-full lg:w-1/2">
+
+        <p class="text-xs font-black text-emerald-600
+        uppercase tracking-widest mb-5">
+            Team Members
+        </p>
+
+        <div id="modal-owners"
+        class="space-y-4 max-h-[420px] overflow-y-auto pr-2">
+        </div>
+
+    </div>
+
+</div>
             <!-- TOPIC -->
             <div class="grid grid-cols-1 lg:grid-cols-2 gap-10 px-10 py-8">
 
@@ -247,7 +258,7 @@ max-h-[75vh] overflow-y-auto">
     </div>
 </div>
     </div>
-<script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels@2"></script>
+<script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels"></script>
 <script type="module">
 
 // ================= IMPORT =================
@@ -469,65 +480,68 @@ window.drillDown=(main)=>{
 
 
 // ================= MODAL DETAIL =================
-window.showDetail=(sub)=>{
+window.showDetail = (sub)=>{
 
-    selectedSub=sub;
+    selectedSub = sub;
 
-    const related=filteredTickets.filter(t=>
-        t.sender_team===selectedMain &&
-        t.sender_subteam===sub
+    document.getElementById("modal-head").innerText =
+        `${selectedMain} / ${sub}`;
+
+    const related = filteredTickets.filter(t =>
+        t.sender_team === selectedMain &&
+        t.sender_subteam === sub
     );
 
-    const total=related.length;
+    const totalTickets = related.length;
 
-    const ownerMap={};
-    const topicMap={};
+    const ownerMap = {};
+    const topicMap = {};
 
     related.forEach(t=>{
 
-        const owner=t.owner||"Unknown";
+        const owner = t.owner || t.ownerEmail || "Unknown";
 
-        ownerMap[owner]=(ownerMap[owner]||0)+1;
+        if(!ownerMap[owner]){
+            ownerMap[owner]={ total:0, topics:{} };
+        }
 
-        if(t.topic)
-            topicMap[t.topic]=(topicMap[t.topic]||0)+1;
+        ownerMap[owner].total++;
+
+        if(t.topic){
+            ownerMap[owner].topics[t.topic] =
+                (ownerMap[owner].topics[t.topic]||0)+1;
+
+            topicMap[t.topic] =
+                (topicMap[t.topic]||0)+1;
+        }
     });
 
-    // OWNER LIST
-    document.getElementById("modal-owners").innerHTML=
-    Object.entries(ownerMap).map(([o,c])=>{
+    // ================= OWNER LIST =================
+    document.getElementById("modal-owners").innerHTML =
+        Object.entries(ownerMap).map(([owner,data])=>{
 
-        const pct=Math.round(c/total*100);
+            const percent =
+                Math.round(data.total/totalTickets*100);
 
-        return `
-<div class="border rounded-xl p-4">
+            return `
+<div onclick="showOwnerDetail('${owner}')"
+class="cursor-pointer border rounded-xl p-4 bg-white
+hover:bg-indigo-50 transition">
+
 <div class="flex justify-between font-bold">
-${o}
-<span class="text-indigo-600">${c} (${pct}%)</span>
+${owner}
+<span class="text-indigo-600">
+${data.total} (${percent}%)
+</span>
 </div>
+
 </div>`;
-    }).join("");
+        }).join("");
 
+    drawDetailChart(topicMap,totalTickets);
 
-    // DETAIL CHART
-    const ctx=document.getElementById("detailChart");
-
-    if(detailChart) detailChart.destroy();
-
-    detailChart=new Chart(ctx,{
-        type:"doughnut",
-        data:{
-            labels:Object.keys(topicMap),
-            datasets:[{data:Object.values(topicMap)}]
-        },
-        options:{cutout:"65%",plugins:{legend:{position:"bottom"}}}
-    });
-
-    const modal=document.getElementById("detail-modal");
-    modal.classList.remove("hidden");
-    modal.classList.add("flex");
+    openModal();
 };
-
 
 // ================= CLOSE =================
 window.closeModal=()=>{

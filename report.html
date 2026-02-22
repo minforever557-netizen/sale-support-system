@@ -488,7 +488,8 @@ window.drillDown=(main)=>{
 
 // ================= MODAL DETAIL =================
 window.showDetail = (sub) => {
-    modalLevel = "OWNER";   // ✅ ใส่ตรงนี้
+
+    modalLevel = "OWNER";
     selectedSub = sub;
 
     const related = filteredTickets.filter(t =>
@@ -496,7 +497,7 @@ window.showDetail = (sub) => {
         t.sender_subteam === sub
     );
 
-    const total = related.length || 1; // กันหาร 0
+    const total = related.length || 1;
 
     const ownerMap = {};
     const topicMap = {};
@@ -509,6 +510,10 @@ window.showDetail = (sub) => {
         if (t.topic)
             topicMap[t.topic] = (topicMap[t.topic] || 0) + 1;
     });
+
+    // ===== HEADER =====
+    document.getElementById("modal-head").innerText =
+        `${selectedMain} / ${sub}`;
 
     // ===== OWNER LIST =====
     document.getElementById("modal-owners").innerHTML =
@@ -528,7 +533,13 @@ window.showDetail = (sub) => {
         <span class="text-indigo-600">${c} (${pct}%)</span>
     </div>
 </div>`;
-}).join("");
+        }).join("");
+
+    // ✅ สำคัญมาก — เปิด modal
+    const modal = document.getElementById("detail-modal");
+    modal.classList.remove("hidden");
+    modal.classList.add("flex");
+};
 
     // ===== DETAIL CHART =====
 const canvas = document.getElementById("detailChart");

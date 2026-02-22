@@ -119,11 +119,11 @@ class="w-64 shrink-0 h-full bg-white border-r border-slate-200">
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     </div>
 
-    <div id="detail-modal" class="fixed inset-0 z-[150] hidden flex items-center justify-center p-4 bg-slate-900/40 backdrop-blur-sm">
+   <div id="detail-modal"
+onclick="if(event.target.id==='detail-modal') closeModal()"
         <div class="bg-white w-full max-w-4xl rounded-[2.5rem] p-8 shadow-2xl overflow-y-auto max-h-[85vh]">
             <div class="flex justify-between items-center mb-6">
                 <h3 id="modal-head" class="text-2xl font-bold text-slate-800"></h3>
-                <button onclick="closeModal()" class="text-slate-400 hover:text-slate-800"><i class="fa-solid fa-times text-xl"></i></button>
             </div>
             <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <div class="bg-slate-50 p-6 rounded-3xl border border-slate-100">
@@ -132,7 +132,7 @@ class="w-64 shrink-0 h-full bg-white border-r border-slate-200">
                 </div>
                 <div class="bg-slate-50 p-6 rounded-3xl border border-slate-100">
                     <p class="text-[10px] font-black text-emerald-600 uppercase mb-4 tracking-widest">Owner List</p>
-                    <div id="modal-owners" class="space-y-2"></div>
+                    <div id="modal-owners" class="space-y-4"></div>
                 </div>
             </div>
         </div>
@@ -365,40 +365,88 @@ window.drillDown=(main)=>{
 };
 
 
-// ================= SHOW MODAL (SUB → USER) =================
-window.showDetail=(sub)=>{
+// ================= SHOW MODAL (USER DETAIL) =================
+window.showDetail = (sub)=>{
 
-    selectedSub=sub;
+    selectedSub = sub;
 
     document.getElementById("modal-head").innerText =
         `${selectedMain} / ${sub}`;
 
-    const related=filteredTickets.filter(t=>
-        t.sender_team===selectedMain &&
-        t.sender_subteam===sub
+    const related = filteredTickets.filter(t =>
+        t.sender_team === selectedMain &&
+        t.sender_subteam === sub
     );
 
-    const topicMap={};
-    const ownerMap={};
+    const totalTickets = related.length;
+
+    // ===== GROUP BY OWNER =====
+    const ownerMap = {};
 
     related.forEach(t=>{
 
+        const owner = t.owner || t.ownerEmail || "Unknown";
+
+        if(!ownerMap[owner]){
+            ownerMap[owner]={
+                total:0,
+                topics:{}
+            };
+        }
+
+        ownerMap[owner].total++;
+
+        if(t.topic){
+            ownerMap[owner].topics[t.topic] =
+                (ownerMap[owner].topics[t.topic]||0)+1;
+        }
+    });
+
+    // ===== RENDER OWNER DETAIL =====
+    document.getElementById("modal-owners").innerHTML =
+        Object.entries(ownerMap).map(([owner,data])=>{
+
+            const percent =
+                Math.round((data.total/totalTickets)*100);
+
+            const topicList =
+                Object.entries(data.topics)
+                .map(([t,c])=>`• ${t} (${c})`)
+                .join("<br>");
+
+            return `
+            <div class="bg-white border rounded-2xl p-4 shadow-sm">
+
+                <div class="flex justify-between items-center mb-2">
+                    <div class="font-bold text-slate-800">
+                        ${owner}
+                    </div>
+
+                    <div class="text-sm font-black text-indigo-600">
+                        ${data.total} tickets (${percent}%)
+                    </div>
+                </div>
+
+                <div class="text-sm text-slate-500 leading-relaxed">
+                    ${topicList}
+                </div>
+
+            </div>
+            `;
+        }).join("");
+
+    // ===== TOPIC SUMMARY =====
+    const topicMap={};
+
+    related.forEach(t=>{
         if(t.topic)
             topicMap[t.topic]=(topicMap[t.topic]||0)+1;
-
-        if(t.ownerEmail)
-            ownerMap[t.ownerEmail]=(ownerMap[t.ownerEmail]||0)+1;
     });
 
     document.getElementById("modal-topics").innerHTML =
         Object.entries(topicMap)
         .map(([t,c])=>`<div>${t} : <b>${c}</b></div>`)
-        .join("") || "No Data";
-
-    document.getElementById("modal-owners").innerHTML =
-        Object.entries(ownerMap)
-        .map(([o,c])=>`<div>${o} : <b>${c}</b></div>`)
-        .join("") || "No Data";
+        .join("");
 
     document.getElementById("detail-modal")
         .classList.remove("hidden");

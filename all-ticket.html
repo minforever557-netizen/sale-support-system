@@ -284,26 +284,43 @@
         }).join('');
     }
 
-    // --- 5. การเชื่อมต่อ Firebase ---
-    function initTicketListener(email) {
+    // --- 5. การเชื่อมต่อ Firebase (แก้ไขให้ดึงข้อมูลครบทุกคน) ---
+    function initTicketListener() {
         if (unsubscribe) unsubscribe();
+        
         const sortOrderEl = document.getElementById('sortOrder');
         const [field, direction] = sortOrderEl ? sortOrderEl.value.split('-') : ['createdAt', 'desc'];
 
-               unsubscribe = onSnapshot(q, (snapshot) => {
+        // ✅ สร้าง Query ใหม่: ดึงทั้งหมดและเรียงลำดับ (ไม่มี where มากั้น)
+        const q = query(
+            collection(db, "tickets"), 
+            orderBy(field, direction)
+        );
+
+        unsubscribe = onSnapshot(q, (snapshot) => {
             currentTickets = snapshot.docs.map(d => ({ id: d.id, ...d.data() }));
             renderTickets(currentTickets);
+        }, (error) => {
+            console.error("Firestore Error:", error);
         });
     }
 
+    // --- 6. การจัดการ Auth และ Event ---
     onAuthStateChanged(auth, (user) => {
         if (!user) return window.location.replace("login.html");
-        initTicketListener(user.email);
+        // ✅ เรียกโดยไม่ต้องส่ง email
+        initTicketListener();
     });
 
+    // ค้นหาข้อมูลในตาราง
     document.getElementById('searchInput')?.addEventListener('input', () => renderTickets(currentTickets));
+    
+    // เปลี่ยนการเรียงลำดับ
     document.getElementById('sortOrder')?.addEventListener('change', () => {
-        if (auth.currentUser) initTicketListener(auth.currentUser.email);
+        if (auth.currentUser) {
+            // ✅ เรียกโดยไม่ต้องส่ง email
+            initTicketListener();
+        }
     });
 </script>
     <script src="./js/layout.js"></script>

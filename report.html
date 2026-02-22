@@ -120,16 +120,18 @@ class="w-64 shrink-0 h-full bg-white border-r border-slate-200">
     </div>
 <!-- ================= MODAL ================= -->
 <div id="detail-modal"
-class="fixed inset-0 z-[150] hidden items-center justify-center
+class="fixed inset-0 z-[150] hidden
+flex items-center justify-center
 bg-slate-900/40 backdrop-blur-sm p-6"
 onclick="if(event.target.id==='detail-modal') closeModal()">
 
     <div class="bg-white w-full max-w-5xl rounded-[32px]
-    shadow-2xl overflow-hidden animate-[fadeIn_.25s_ease]">
+    shadow-2xl overflow-hidden
+    animate-[fadeIn_.25s_ease] relative">
 
         <!-- HEADER -->
-        <div class="px-10 py-6 border-b bg-gradient-to-r
-        from-indigo-50 to-white">
+        <div class="px-10 py-6 border-b
+        bg-gradient-to-r from-indigo-50 to-white">
 
             <h3 id="modal-head"
             class="text-2xl font-black text-slate-800"></h3>
@@ -427,7 +429,9 @@ Object.entries(data.topics)
         }).join("");
 
     document.getElementById("detail-modal")
-        .classList.remove("hidden");
+        const modal = document.getElementById("detail-modal");
+modal.classList.remove("hidden");
+modal.classList.add("flex");
 };
 
 

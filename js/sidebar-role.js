@@ -10,8 +10,8 @@ import {
   onAuthStateChanged
 } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
 
-
 console.log("ROLE CHECK START");
+
 
 // ================= HELPER : WAIT ELEMENT =================
 function waitForElement(id, callback) {

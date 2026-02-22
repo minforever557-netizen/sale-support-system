@@ -467,60 +467,129 @@ window.drillDown=(main)=>{
 
 
 // ================= MODAL DETAIL =================
-window.showDetail=(sub)=>{
+window.showDetail = (sub)=>{
 
-    selectedSub=sub;
+    selectedSub = sub;
 
-    const related=filteredTickets.filter(t=>
-        t.sender_team===selectedMain &&
-        t.sender_subteam===sub
+    const related = filteredTickets.filter(t =>
+        t.sender_team === selectedMain &&
+        t.sender_subteam === sub
     );
 
-    const total=related.length;
+    const total = related.length;
 
-    const ownerMap={};
-    const topicMap={};
+    const ownerMap = {};
+    const topicMap = {};
 
+    // ================= GROUP DATA =================
     related.forEach(t=>{
 
-        const owner=t.owner||"Unknown";
+        const owner = t.owner || "Unknown";
 
-        ownerMap[owner]=(ownerMap[owner]||0)+1;
+        if(!ownerMap[owner]){
+            ownerMap[owner] = {
+                total:0,
+                topics:{}
+            };
+        }
 
-        if(t.topic)
-            topicMap[t.topic]=(topicMap[t.topic]||0)+1;
+        ownerMap[owner].total++;
+
+        if(t.topic){
+
+            // topic รวมทั้งหมด
+            topicMap[t.topic] =
+                (topicMap[t.topic]||0)+1;
+
+            // topic ของ owner
+            ownerMap[owner].topics[t.topic] =
+                (ownerMap[owner].topics[t.topic]||0)+1;
+        }
     });
 
-    // OWNER LIST
-    document.getElementById("modal-owners").innerHTML=
-    Object.entries(ownerMap).map(([o,c])=>{
+    // ================= OWNER LIST (เรียงมาก→น้อย) =================
+    document.getElementById("modal-owners").innerHTML =
+        Object.entries(ownerMap)
+        .sort((a,b)=>b[1].total-a[1].total)
+        .map(([owner,data])=>{
 
-        const pct=Math.round(c/total*100);
+            const pct =
+                Math.round(data.total/total*100);
 
-        return `
-<div class="border rounded-xl p-4">
-<div class="flex justify-between font-bold">
-${o}
-<span class="text-indigo-600">${c} (${pct}%)</span>
-</div>
+            return `
+<div onclick="showOwnerDetail('${owner}')"
+class="border rounded-xl p-4 cursor-pointer
+hover:bg-indigo-50 transition">
+
+    <div class="flex justify-between font-bold">
+        ${owner}
+        <span class="text-indigo-600">
+            ${data.total} (${pct}%)
+        </span>
+    </div>
+
 </div>`;
-    }).join("");
+        }).join("");
 
 
-    // DETAIL CHART
-    const ctx=document.getElementById("detailChart");
+    // ================= TOP 5 TOPIC =================
+    const sortedTopics =
+        Object.entries(topicMap)
+        .sort((a,b)=>b[1]-a[1])
+        .slice(0,5);
 
-    if(detailChart) detailChart.destroy();
+    const labels = sortedTopics.map(t=>t[0]);
+    const values = sortedTopics.map(t=>t[1]);
 
-    detailChart=new Chart(ctx,{
+    const totalTopic =
+        values.reduce((a,b)=>a+b,0);
+
+    // ================= CHART =================
+    const ctx =
+        document.getElementById("detailChart").getContext("2d");
+
+    if(window.detailChart)
+        window.detailChart.destroy();
+
+    window.detailChart = new Chart(ctx,{
         type:"doughnut",
         data:{
-            labels:Object.keys(topicMap),
-            datasets:[{data:Object.values(topicMap)}]
+            labels:labels,
+            datasets:[{
+                data:values,
+                backgroundColor:[
+                    "#3b82f6",
+                    "#ef4444",
+                    "#f59e0b",
+                    "#10b981",
+                    "#8b5cf6"
+                ]
+            }]
         },
-        options:{cutout:"65%",plugins:{legend:{position:"bottom"}}}
+        options:{
+            cutout:"65%",
+            plugins:{
+                legend:{position:"bottom"},
+
+                // ✅ แสดง จำนวน + %
+                datalabels:{
+                    color:"#111",
+                    font:{
+                        weight:"bold",
+                        size:13
+                    },
+                    formatter:(value)=>{
+                        const pct =
+                            Math.round(value/totalTopic*100);
+                        return `${value}\n(${pct}%)`;
+                    }
+                }
+            }
+        },
+        plugins:[ChartDataLabels]
     });
 
+    // ================= OPEN MODAL =================
     const modal=document.getElementById("detail-modal");
     modal.classList.remove("hidden");
     modal.classList.add("flex");

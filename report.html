@@ -436,9 +436,10 @@ modal.classList.add("flex");
 
 
 // ================= CLOSE =================
-window.closeModal=()=>{
-    document.getElementById("detail-modal")
-        .classList.add("hidden");
+window.closeModal = () => {
+    const modal = document.getElementById("detail-modal");
+    modal.classList.add("hidden");
+    modal.classList.remove("flex");
 };
 
 

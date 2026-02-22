@@ -336,25 +336,18 @@ function buildYearFilter(){
 
 // ================= FILTER =================
 function applyFilters(){
-    filteredTickets = allTickets.filter(t => {
+
+    filteredTickets = allTickets.filter(t=>{
+
         if(!t.createdAt) return false;
 
-        const d = t.createdAt.toDate();
-        const y = d.getFullYear().toString();
-        const m = String(d.getMonth() + 1).padStart(2, "0");
+        const d=t.createdAt.toDate();
 
-        // 1. กรองตามปี (ถ้ามีการเลือก)
-        if(selectedYear && y !== selectedYear) return false;
-        
-        // 2. กรองตามเดือน (ถ้ามีการเลือก)
-        if(selectedMonth && m !== selectedMonth) return false;
+        const y=d.getFullYear().toString();
+        const m=String(d.getMonth()+1).padStart(2,"0");
 
-        // 3. ✅ กรองตามทีม (เมื่ออยู่ในระดับ SUB หรือมีการเลือกทีม)
-        // ถ้า currentLevel เป็น "SUB" ให้แสดงเฉพาะตั๋วที่ตรงกับทีม (selectedMain) ที่เราคลิกมา
-        if(currentLevel === "SUB" && selectedMain) {
-            const teamName = t.sender_team || "Unknown";
-            if(teamName !== selectedMain) return false;
-        }
+        if(selectedYear && y!==selectedYear) return false;
+        if(selectedMonth && m!==selectedMonth) return false;
 
         return true;
     });
@@ -437,6 +430,10 @@ currentLevel==="MAIN"
 
     updateChart();
 }
+
+// ประกาศตัวแปรไว้ด้านนอกฟังก์ชันเพื่อให้เรียกใช้ destroy ได้ถูกต้อง
+let myChart; 
+
 function updateChart() {
     const ctx = document.getElementById("mainChart");
     if (!ctx) return;
@@ -527,17 +524,19 @@ function updateChart() {
         }
     });
 }
+
 // ================= DRILL =================
-window.drillDown = (main) => {
-    currentLevel = "SUB";
-    selectedMain = main;
+window.drillDown=(main)=>{
+    currentLevel="SUB";
+    selectedMain=main;
 
-    document.getElementById("nav-path").innerText = `Dashboard / ${main}`;
+    document.getElementById("nav-path").innerText=
+        `Dashboard / ${main}`;
 
-    // renderUI จะไปเรียก applyFilters ซึ่งตอนนี้ฉลาดพอที่จะกรองทีมให้เราแล้ว
-    renderUI(); 
+    renderUI();
 };
-    
+
+
 // ================= MODAL DETAIL =================
 window.showDetail = (sub) => {
 
@@ -739,9 +738,6 @@ window.resetView=()=>{
     currentLevel="MAIN";
     selectedMain="";
     selectedSub="";
-
-    // ✅ เพิ่มบรรทัดนี้: คืนค่าข้อมูลกลับเป็นทั้งหมด (allTickets)
-    filteredTickets = [...allTickets]; 
 
     document.getElementById("nav-path").innerText=
         "Dashboard / Overall";

@@ -58,6 +58,22 @@ document.addEventListener("layoutLoaded", () => {
           adminMenu.style.display = "none";
       }
 
+      // ================= START NOTIFICATION =================
+
+// ⭐ รอ Topbar โหลดก่อน (แก้ noti บางหน้าไม่ขึ้น)
+const waitTopbar = setInterval(() => {
+
+  if (document.getElementById("noti-btn")) {
+
+    clearInterval(waitTopbar);
+
+    console.log("START NOTIFICATION");
+
+    startNotificationSystem(role, user.email);
+  }
+
+}, 200);
+
     } catch (err) {
       console.error("ROLE LOAD ERROR:", err);
     }

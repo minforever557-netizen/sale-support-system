@@ -110,8 +110,7 @@ async function startNotificationSystem(role, email) {
                 html += `
                     <div class="p-4 border-b border-slate-50 hover:bg-emerald-50/50 transition cursor-pointer">
                         <div class="font-bold text-emerald-600">🆕 ใบงานใหม่!</div>
-                        <div class="font-bold text-slate-700 text-xs leading-tight">Internet No: ${internetNo}</div>
-                        <div class="text-slate-600 text-[11px] mt-1 line-clamp-2">คุณ ${data.owner} เปิดใบงาน: ${topic}</div>
+                        <div class="text-slate-600 text-[11px] mt-1 line-clamp-2">คุณ ${data.owner} เปิดใบงาน: ${data.topic}</div>
                     </div>`;
             } 
             else if (role !== 'admin' && change.type === "modified") {

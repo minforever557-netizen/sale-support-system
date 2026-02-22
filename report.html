@@ -524,8 +524,7 @@ window.showDetail = (sub) => {
             return `
 <div class="border rounded-xl p-4
             cursor-pointer
-            hover:bg-indigo-50
-            transition"
+            hover:bg-indigo-50 transition"
      onclick="showOwnerTopics('${o}')">
 
     <div class="flex justify-between font-bold">
@@ -535,15 +534,18 @@ window.showDetail = (sub) => {
 </div>`;
         }).join("");
 
-    // ✅ สำคัญมาก — เปิด modal
+    // ===== DETAIL CHART =====
+    const canvas = document.getElementById("detailChart");
+    const ctx = canvas.getContext("2d");
+
+    // (chart code อยู่ตรงนี้ต่อได้เลย)
+
+    // ===== OPEN MODAL =====
     const modal = document.getElementById("detail-modal");
     modal.classList.remove("hidden");
     modal.classList.add("flex");
-};
 
-    // ===== DETAIL CHART =====
-const canvas = document.getElementById("detailChart");
-const ctx = canvas.getContext("2d");
+}; // ✅ ปิด function ตรงนี้ "บรรทัดสุดท้ายเท่านั้น"
 
 /* =========================
    ✅ TOP 5 TOPIC ONLY

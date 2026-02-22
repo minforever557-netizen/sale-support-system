@@ -503,31 +503,50 @@ window.showDetail = (sub) => {
         }).join("");
 
     // ===== DETAIL CHART =====
-    const canvas = document.getElementById("detailChart");
-    const ctx = canvas.getContext("2d");
+const canvas = document.getElementById("detailChart");
+const ctx = canvas.getContext("2d");
 
-    // 🔥 destroy เฉพาะตอนที่เป็น chart จริง
-    if (detailChart instanceof Chart) {
-        detailChart.destroy();
-    }
+/* =========================
+   ✅ TOP 5 TOPIC ONLY
+========================= */
 
-    detailChart = new Chart(ctx, {
-        type: "doughnut",
-        data: {
-            labels: Object.keys(topicMap),
-            datasets: [{
-                data: Object.values(topicMap)
-            }]
-        },
-        options: {
-            cutout: "65%",
-            plugins: {
-                legend: {
-                    position: "bottom"
-                }
-            }
+// แปลง object → array แล้วเรียงมากไปน้อย
+const sortedTopics = Object.entries(topicMap)
+    .sort((a,b)=> b[1]-a[1])
+    .slice(0,5); // เอาแค่ Top 5
+
+const labels = sortedTopics.map(t=>t[0]);
+const values = sortedTopics.map(t=>t[1]);
+
+// 🔥 destroy เฉพาะตอนที่เป็น chart จริง
+if (detailChart instanceof Chart) {
+    detailChart.destroy();
+}
+
+/* =========================
+   ✅ CREATE CHART
+========================= */
+
+detailChart = new Chart(ctx, {
+    type: "doughnut",
+    data: {
+        labels: labels,
+        datasets: [{
+            data: values
+        }]
+    },
+    options: {
+        cutout: "65%",
+        plugins: {
+            legend:{
+                position:"bottom"
+            },
+
+            // ✅ เปิด plugin แสดงตัวเลข
+            doughnutLabel:{}
         }
-    });
+    }
+});
 
     // ===== OPEN MODAL =====
     const modal = document.getElementById("detail-modal");

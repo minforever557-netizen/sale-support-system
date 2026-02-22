@@ -13,6 +13,30 @@ import {
 
 console.log("ROLE CHECK START");
 
+// ================= HELPER : WAIT ELEMENT =================
+function waitForElement(id, callback) {
+
+  const el = document.getElementById(id);
+
+  if (el) {
+    callback();
+    return;
+  }
+
+  const observer = new MutationObserver(() => {
+    const el = document.getElementById(id);
+    if (el) {
+      observer.disconnect();
+      callback();
+    }
+  });
+
+  observer.observe(document.body, {
+    childList: true,
+    subtree: true
+  });
+}
+
 document.addEventListener("layoutLoaded", () => {
 
   onAuthStateChanged(auth, async (user) => {
@@ -57,22 +81,16 @@ document.addEventListener("layoutLoaded", () => {
         if (adminMenu)
           adminMenu.style.display = "none";
       }
+      
 
-      // ================= START NOTIFICATION =================
+  // ================= START NOTIFICATION =================
+waitForElement("noti-btn", () => {
 
-// ⭐ รอ Topbar โหลดก่อน (แก้ noti บางหน้าไม่ขึ้น)
-const waitTopbar = setInterval(() => {
+  console.log("START NOTIFICATION");
 
-  if (document.getElementById("noti-btn")) {
+  startNotificationSystem(role, user.email);
 
-    clearInterval(waitTopbar);
-
-    console.log("START NOTIFICATION");
-
-    startNotificationSystem(role, user.email);
-  }
-
-}, 200);
+});
 
     } catch (err) {
       console.error("ROLE LOAD ERROR:", err);

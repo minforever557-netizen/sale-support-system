@@ -524,18 +524,19 @@ function updateChart() {
         }
     });
 }
-
 // ================= DRILL =================
 window.drillDown=(main)=>{
     currentLevel="SUB";
     selectedMain=main;
+
+    // ✅ เพิ่มบรรทัดนี้: กรองข้อมูลเฉพาะทีมที่เลือก
+    filteredTickets = allTickets.filter(t => (t.sender_team || "Unknown") === main);
 
     document.getElementById("nav-path").innerText=
         `Dashboard / ${main}`;
 
     renderUI();
 };
-
 
 // ================= MODAL DETAIL =================
 window.showDetail = (sub) => {
@@ -738,6 +739,9 @@ window.resetView=()=>{
     currentLevel="MAIN";
     selectedMain="";
     selectedSub="";
+
+    // ✅ เพิ่มบรรทัดนี้: คืนค่าข้อมูลกลับเป็นทั้งหมด (allTickets)
+    filteredTickets = [...allTickets]; 
 
     document.getElementById("nav-path").innerText=
         "Dashboard / Overall";

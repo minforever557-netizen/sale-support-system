@@ -190,7 +190,7 @@ let allTickets = [];
 let filteredTickets = [];
 let myChart = null;
 
-let currentLevel = "MAIN"; // MAIN | SUB
+let currentLevel = "MAIN";
 let selectedMain = "";
 let selectedSub = "";
 let activeMonths = [];
@@ -280,8 +280,7 @@ function renderUI(){
         if(!stats[key]){
             stats[key]={
                 total:0,
-                topics:{},
-                owners:{}
+                topics:{}
             };
         }
 
@@ -289,9 +288,6 @@ function renderUI(){
 
         if(t.topic)
             stats[key].topics[t.topic]=(stats[key].topics[t.topic]||0)+1;
-
-        if(t.ownerEmail)
-            stats[key].owners[t.ownerEmail]=(stats[key].owners[t.ownerEmail]||0)+1;
     });
 
     const tableBody=document.getElementById("table-body");
@@ -328,7 +324,7 @@ function renderUI(){
 }
 
 
-// ================= CHART TOP 5 =================
+// ================= CHART =================
 function updateChart(){
 
     const ctx=document.getElementById("mainChart").getContext("2d");
@@ -345,52 +341,23 @@ function updateChart(){
         .sort((a,b)=>b[1]-a[1])
         .slice(0,5);
 
-    const total = sorted.reduce((s,v)=>s+v[1],0);
-
-    if(total===0){
-        if(myChart) myChart.destroy();
-        return;
-    }
-
     if(myChart) myChart.destroy();
 
     myChart=new Chart(ctx,{
         type:"doughnut",
         data:{
-            labels:sorted.map(([n,c])=>{
-                const pct=Math.round(c/total*100);
-                return `${n} (${pct}%)`;
-            }),
-            datasets:[{
-                data:sorted.map(v=>v[1]),
-                backgroundColor:[
-                    "#6366f1",
-                    "#10b981",
-                    "#f59e0b",
-                    "#ef4444",
-                    "#8b5cf6"
-                ]
-            }]
-        },
-        options:{
-            cutout:"70%",
-            plugins:{
-                legend:{
-                    position:"right",
-                    labels:{font:{size:13}}
-                }
-            }
+            labels:sorted.map(([n,c])=>n),
+            datasets:[{ data:sorted.map(v=>v[1]) }]
         }
     });
 }
 
 
-// ================= DRILL MAIN → SUB =================
+// ================= DRILL DOWN =================
 window.drillDown=(main)=>{
 
     currentLevel="SUB";
     selectedMain=main;
-    selectedSub="";
 
     document.getElementById("nav-path").innerText =
         `Dashboard / ${main}`;
@@ -399,14 +366,10 @@ window.drillDown=(main)=>{
 };
 
 
-// ================= SHOW MODAL (USER DETAIL) =================
-// ================= SHOW MODAL (USER DETAIL) =================
+// ================= USER DETAIL =================
 window.showDetail = (sub)=>{
 
     selectedSub = sub;
-
-    document.getElementById("modal-head").innerText =
-        `${selectedMain} / ${sub}`;
 
     const related = filteredTickets.filter(t =>
         t.sender_team === selectedMain &&
@@ -415,15 +378,12 @@ window.showDetail = (sub)=>{
 
     const totalTickets = related.length;
 
-    // ================= GROUP OWNER =================
     const ownerMap = {};
-    const topicMap = {};
 
     related.forEach(t=>{
 
         const owner = t.owner || t.ownerEmail || "Unknown";
 
-        // owner summary
         if(!ownerMap[owner]){
             ownerMap[owner]={
                 total:0,
@@ -434,17 +394,11 @@ window.showDetail = (sub)=>{
         ownerMap[owner].total++;
 
         if(t.topic){
-
             ownerMap[owner].topics[t.topic] =
                 (ownerMap[owner].topics[t.topic]||0)+1;
-
-            topicMap[t.topic] =
-                (topicMap[t.topic]||0)+1;
         }
     });
 
-
-    // ================= RENDER OWNER =================
     document.getElementById("modal-owners").innerHTML =
         Object.entries(ownerMap).map(([owner,data])=>{
 
@@ -452,86 +406,33 @@ window.showDetail = (sub)=>{
                 Math.round((data.total/totalTickets)*100);
 
             return `
-<div class="bg-gradient-to-br from-white to-slate-50
-border rounded-2xl p-5 shadow-sm hover:shadow-md transition">
+<div class="border rounded-xl p-4 mb-3 bg-white">
 
-    <div class="flex justify-between items-center mb-3">
+<div class="flex justify-between font-bold">
+${owner}
+<span class="text-indigo-600">
+${data.total} (${percent}%)
+</span>
+</div>
 
-        <div class="font-bold text-slate-800 text-base">
-            ${owner}
-        </div>
-
-        <div class="text-sm font-black text-indigo-600
-        bg-indigo-50 px-3 py-1 rounded-full">
-            ${data.total} cases • ${percent}%
-        </div>
-
-    </div>
-
-    <div class="text-sm text-slate-500 space-y-1">
-        ${
-            Object.entries(data.topics)
-            .map(([t,c])=>`
-                <div class="flex justify-between">
-                    <span>${t}</span>
-                    <span class="font-semibold">${c}</span>
-                </div>
-            `).join("")
-        }
-    </div>
+<div class="text-sm text-slate-500 mt-2">
+${
+Object.entries(data.topics)
+.map(([t,c])=>`${t} : ${c}`)
+.join("<br>")
+}
+</div>
 
 </div>`;
         }).join("");
-
-
-    // ================= RENDER TOPIC SUMMARY =================
-    document.getElementById("modal-topics").innerHTML =
-        Object.entries(topicMap).map(([t,c])=>{
-
-            const pct =
-                Math.round((c/totalTickets)*100);
-
-            return `
-<div>
-    <div class="flex justify-between text-sm mb-1">
-        <span class="font-semibold text-slate-700">${t}</span>
-        <span class="text-indigo-600 font-bold">${pct}%</span>
-    </div>
-
-    <div class="w-full h-2 bg-slate-200 rounded-full overflow-hidden">
-        <div class="h-full bg-indigo-500"
-            style="width:${pct}%"></div>
-    </div>
-</div>`;
-        }).join("");
-
-
-    // ================= OPEN MODAL =================
-    document.getElementById("detail-modal")
-        .classList.remove("hidden");
-};
-
-    // ===== TOPIC SUMMARY =====
-    const topicMap={};
-
-    related.forEach(t=>{
-        if(t.topic)
-            topicMap[t.topic]=(topicMap[t.topic]||0)+1;
-    });
-
-    document.getElementById("modal-topics").innerHTML =
-        Object.entries(topicMap)
-        .map(([t,c])=>`<div>${t} : <b>${c}</b></div>`)
-        .join("");
 
     document.getElementById("detail-modal")
         .classList.remove("hidden");
 };
 
 
-// ================= CLOSE MODAL =================
+// ================= CLOSE =================
 window.closeModal=()=>{
-    selectedSub="";
     document.getElementById("detail-modal")
         .classList.add("hidden");
 };

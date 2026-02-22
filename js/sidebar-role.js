@@ -15,57 +15,62 @@ console.log("ROLE CHECK START");
 
 document.addEventListener("layoutLoaded", () => {
 
-  onAuthStateChanged(auth, async (user) => {
+  // ⭐ รอ DOM inject จาก Topbar / Sidebar ให้เสร็จก่อน
+  setTimeout(() => {
 
-    if (!user) return;
+    onAuthStateChanged(auth, async (user) => {
 
-    try {
+      if (!user) return;
 
-      // ✅ ไปอ่าน USER PROFILE จาก database
-      const q = query(
-        collection(db, "admin"), // ⭐ collection ที่เก็บ user profile
-        where("email", "==", user.email)
-      );
+      try {
 
-      const snap = await getDocs(q);
+        // ✅ อ่าน USER PROFILE
+        const q = query(
+          collection(db, "admin"),
+          where("email", "==", user.email)
+        );
 
-      if (snap.empty) {
-        console.warn("User profile not found");
-        return;
+        const snap = await getDocs(q);
+
+        if (snap.empty) {
+          console.warn("User profile not found");
+          return;
+        }
+
+        const userData = snap.docs[0].data();
+        const role = (userData.role || "").toLowerCase();
+
+        console.log("USER ROLE =", role);
+
+        // =========================
+        // SHOW / HIDE ADMIN MENU
+        // =========================
+        const adminMenu =
+          document.getElementById("admin-menu-section");
+
+        if (adminMenu) {
+          if (role === "admin") {
+            console.log("ADMIN MENU SHOW");
+            adminMenu.style.display = "block";
+          } else {
+            console.log("NORMAL USER");
+            adminMenu.style.display = "none";
+          }
+        }
+
+        // =========================
+        // START NOTIFICATION SYSTEM
+        // =========================
+        startNotificationSystem(role, user.email);
+
+      } catch (err) {
+        console.error("ROLE LOAD ERROR:", err);
       }
 
-      const userData = snap.docs[0].data();
-      const role = (userData.role || "").toLowerCase();
+    });
 
-      console.log("USER ROLE =", role);
-
-      const adminMenu =
-        document.getElementById("admin-menu-section");
-
-      // ✅ เช็คจาก FIELD role โดยตรง
-      if (role === "admin") {
-
-        console.log("ADMIN MENU SHOW");
-
-        if (adminMenu)
-          adminMenu.style.display = "block";
-
-      } else {
-
-        console.log("NORMAL USER");
-
-        if (adminMenu)
-          adminMenu.style.display = "none";
-      }
-startNotificationSystem(role, user.email);
-    } catch (err) {
-      console.error("ROLE LOAD ERROR:", err);
-    }
-
-  });
-
+  }, 300); // ⭐ สำคัญมาก (รอ layout render)
 });
-
 // ==========================================================
 // ส่วนที่เพิ่มใหม่: ระบบ Notification (ไม่กระทบ Script เดิม)
 // ==========================================================

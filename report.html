@@ -640,15 +640,13 @@ window.modalBack = () => {
     document.getElementById("modal-head").innerText =
         `${selectedMain} / ${selectedSub}`;
 
-    // ✅ แสดง owner list กลับ
-    document.getElementById("modal-owners")
-        .classList.remove("hidden");
-
-    // ✅ (ถ้ามี section topic detail ให้ซ่อน)
+    // ซ่อน topic detail
     const topicBox = document.getElementById("owner-topic-box");
     if(topicBox) topicBox.classList.add("hidden");
-};
 
+    // ✅ สำคัญ — render owner ใหม่
+    showDetail(selectedSub);
+};
 // ================= RESET =================
 window.resetView=()=>{
     currentLevel="MAIN";

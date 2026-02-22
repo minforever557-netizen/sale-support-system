@@ -139,23 +139,31 @@ class="w-64 shrink-0 h-full bg-white border-r border-slate-200">
     </div>
 <script type="module">
 
+// ================= IMPORT =================
 import { db, auth } from "/Sale-Support-System/js/firebase.js";
-import { collection, onSnapshot }
-from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
-import { onAuthStateChanged }
-from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
+import {
+    collection,
+    onSnapshot
+} from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
 
+import {
+    onAuthStateChanged
+} from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
+
+
+// ================= STATE =================
 let allTickets = [];
 let filteredTickets = [];
 let myChart = null;
 
-let currentLevel = "MAIN";
+let currentLevel = "MAIN"; // MAIN | SUB
 let selectedMain = "";
+let selectedSub = "";
 let activeMonths = [];
 
 
 // ================= REALTIME =================
-function startListening() {
+function startListening(){
 
     const ticketRef = collection(db,"tickets");
 
@@ -171,7 +179,7 @@ function startListening() {
 }
 
 
-// ================= FILTER =================
+// ================= MONTH FILTER =================
 function applyMonthFilter(){
 
     if(!activeMonths.length){
@@ -180,11 +188,12 @@ function applyMonthFilter(){
     }
 
     filteredTickets = allTickets.filter(t=>{
+
         if(!t.createdAt) return false;
 
         const d = t.createdAt.toDate();
         const ym =
-            `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}`;
+        `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}`;
 
         return activeMonths.includes(ym);
     });
@@ -220,46 +229,51 @@ function renderUI(){
 
     filteredTickets.forEach(t=>{
 
-        const key =
-            (currentLevel==="MAIN")
-            ? t.sender_team
-            : t.sender_subteam;
+        const main = t.sender_team || "Unknown";
+        const sub  = t.sender_subteam || "Unknown";
 
-        if(
-            currentLevel==="MAIN" ||
-            t.sender_team===selectedMain
-        ){
+        let key=null;
 
-            if(!key) return;
-
-            if(!stats[key]){
-                stats[key]={
-                    total:0,
-                    topics:{},
-                    owners:{}
-                };
-            }
-
-            stats[key].total++;
-
-            stats[key].topics[t.topic] =
-                (stats[key].topics[t.topic]||0)+1;
-
-            stats[key].owners[t.ownerEmail] =
-                (stats[key].owners[t.ownerEmail]||0)+1;
+        if(currentLevel==="MAIN"){
+            key = main;
         }
+        else if(currentLevel==="SUB" && main===selectedMain){
+            key = sub;
+        }
+
+        if(!key) return;
+
+        if(!stats[key]){
+            stats[key]={
+                total:0,
+                topics:{},
+                owners:{}
+            };
+        }
+
+        stats[key].total++;
+
+        if(t.topic)
+            stats[key].topics[t.topic]=(stats[key].topics[t.topic]||0)+1;
+
+        if(t.ownerEmail)
+            stats[key].owners[t.ownerEmail]=(stats[key].owners[t.ownerEmail]||0)+1;
     });
 
     const tableBody=document.getElementById("table-body");
 
-    tableBody.innerHTML=
-    Object.entries(stats).map(([team,data])=>`
+    tableBody.innerHTML =
+    Object.entries(stats).map(([name,data])=>`
 
         <tr class="hover:bg-slate-50 cursor-pointer"
-            onclick="showDetail('${team}')">
+            onclick="${
+                currentLevel==="MAIN"
+                ? `drillDown('${name}')`
+                : `showDetail('${name}')`
+            }">
 
             <td class="py-4 font-bold text-slate-700">
-                ${team}
+                ${name}
                 <div class="text-xs text-slate-400 mt-1">
                     ${
                         Object.entries(data.topics)
@@ -280,7 +294,7 @@ function renderUI(){
 }
 
 
-// ================= CHART TOP5 =================
+// ================= CHART TOP 5 =================
 function updateChart(){
 
     const ctx=document.getElementById("mainChart").getContext("2d");
@@ -292,12 +306,17 @@ function updateChart(){
             topicStats[t.topic]=(topicStats[t.topic]||0)+1;
     });
 
-    const sorted=
+    const sorted =
         Object.entries(topicStats)
         .sort((a,b)=>b[1]-a[1])
         .slice(0,5);
 
-    const total=sorted.reduce((s,v)=>s+v[1],0);
+    const total = sorted.reduce((s,v)=>s+v[1],0);
+
+    if(total===0){
+        if(myChart) myChart.destroy();
+        return;
+    }
 
     if(myChart) myChart.destroy();
 
@@ -306,7 +325,7 @@ function updateChart(){
         data:{
             labels:sorted.map(([n,c])=>{
                 const pct=Math.round(c/total*100);
-                return `${n} ${pct}%`;
+                return `${n} (${pct}%)`;
             }),
             datasets:[{
                 data:sorted.map(v=>v[1]),
@@ -332,61 +351,78 @@ function updateChart(){
 }
 
 
-// ================= MODAL =================
-window.showDetail=(team)=>{
+// ================= DRILL MAIN → SUB =================
+window.drillDown=(main)=>{
 
-    document.getElementById("modal-head").innerText=team;
+    currentLevel="SUB";
+    selectedMain=main;
+    selectedSub="";
+
+    document.getElementById("nav-path").innerText =
+        `Dashboard / ${main}`;
+
+    renderUI();
+};
+
+
+// ================= SHOW MODAL (SUB → USER) =================
+window.showDetail=(sub)=>{
+
+    selectedSub=sub;
+
+    document.getElementById("modal-head").innerText =
+        `${selectedMain} / ${sub}`;
 
     const related=filteredTickets.filter(t=>
-        t.sender_team===team ||
-        t.sender_subteam===team
+        t.sender_team===selectedMain &&
+        t.sender_subteam===sub
     );
 
     const topicMap={};
     const ownerMap={};
 
     related.forEach(t=>{
-        topicMap[t.topic]=(topicMap[t.topic]||0)+1;
-        ownerMap[t.ownerEmail]=(ownerMap[t.ownerEmail]||0)+1;
+
+        if(t.topic)
+            topicMap[t.topic]=(topicMap[t.topic]||0)+1;
+
+        if(t.ownerEmail)
+            ownerMap[t.ownerEmail]=(ownerMap[t.ownerEmail]||0)+1;
     });
 
-    document.getElementById("modal-topics").innerHTML=
+    document.getElementById("modal-topics").innerHTML =
         Object.entries(topicMap)
         .map(([t,c])=>`<div>${t} : <b>${c}</b></div>`)
-        .join("");
+        .join("") || "No Data";
 
-    document.getElementById("modal-owners").innerHTML=
+    document.getElementById("modal-owners").innerHTML =
         Object.entries(ownerMap)
         .map(([o,c])=>`<div>${o} : <b>${c}</b></div>`)
-        .join("");
+        .join("") || "No Data";
 
     document.getElementById("detail-modal")
         .classList.remove("hidden");
 };
 
+
+// ================= CLOSE MODAL =================
 window.closeModal=()=>{
+    selectedSub="";
     document.getElementById("detail-modal")
         .classList.add("hidden");
 };
 
 
-// ================= DRILL =================
-window.drillDown=(name)=>{
-
-    currentLevel="SUB";
-    selectedMain=name;
-
-    document.getElementById("nav-path").innerText=
-        `Dashboard / ${name}`;
-
-    renderUI();
-};
-
+// ================= RESET =================
 window.resetView=()=>{
+
     currentLevel="MAIN";
     selectedMain="";
-    document.getElementById("nav-path").innerText=
+    selectedSub="";
+
+    document.getElementById("nav-path").innerText =
         "Dashboard / Overall";
+
     renderUI();
 };
 

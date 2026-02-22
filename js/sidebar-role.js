@@ -157,3 +157,25 @@ document.addEventListener("layoutLoaded", () => {
         }
     });
 });
+// 3. ระบบเปิด/ปิด Dropdown และ Clear All
+    if (notiBtn && notiDrop) {
+        notiBtn.onclick = (e) => {
+            e.stopPropagation();
+            notiDrop.classList.toggle('hidden');
+            if (notiDot) notiDot.classList.add('hidden');
+        };
+
+        // ✅ เพิ่ม Event สำหรับ Clear All
+        const clearBtn = document.getElementById('clear-all-noti');
+        if (clearBtn) {
+            clearBtn.onclick = (e) => {
+                e.stopPropagation();
+                // ล้างรายการใน UI
+                notiList.innerHTML = `<div class="p-6 text-center text-slate-400 text-xs">ล้างการแจ้งเตือนแล้ว</div>`;
+                // ซ่อนจุดแดง
+                if (notiDot) notiDot.classList.add('hidden');
+            };
+        }
+
+        window.addEventListener('click', () => notiDrop.classList.add('hidden'));
+    }

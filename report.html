@@ -431,88 +431,99 @@ currentLevel==="MAIN"
     updateChart();
 }
 
-    // ===== SHOW VALUE ON DOUGHNUT =====
-const doughnutLabelPlugin = {
-    id: 'doughnutLabelPlugin',
-   afterDraw(chart) {
+// ประกาศตัวแปรไว้ด้านนอกฟังก์ชันเพื่อให้เรียกใช้ destroy ได้ถูกต้อง
+let myChart; 
 
-        const { ctx } = chart;
-        ctx.save();
+function updateChart() {
+    const ctx = document.getElementById("mainChart");
+    if (!ctx) return;
 
-        const dataset = chart.data.datasets[0];
-        const meta = chart.getDatasetMeta(0);
-
-        const total = dataset.data.reduce((a,b)=>a+b,0);
-
-        meta.data.forEach((element, index) => {
-
-            const value = dataset.data[index];
-            const percent = Math.round(value / total * 100);
-
-            const pos = element.tooltipPosition();
-
-            ctx.fillStyle = "#334155";
-            ctx.font = "bold 12px sans-serif";
-            ctx.textAlign = "center";
-            ctx.textBaseline = "middle";
-
-            ctx.fillText(
-                `${value} (${percent}%)`,
-                pos.x,
-                pos.y
-            );
-        });
-
-        ctx.restore();
-    }
-};
-
-// ================= MAIN CHART =================
-function updateChart(){
-
-    const ctx=document.getElementById("mainChart");
-
-    const topicMap={};
-
-    filteredTickets.forEach(t=>{
-        if(t.topic)
-            topicMap[t.topic]=(topicMap[t.topic]||0)+1;
+    // --- 1. เตรียมข้อมูล ---
+    const topicMap = {};
+    filteredTickets.forEach(t => {
+        if (t.topic)
+            topicMap[t.topic] = (topicMap[t.topic] || 0) + 1;
     });
 
-    const labels=Object.keys(topicMap);
-    const values=Object.values(topicMap);
-    const total=values.reduce((a,b)=>a+b,0);
+    const labels = Object.keys(topicMap);
+    const values = Object.values(topicMap);
+    const totalCount = values.reduce((a, b) => a + b, 0);
 
-    if(myChart) myChart.destroy();
+    // --- 2. นิยาม Plugin ไว้ข้างในฟังก์ชัน (แก้ปัญหา is not defined) ---
+    const doughnutLabelPlugin = {
+        id: 'doughnutLabelPlugin',
+        afterDraw(chart) {
+            const { ctx } = chart;
+            ctx.save();
+            const dataset = chart.data.datasets[0];
+            const meta = chart.getDatasetMeta(0);
+            const totalVal = dataset.data.reduce((a, b) => a + b, 0);
 
-    myChart = new Chart(ctx,{
-    type:"doughnut",
+            if (totalVal === 0) return;
 
-    data:{
-        labels,
-        datasets:[{ data:values }]
-    },
+            meta.data.forEach((element, index) => {
+                const value = dataset.data[index];
+                const percent = Math.round((value / totalVal) * 100);
+                const pos = element.tooltipPosition();
 
-    // ⭐⭐⭐ เพิ่มบรรทัดนี้
-    plugins:[doughnutLabelPlugin],
+                // ตั้งค่า Font ตามสไตล์ Dashboard (Ref: CSS ของคุณ)
+                ctx.fillStyle = "#334155"; 
+                ctx.font = "bold 13px 'Sarabun', sans-serif";
+                ctx.textAlign = "center";
+                ctx.textBaseline = "middle";
 
-    options:{
-        cutout:"65%",
-        plugins:{
-            legend:{position:"bottom"},
-            tooltip:{
-                callbacks:{
-                    label:(c)=>{
-                        const pct=Math.round(c.raw/total*100);
-                        return `${c.label}: ${c.raw} (${pct}%)`;
+                // วาดตัวเลขและเปอร์เซ็นต์
+                ctx.fillText(`${value} (${percent}%)`, pos.x, pos.y);
+            });
+            ctx.restore();
+        }
+    };
+
+    // --- 3. เคลียร์ Chart เก่า ---
+    if (myChart) {
+        myChart.destroy();
+    }
+
+    // --- 4. สร้าง Chart ใหม่ ---
+    myChart = new Chart(ctx, {
+        type: "doughnut",
+        data: {
+            labels: labels,
+            datasets: [{
+                data: values,
+                backgroundColor: [
+                    '#10b981', '#3b82f6', '#f59e0b', '#ef4444', '#8b5cf6', '#64748b'
+                ],
+                borderWidth: 2,
+                borderColor: '#ffffff'
+            }]
+        },
+        plugins: [doughnutLabelPlugin], 
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            cutout: "65%",
+            plugins: {
+                legend: {
+                    position: "bottom",
+                    labels: {
+                        usePointStyle: true,
+                        padding: 20,
+                        font: { family: "'Sarabun', sans-serif" }
+                    }
+                },
+                tooltip: {
+                    callbacks: {
+                        label: (c) => {
+                            const pct = Math.round(c.raw / totalCount * 100);
+                            return ` ${c.label}: ${c.raw} (${pct}%)`;
+                        }
                     }
                 }
             }
         }
-    }
-});
+    });
 }
-
 
 // ================= DRILL =================
 window.drillDown=(main)=>{

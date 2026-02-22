@@ -67,7 +67,7 @@ document.addEventListener("layoutLoaded", () => {
 });
 
 // ==========================================================
-// ส่วนที่เพิ่มใหม่: ระบบ Notification แบบ Global (แจ้งเตือนทุก Page)
+// ส่วนระบบ Notification (แก้ไขเพื่อไม่ให้ Import ซ้ำและทำงานทุก Page)
 // ==========================================================
 import { 
     onSnapshot, orderBy, limit, collection, query, where, getDocs 
@@ -75,13 +75,14 @@ import {
 import { onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
 
 async function startNotificationSystem(role, email) {
-    const notiDot = document.getElementById('notid-dot') || document.getElementById('noti-dot');
+    // เช็ค Element ป้องกัน Error "el is null" ตามในรูปของนาย
+    const notiDot = document.getElementById('noti-dot');
     const notiList = document.getElementById('noti-list');
     const notiBtn = document.getElementById('noti-btn');
     const notiDrop = document.getElementById('noti-dropdown');
     const clearBtn = document.getElementById('clear-all-noti');
 
-    if (!notiList) return; 
+    if (!notiList) return; // ถ้าหน้านั้นไม่มีกระดิ่ง จะไม่รันต่อเพื่อป้องกัน Error
 
     let q = (role === 'admin') 
         ? query(collection(db, "tickets"), where("status", "==", "Pending"), orderBy("createdAt", "desc"), limit(5))
@@ -101,13 +102,14 @@ async function startNotificationSystem(role, email) {
             const data = change.doc.data();
             const internetNo = data.id_number || data.internetNo || "ไม่ระบุเลข";
             
+            // แจ้งเตือนเฉพาะของใหม่ที่ไม่ได้มาจาก Cache
             if (!snapshot.metadata.fromCache && (change.type === "added" || change.type === "modified")) {
                 hasNewChange = true;
             }
 
             if (role === 'admin' && change.type === "added") {
                 html += `
-                    <div onclick="window.location.href='admin-management.html'" class="p-4 border-b border-slate-50 hover:bg-emerald-50/50 transition cursor-pointer group">
+                    <div onclick="window.location.href='admin-management.html'" class="p-4 border-b border-slate-50 hover:bg-emerald-50/50 transition cursor-pointer">
                         <div class="font-bold text-emerald-600 text-[10px] mb-1">🆕 ใบงานใหม่!</div>
                         <div class="font-bold text-slate-700 text-xs leading-tight">Internet No: ${internetNo}</div>
                         <div class="text-slate-600 text-[11px] mt-1 line-clamp-2">คุณ ${data.owner} เปิดใบงาน: ${data.topic}</div>
@@ -144,14 +146,17 @@ async function startNotificationSystem(role, email) {
     }
 }
 
-// ผูกระบบเข้ากับ Auth สถานะเดียว เพื่อให้รันได้ทุก Page
+// ผูกระบบเข้ากับ Auth 
 onAuthStateChanged(auth, async (user) => {
     if (!user) return;
-    const q = query(collection(db, "admin"), where("email", "==", user.email));
-    const snap = await getDocs(q);
-    if (!snap.empty) {
-        const userData = snap.docs[0].data();
-        const role = (userData.role || "").toLowerCase();
-        startNotificationSystem(role, user.email);
+    try {
+        const qUser = query(collection(db, "admin"), where("email", "==", user.email));
+        const snap = await getDocs(qUser);
+        if (!snap.empty) {
+            const role = (snap.docs[0].data().role || "").toLowerCase();
+            startNotificationSystem(role, user.email);
+        }
+    } catch (err) {
+        console.error("Noti Load Error:", err);
     }
 });

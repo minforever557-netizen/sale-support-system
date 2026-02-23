@@ -83,93 +83,114 @@ async function startNotificationSystem(role, email) {
     const notiList = document.getElementById('noti-list');
     const notiBtn = document.getElementById('noti-btn');
     const notiDrop = document.getElementById('noti-dropdown');
+    const clearAllBtn = document.getElementById('clear-all-noti');
 
-    if (!notiList) return; 
+    // 🛑 ป้องกัน Error: ตรวจสอบ Element ก่อนเริ่มงาน
+    if (!notiList || !notiDot) return; 
 
+    // 1. จัดการระบบ "อ่านแล้ว" ผ่าน LocalStorage
+    const storageKey = `read_noti_${email}`;
+    let readIds = JSON.parse(localStorage.getItem(storageKey)) || [];
+
+    // ฟังก์ชันอัปเดต Badge ตัวเลขสีแดง (กรอบแดงชัดเจน)
+    const updateBadge = (currentDocs) => {
+        const unreadItems = currentDocs.filter(doc => !readIds.includes(doc.id));
+        const count = unreadItems.length;
+
+        if (count > 0) {
+            notiDot.innerText = count > 9 ? '9+' : count;
+            // ปรับแต่ง CSS ผ่าน JS ให้เป็นวงกลมแดงชัดเจน
+            notiDot.className = "absolute -top-1 -right-1 bg-red-600 text-white text-[10px] font-bold px-1.5 py-0.5 rounded-full min-w-[18px] h-[18px] flex items-center justify-center border-2 border-white shadow-sm";
+            notiDot.classList.remove('hidden');
+        } else {
+            notiDot.classList.add('hidden');
+        }
+    };
+
+    // ฟังก์ชันเมื่อคลิกอ่าน
+    window.markAsRead = function(docId, targetPage) {
+        if (!readIds.includes(docId)) {
+            readIds.push(docId);
+            localStorage.setItem(storageKey, JSON.stringify(readIds));
+        }
+        window.location.href = targetPage;
+    };
+
+    // 2. Query ข้อมูล (Admin ดูงานสร้างใหม่ / User ดูงานที่มีการอัปเดต)
     let q;
     if (role === 'admin') {
-        q = query(collection(db, "tickets"), orderBy("createdAt", "desc"), limit(10));
+        q = query(collection(db, "tickets"), orderBy("createdAt", "desc"), limit(15));
     } else {
-        q = query(collection(db, "tickets"), where("ownerEmail", "==", email), orderBy("updatedAt", "desc"), limit(10));
+        q = query(collection(db, "tickets"), where("ownerEmail", "==", email), orderBy("updatedAt", "desc"), limit(15));
     }
 
+    // 3. Listen แบบ Real-time
     onSnapshot(q, (snapshot) => {
-        if (snapshot.empty) {
-            if (notiList.innerHTML === "" || notiList.innerText.includes("ไม่มีรายการ")) {
-                notiList.innerHTML = `<div class="p-6 text-center text-slate-400 text-xs font-medium">ไม่มีรายการแจ้งเตือน</div>`;
-            }
-            if (notiDot) notiDot.classList.add('hidden');
-            return;
-        }
-
         let html = "";
-        let hasNewChange = false;
+        const allDocs = snapshot.docs;
 
-        snapshot.docChanges().forEach((change) => {
-            const data = change.doc.data();
-            
-            // ✅ ประกาศตัวแปรตรงนี้ เพื่อให้ทั้ง Admin และ User เรียกใช้ได้ไม่พัง
+        allDocs.forEach((doc) => {
+            const data = doc.data();
+            const docId = doc.id;
+            const isRead = readIds.includes(docId);
+
+            // เงื่อนไขแจ้งเตือน: Admin ทุกอัน / User เฉพาะที่ไม่ใช่ Pending
+            const shouldNotify = (role === 'admin') || (role !== 'admin' && data.status !== "Pending");
+            if (!shouldNotify) return;
+
             const internetNo = data.internetNo || data.id_number || '-';
             const topic = data.topic || 'ไม่มีหัวข้อ';
+            const ts = (role === 'admin' ? data.createdAt : data.updatedAt);
+            const timeStr = ts ? ts.toDate().toLocaleTimeString('th-TH', { hour: '2-digit', minute: '2-digit' }) + " น." : "";
 
-            // --- [ADMIN CASE] ---
-            if (role === 'admin' && change.type === "added") {
-                hasNewChange = true;
-                html += `
-                    <div onclick="window.location.href='user-management.html'" 
-                         class="p-4 border-b border-slate-50 hover:bg-emerald-50/50 transition cursor-pointer group">
-                        <div class="flex items-center gap-2 font-bold text-emerald-600 mb-1">
-                            <span class="w-2 h-2 bg-emerald-500 rounded-full animate-pulse"></span>
-                            <span class="text-[13px]">ใบงานใหม่จาก Sale</span>
+            // UI: Highlight สีพื้นหลังถ้ายังไม่อ่าน
+            const unreadClass = isRead ? "bg-white" : (role === 'admin' ? "bg-emerald-50/60" : "bg-blue-50/60");
+            const targetPage = role === 'admin' ? 'user-management.html' : 'my-ticket.html';
+
+            html += `
+                <div onclick="markAsRead('${docId}', '${targetPage}')" 
+                     class="p-4 border-b border-slate-50 transition cursor-pointer group ${unreadClass} hover:bg-slate-50 relative">
+                    <div class="flex justify-between items-start mb-1">
+                        <div class="flex items-center gap-2">
+                            ${!isRead ? `<span class="w-2 h-2 ${role === 'admin' ? 'bg-emerald-500' : 'bg-blue-500'} rounded-full animate-pulse"></span>` : ''}
+                            <span class="text-[13px] font-bold ${isRead ? 'text-slate-500' : (role === 'admin' ? 'text-emerald-600' : 'text-blue-600')}">
+                                ${role === 'admin' ? 'ใบงานใหม่' : 'อัปเดตงาน'} ${internetNo}
+                            </span>
                         </div>
-                        <div class="text-slate-600 text-[11px] leading-relaxed">
-                            <b>Internet No:</b> <span class="text-slate-900">${internetNo}</span><br>
-                            <b>ผู้แจ้ง:</b> ${data.owner || 'ไม่ระบุชื่อ'}<br>
-                            <b>หัวข้อ:</b> ${topic}
-                        </div>
-                        <div class="text-[9px] text-slate-400 mt-2 italic text-right group-hover:text-emerald-500 transition-colors">คลิกเพื่อจัดการงาน</div>
-                    </div>`;
-            } 
-            
-            // --- [USER CASE] ---
-            else if (role !== 'admin' && (change.type === "modified" || (change.type === "added" && data.status !== "Pending"))) {
-                hasNewChange = true;
-                html += `
-                    <div onclick="window.location.href='my-ticket.html'" 
-                         class="p-4 border-b border-slate-50 hover:bg-blue-50/50 transition cursor-pointer group">
-                        <div class="flex items-center gap-2 font-bold text-blue-600 mb-1">
-                            <i class="fas fa-bell text-[10px]"></i>
-                            <span class="text-[13px]">อัปเดตสถานะใบงาน</span>
-                        </div>
-                        <div class="text-slate-600 text-[11px] leading-relaxed">
-                            <b>Internet No:</b> <span class="text-slate-900">${internetNo}</span><br>
-                            <b>หัวข้อ:</b> ${topic}<br>
-                            <b>สถานะล่าสุด:</b> <span class="text-orange-600 font-bold">${data.status}</span>
-                        </div>
-                        <div class="text-[9px] text-blue-400 mt-2 font-medium italic text-right group-hover:underline">ดูรายละเอียดคลิกที่นี่</div>
-                    </div>`;
-            }
+                        <span class="text-[9px] text-slate-400 font-medium">${timeStr}</span>
+                    </div>
+                    <div class="text-[11px] ${isRead ? 'text-slate-400' : 'text-slate-600'} leading-relaxed pl-4">
+                        <b>หัวข้อ:</b> ${topic}
+                        ${!isRead && role !== 'admin' ? `<br><b>สถานะ:</b> <span class="text-orange-600">${data.status}</span>` : ''}
+                    </div>
+                </div>`;
         });
 
-        if (hasNewChange) {
-            if (notiList.innerText.includes("ไม่มีรายการ")) {
-                notiList.innerHTML = "";
-            }
-            notiList.insertAdjacentHTML('afterbegin', html);
-            if (notiDot) notiDot.classList.remove('hidden');
-        }
+        notiList.innerHTML = html || `<div class="p-6 text-center text-slate-400 text-xs font-medium">ไม่มีรายการแจ้งเตือน</div>`;
+        updateBadge(allDocs);
     });
 
+    // 4. ปุ่ม Clear All (ทำงานร่วมกับ LocalStorage)
+    if (clearAllBtn) {
+        clearAllBtn.onclick = async (e) => {
+            e.stopPropagation();
+            const snap = await getDocs(q);
+            snap.docs.forEach(doc => {
+                if (!readIds.includes(doc.id)) readIds.push(doc.id);
+            });
+            localStorage.setItem(storageKey, JSON.stringify(readIds));
+            // UI จะอัปเดตเองอัตโนมัติจาก onSnapshot
+        };
+    }
+
+    // 5. ระบบ Dropdown
     if (notiBtn && notiDrop) {
         notiBtn.onclick = (e) => {
             e.stopPropagation();
             notiDrop.classList.toggle('hidden');
-            if (notiDot) notiDot.classList.add('hidden');
         };
         window.addEventListener('click', () => {
-            if (!notiDrop.classList.contains('hidden')) {
-                notiDrop.classList.add('hidden');
-            }
+            if (!notiDrop.classList.contains('hidden')) notiDrop.classList.add('hidden');
         });
     }
 }

@@ -86,41 +86,39 @@ async function startNotificationSystem(role, email) {
     const notiDrop = document.getElementById('noti-dropdown');
     const clearAllBtn = document.getElementById('clear-all-noti');
 
-    if (!notiList) return;
+    if (!notiList || !notiDot) return; // ป้องกัน Error null
 
-    // 1. โหลดข้อมูล "รายการที่ลบไปแล้ว" หรือ "อ่านแล้ว" จาก LocalStorage
-    // key จะแยกตาม email เพื่อไม่ให้ปนกันถ้าสลับ ID เครื่องเดียวกัน
+    // 1. โหลด ID ที่อ่านแล้วจาก LocalStorage
     const storageKey = `read_noti_${email}`;
     let readIds = JSON.parse(localStorage.getItem(storageKey)) || [];
 
-    const updateBadge = () => {
-        if (!notiDot) return;
-        // นับจำนวน div ที่มี class 'is-unread' จริงๆ ในหน้าจอ
-        const unreadItems = notiList.querySelectorAll('.is-unread').length;
-        if (unreadItems > 0) {
-            notiDot.innerText = unreadItems > 9 ? '9+' : unreadItems;
+    // ฟังก์ชันอัปเดต Badge ตัวเลขสีแดง (นับจากรายการที่ไม่อยู่ใน readIds)
+    const updateBadge = (currentDocs) => {
+        // กรองเฉพาะอันที่ยังไม่อ่าน
+        const unreadItems = currentDocs.filter(doc => !readIds.includes(doc.id));
+        const count = unreadItems.length;
+
+        if (count > 0) {
+            notiDot.innerText = count > 9 ? '9+' : count;
+            // ปรับ Style ให้เป็นวงกลมสีแดงชัดเจน
+            notiDot.className = "absolute -top-1 -right-1 bg-red-600 text-white text-[10px] font-bold px-1.5 py-0.5 rounded-full min-w-[18px] h-[18px] flex items-center justify-center border-2 border-white shadow-sm";
             notiDot.classList.remove('hidden');
         } else {
             notiDot.classList.add('hidden');
         }
     };
 
-    // ฟังก์ชันสำหรับบันทึกว่า "อ่าน/ลบ" แล้ว
-    window.markAsRead = function(docId, element) {
+    // ฟังก์ชันกดอ่าน (ย้าย ID เข้า LocalStorage และลบ Highlight)
+    window.markAsRead = function(docId, targetPage) {
         if (!readIds.includes(docId)) {
             readIds.push(docId);
             localStorage.setItem(storageKey, JSON.stringify(readIds));
         }
-        if (element) {
-            element.remove(); // ลบออกจาก List ทันทีเมื่อกด
-            updateBadge();
-            if (notiList.children.length === 0) {
-                notiList.innerHTML = `<div class="p-6 text-center text-slate-400 text-xs font-medium">ไม่มีรายการแจ้งเตือน</div>`;
-            }
-        }
+        // เปลี่ยนหน้าไปยัง URL เป้าหมาย
+        window.location.href = targetPage;
     };
 
-    // 2. Query ข้อมูล
+    // 2. ตั้งค่า Query
     let q;
     if (role === 'admin') {
         q = query(collection(db, "tickets"), orderBy("createdAt", "desc"), limit(15));
@@ -131,68 +129,58 @@ async function startNotificationSystem(role, email) {
     // 3. Listen แบบ Real-time
     onSnapshot(q, (snapshot) => {
         let html = "";
-        let hasNewData = false;
+        const allDocs = snapshot.docs;
 
-        snapshot.docs.forEach((doc) => {
+        allDocs.forEach((doc) => {
             const data = doc.data();
             const docId = doc.id;
+            const isRead = readIds.includes(docId);
 
-            // 🛑 ถ้า ID นี้ถูก Mark ว่าอ่าน/ลบไปแล้ว ไม่ต้องแสดงผล
-            if (readIds.includes(docId)) return;
+            // เงื่อนไขการโชว์แจ้งเตือน
+            const shouldNotify = (role === 'admin') || (role !== 'admin' && data.status !== "Pending");
+            if (!shouldNotify) return;
 
             const internetNo = data.internetNo || data.id_number || '-';
             const topic = data.topic || 'ไม่มีหัวข้อ';
             const ts = (role === 'admin' ? data.createdAt : data.updatedAt);
-            const timeStr = ts ? ts.toDate().toLocaleTimeString('th-TH', { hour: '2-digit', minute: '2-digit' }) + " น." : "เมื่อสักครู่";
+            const timeStr = ts ? ts.toDate().toLocaleTimeString('th-TH', { hour: '2-digit', minute: '2-digit' }) + " น." : "";
 
-            const shouldNotify = (role === 'admin') || (role !== 'admin' && data.status !== "Pending");
+            // UI: ถ้ายังไม่อ่าน ให้มี Highlight สีฟ้า/เขียว และมีจุด Dot เล็กๆ
+            const unreadClass = isRead ? "bg-white" : (role === 'admin' ? "bg-emerald-50/60" : "bg-blue-50/60");
+            const targetPage = role === 'admin' ? 'user-management.html' : 'my-ticket.html';
 
-            if (shouldNotify) {
-                hasNewData = true;
-                const bgColor = role === 'admin' ? 'bg-emerald-50/80' : 'bg-blue-50/80';
-                const targetPage = role === 'admin' ? 'user-management.html' : 'my-ticket.html';
-
-                html += `
-                    <div onclick="markAsRead('${docId}', this); window.location.href='${targetPage}'" 
-                         class="p-4 border-b border-slate-50 transition cursor-pointer group is-unread ${bgColor} hover:bg-white">
-                        <div class="flex justify-between items-start mb-1">
-                            <div class="flex items-center gap-2 font-bold ${role === 'admin' ? 'text-emerald-600' : 'text-blue-600'}">
-                                <span class="w-2 h-2 ${role === 'admin' ? 'bg-emerald-500' : 'bg-blue-500'} rounded-full animate-pulse"></span>
-                                <span class="text-[13px]">${role === 'admin' ? 'ใบงานใหม่' : 'อัปเดตใบงาน'} ${internetNo}</span>
-                            </div>
-                            <span class="text-[9px] text-slate-400 font-medium">${timeStr}</span>
+            html += `
+                <div onclick="markAsRead('${docId}', '${targetPage}')" 
+                     class="p-4 border-b border-slate-50 transition cursor-pointer group ${unreadClass} hover:bg-slate-50">
+                    <div class="flex justify-between items-start mb-1">
+                        <div class="flex items-center gap-2">
+                            ${!isRead ? `<span class="w-2 h-2 ${role === 'admin' ? 'bg-emerald-500' : 'bg-blue-500'} rounded-full"></span>` : ''}
+                            <span class="text-[13px] font-bold ${isRead ? 'text-slate-500' : (role === 'admin' ? 'text-emerald-600' : 'text-blue-600')}">
+                                ${role === 'admin' ? 'ใบงานใหม่' : 'อัปเดตงาน'} ${internetNo}
+                            </span>
                         </div>
-                        <div class="text-slate-600 text-[11px] leading-relaxed">
-                            <b>หัวข้อ:</b> ${topic} ${role !== 'admin' ? `<br><b>สถานะ:</b> ${data.status}` : ''}
-                        </div>
-                    </div>`;
-            }
+                        <span class="text-[9px] text-slate-400">${timeStr}</span>
+                    </div>
+                    <div class="text-[11px] ${isRead ? 'text-slate-400' : 'text-slate-600'} leading-relaxed">
+                        <b>หัวข้อ:</b> ${topic}
+                    </div>
+                </div>`;
         });
 
         notiList.innerHTML = html || `<div class="p-6 text-center text-slate-400 text-xs font-medium">ไม่มีรายการแจ้งเตือน</div>`;
-        updateBadge();
+        updateBadge(allDocs);
     });
 
-    // 4. ปุ่ม Clear All (เก็บ ID ทั้งหมดลง LocalStorage)
+    // 4. ปุ่ม Clear All
     if (clearAllBtn) {
-        clearAllBtn.onclick = (e) => {
+        clearAllBtn.onclick = async (e) => {
             e.stopPropagation();
-            const allItems = snapshotQuery; // ใช้ snapshot ล่าสุด
-            getDocs(q).then((snap) => {
-                snap.docs.forEach(doc => {
-                    if (!readIds.includes(doc.id)) readIds.push(doc.id);
-                });
-                localStorage.setItem(storageKey, JSON.stringify(readIds));
-                notiList.innerHTML = `<div class="p-6 text-center text-slate-400 text-xs font-medium">ไม่มีรายการแจ้งเตือน</div>`;
-                unreadCount = 0;
-                updateBadge();
+            const snap = await getDocs(q);
+            snap.docs.forEach(doc => {
+                if (!readIds.includes(doc.id)) readIds.push(doc.id);
             });
+            localStorage.setItem(storageKey, JSON.stringify(readIds));
+            // ตัวเลขจะลดและ List จะหาย Highlight อัตโนมัติจาก onSnapshot
         };
-    }
-
-    // 5. ระบบ Dropdown
-    if (notiBtn && notiDrop) {
-        notiBtn.onclick = (e) => { e.stopPropagation(); notiDrop.classList.toggle('hidden'); };
-        window.addEventListener('click', () => notiDrop.classList.add('hidden'));
     }
 }

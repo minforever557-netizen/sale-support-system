@@ -99,7 +99,16 @@ class="w-64 shrink-0 h-full bg-white border-r border-slate-200">
                     <i class="fa-solid fa-pen-fancy absolute left-5 top-6 text-emerald-500/50 text-sm pointer-events-none"></i>
                 </div>
             </div>
-
+<div class="group space-y-3">
+    <label class="font-extrabold text-slate-800 text-sm flex items-center gap-2">
+        <i class="fa-solid fa-image text-emerald-500"></i> 4. แนบรูปภาพประกอบ (จำกัด 2MB)
+    </label>
+    <div class="relative">
+        <input type="file" id="ticket-image" accept="image/*" 
+            class="w-full pl-12 pr-5 py-4 bg-slate-50 border-2 border-dashed border-slate-200 rounded-2xl focus:bg-white focus:border-emerald-500 outline-none font-bold text-slate-500 cursor-pointer shadow-sm file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-emerald-50 file:text-emerald-700 hover:file:bg-emerald-100">
+        <i class="fa-solid fa-camera absolute left-5 top-1/2 -translate-y-1/2 text-emerald-500/50 text-sm pointer-events-none"></i>
+    </div>
+</div>
             <div class="pt-4 pb-6">
                 <button type="submit" id="submitBtn" class="group w-full py-5 bg-[#0f172a] text-white rounded-[1.5rem] font-black text-lg hover:bg-emerald-600 hover:shadow-2xl hover:shadow-emerald-200 transition-all duration-300 flex justify-center items-center gap-3 active:scale-[0.99]">
                     <span>ส่งข้อมูลใบงานเข้าสู่ระบบ</span>

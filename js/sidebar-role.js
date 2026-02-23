@@ -77,12 +77,12 @@ async function startNotificationSystem(role, email) {
 
     if (!notiList || !notiDot) return; 
 
-    // ✅ 1. ฟังก์ชันนับ Badge (อ่านจาก Firestore เท่านั้น)
+    // ✅ ฟังก์ชันอัปเดต Badge (นับจากฟิลด์ readBy ใน Firestore)
     const updateBadge = (currentDocs) => {
         const unreadItems = currentDocs.filter(docSnap => {
             const data = docSnap.data();
-            const readBy = data.readBy || []; // ถ้าไม่มีฟิลด์นี้ ให้เป็น Array ว่าง
-            return !readBy.includes(email);   // ถ้าไม่มี Email เรา = ยังไม่อ่าน
+            const readBy = data.readBy || []; 
+            return !readBy.includes(email); // ถ้าไม่มี email เรา แปลว่ายังไม่อ่าน
         });
         const count = unreadItems.length;
 
@@ -95,41 +95,52 @@ async function startNotificationSystem(role, email) {
         }
     };
 
-    // ✅ 2. ฟังก์ชันคลิกอ่าน (บันทึก Email ลง Database)
+    // ✅ ฟังก์ชันเมื่อคลิกอ่าน (บันทึกลง Database ทันที)
     window.markAsRead = async (docId, targetPage) => {
         try {
             const ticketRef = doc(db, "tickets", docId);
             await updateDoc(ticketRef, {
-                readBy: arrayUnion(email) // Rules ใหม่ 'if true' จะยอมให้เขียนทันที
+                readBy: arrayUnion(email) // เพิ่ม email เราเข้าไปในกลุ่มคนที่อ่านแล้ว
             });
         } catch (err) {
-            console.error("Update Error:", err);
+            console.error("Error marking as read:", err);
         }
         window.location.href = targetPage;
     };
 
-    // 3. Query (เหมือนเดิม)
-    let q = (role === 'admin') 
-        ? query(collection(db, "tickets"), orderBy("createdAt", "desc"), limit(15))
-        : query(collection(db, "tickets"), where("ownerEmail", "==", email), orderBy("updatedAt", "desc"), limit(15));
+    // การ Query (Admin ดูงานใหม่ / User ดูงานอัปเดต)
+    let q;
+    if (role === 'admin') {
+        q = query(collection(db, "tickets"), orderBy("createdAt", "desc"), limit(15));
+    } else {
+        q = query(collection(db, "tickets"), where("ownerEmail", "==", email), orderBy("updatedAt", "desc"), limit(15));
+    }
 
-    // 4. Real-time Listen
+    // Listen Real-time
     onSnapshot(q, (snapshot) => {
         let html = "";
-        snapshot.docs.forEach((docSnap) => {
-            const data = docSnap.data();
-            const readBy = data.readBy || [];
-            const isRead = readBy.includes(email); // เช็คจาก DB
+        const allDocs = snapshot.docs;
 
-            if (role !== 'admin' && data.status === "Pending") return;
+        allDocs.forEach((docSnap) => {
+            const data = docSnap.data();
+            const docId = docSnap.id;
+            const readBy = data.readBy || [];
+            const isRead = readBy.includes(email); // เช็คการอ่านจาก Database
+
+            const shouldNotify = (role === 'admin') || (role !== 'admin' && data.status !== "Pending");
+            if (!shouldNotify) return;
 
             const internetNo = data.internetNo || data.id_number || '-';
+            const topic = data.topic || 'ไม่มีหัวข้อ';
+            const ts = (role === 'admin' ? data.createdAt : data.updatedAt);
+            const timeStr = ts ? ts.toDate().toLocaleTimeString('th-TH', { hour: '2-digit', minute: '2-digit' }) + " น." : "";
+
             const unreadClass = isRead ? "bg-white" : (role === 'admin' ? "bg-emerald-50/60" : "bg-blue-50/60");
             const targetPage = role === 'admin' ? 'user-management.html' : 'my-ticket.html';
 
             html += `
-                <div onclick="markAsRead('${docSnap.id}', '${targetPage}')" 
-                     class="p-4 border-b border-slate-50 transition cursor-pointer ${unreadClass} hover:bg-slate-50 relative">
+                <div onclick="markAsRead('${docId}', '${targetPage}')" 
+                     class="p-4 border-b border-slate-50 transition cursor-pointer group ${unreadClass} hover:bg-slate-50 relative">
                     <div class="flex justify-between items-start mb-1">
                         <div class="flex items-center gap-2">
                             ${!isRead ? `<span class="w-2 h-2 ${role === 'admin' ? 'bg-emerald-500' : 'bg-blue-500'} rounded-full animate-pulse"></span>` : ''}
@@ -137,21 +148,35 @@ async function startNotificationSystem(role, email) {
                                 ${role === 'admin' ? 'ใบงานใหม่' : 'อัปเดตงาน'} ${internetNo}
                             </span>
                         </div>
+                        <span class="text-[9px] text-slate-400 font-medium">${timeStr}</span>
                     </div>
-                    <div class="text-[11px] text-slate-500">หัวข้อ: ${data.topic || 'ไม่มีหัวข้อ'}</div>
+                    <div class="text-[11px] ${isRead ? 'text-slate-400' : 'text-slate-600'} leading-relaxed pl-4">
+                        <b>หัวข้อ:</b> ${topic}
+                    </div>
                 </div>`;
         });
-        notiList.innerHTML = html || `<div class="p-6 text-center text-slate-400 text-xs">ไม่มีรายการ</div>`;
-        updateBadge(snapshot.docs);
+
+        notiList.innerHTML = html || `<div class="p-6 text-center text-slate-400 text-xs font-medium">ไม่มีรายการแจ้งเตือน</div>`;
+        updateBadge(allDocs);
     });
 
-    // ✅ 5. ปุ่ม Clear All (เขียน Email ลงทุกใบงานใน Database)
+    // ✅ ปุ่ม Clear All (บันทึกทุกลายการลง Database ว่าอ่านแล้ว)
     if (clearAllBtn) {
         clearAllBtn.onclick = async (e) => {
             e.stopPropagation();
             const snap = await getDocs(q);
-            const promises = snap.docs.map(d => updateDoc(doc(db, "tickets", d.id), { readBy: arrayUnion(email) }));
-            await Promise.all(promises);
+            const batchPromises = snap.docs.map(docSnap => {
+                return updateDoc(doc(db, "tickets", docSnap.id), {
+                    readBy: arrayUnion(email)
+                });
+            });
+            await Promise.all(batchPromises);
         };
+    }
+
+    // ระบบเปิด-ปิด Dropdown
+    if (notiBtn && notiDrop) {
+        notiBtn.onclick = (e) => { e.stopPropagation(); notiDrop.classList.toggle('hidden'); };
+        window.addEventListener('click', () => { if (!notiDrop.classList.contains('hidden')) notiDrop.classList.add('hidden'); });
     }
 }

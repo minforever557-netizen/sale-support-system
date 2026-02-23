@@ -1,29 +1,36 @@
+// ==========================================================
+// 1. IMPORT (รวมไว้ที่เดียว ป้องกันการเรียกซ้ำซ้อน)
+// ==========================================================
 import { db, auth } from "./firebase.js";
 import {
   collection,
   query,
   where,
-  getDocs
+  getDocs,
+  onSnapshot,
+  orderBy,
+  limit,
+  doc,
+  updateDoc,
+  arrayUnion
 } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
 
 import {
   onAuthStateChanged
 } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
 
+console.log("ROLE CHECK & NOTIFICATION SYSTEM START");
 
-console.log("ROLE CHECK START");
-
+// ==========================================================
+// 2. MAIN CONTROL (จัดการเรื่อง Role และการเรียก Notification)
+// ==========================================================
 document.addEventListener("layoutLoaded", () => {
-
   // ⭐ รอ DOM inject จาก Topbar / Sidebar ให้เสร็จก่อน
   setTimeout(() => {
-
     onAuthStateChanged(auth, async (user) => {
-
       if (!user) return;
 
       try {
-
         // ✅ อ่าน USER PROFILE
         const q = query(
           collection(db, "admin"),
@@ -42,42 +49,25 @@ document.addEventListener("layoutLoaded", () => {
 
         console.log("USER ROLE =", role);
 
-        // =========================
         // SHOW / HIDE ADMIN MENU
-        // =========================
-        const adminMenu =
-          document.getElementById("admin-menu-section");
-
+        const adminMenu = document.getElementById("admin-menu-section");
         if (adminMenu) {
-          if (role === "admin") {
-            console.log("ADMIN MENU SHOW");
-            adminMenu.style.display = "block";
-          } else {
-            console.log("NORMAL USER");
-            adminMenu.style.display = "none";
-          }
+          adminMenu.style.display = (role === "admin") ? "block" : "none";
         }
 
-        // =========================
-        // START NOTIFICATION SYSTEM
-        // =========================
+        // START NOTIFICATION SYSTEM (ส่ง email ไปด้วยเพื่อเช็คการอ่าน)
         startNotificationSystem(role, user.email);
 
       } catch (err) {
         console.error("ROLE LOAD ERROR:", err);
       }
-
     });
-
-  }, 300); // ⭐ สำคัญมาก (รอ layout render)
+  }, 300); 
 });
-// ==========================================================
-// ส่วนที่เพิ่มใหม่: ระบบ Notification (ไม่กระทบ Script เดิม)
-// ==========================================================
-import { 
-    onSnapshot, orderBy, limit 
-} from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
 
+// ==========================================================
+// 3. NOTIFICATION SYSTEM (Logic ใหม่: บันทึกการอ่านลง Database)
+// ==========================================================
 async function startNotificationSystem(role, email) {
     const notiDot = document.getElementById('noti-dot');
     const notiList = document.getElementById('noti-list');
@@ -85,21 +75,19 @@ async function startNotificationSystem(role, email) {
     const notiDrop = document.getElementById('noti-dropdown');
     const clearAllBtn = document.getElementById('clear-all-noti');
 
-    // 🛑 ป้องกัน Error: ตรวจสอบ Element ก่อนเริ่มงาน
     if (!notiList || !notiDot) return; 
 
-    // 1. จัดการระบบ "อ่านแล้ว" ผ่าน LocalStorage
-    const storageKey = `read_noti_${email}`;
-    let readIds = JSON.parse(localStorage.getItem(storageKey)) || [];
-
-    // ฟังก์ชันอัปเดต Badge ตัวเลขสีแดง (กรอบแดงชัดเจน)
+    // ✅ ฟังก์ชันอัปเดต Badge (นับจากฟิลด์ readBy ใน Firestore)
     const updateBadge = (currentDocs) => {
-        const unreadItems = currentDocs.filter(doc => !readIds.includes(doc.id));
+        const unreadItems = currentDocs.filter(docSnap => {
+            const data = docSnap.data();
+            const readBy = data.readBy || []; 
+            return !readBy.includes(email); // ถ้าไม่มี email เรา แปลว่ายังไม่อ่าน
+        });
         const count = unreadItems.length;
 
         if (count > 0) {
             notiDot.innerText = count > 9 ? '9+' : count;
-            // ปรับแต่ง CSS ผ่าน JS ให้เป็นวงกลมแดงชัดเจน
             notiDot.className = "absolute -top-1 -right-1 bg-red-600 text-white text-[10px] font-bold px-1.5 py-0.5 rounded-full min-w-[18px] h-[18px] flex items-center justify-center border-2 border-white shadow-sm";
             notiDot.classList.remove('hidden');
         } else {
@@ -107,16 +95,20 @@ async function startNotificationSystem(role, email) {
         }
     };
 
-    // ฟังก์ชันเมื่อคลิกอ่าน
-    window.markAsRead = function(docId, targetPage) {
-        if (!readIds.includes(docId)) {
-            readIds.push(docId);
-            localStorage.setItem(storageKey, JSON.stringify(readIds));
+    // ✅ ฟังก์ชันเมื่อคลิกอ่าน (บันทึกลง Database ทันที)
+    window.markAsRead = async (docId, targetPage) => {
+        try {
+            const ticketRef = doc(db, "tickets", docId);
+            await updateDoc(ticketRef, {
+                readBy: arrayUnion(email) // เพิ่ม email เราเข้าไปในกลุ่มคนที่อ่านแล้ว
+            });
+        } catch (err) {
+            console.error("Error marking as read:", err);
         }
         window.location.href = targetPage;
     };
 
-    // 2. Query ข้อมูล (Admin ดูงานสร้างใหม่ / User ดูงานที่มีการอัปเดต)
+    // การ Query (Admin ดูงานใหม่ / User ดูงานอัปเดต)
     let q;
     if (role === 'admin') {
         q = query(collection(db, "tickets"), orderBy("createdAt", "desc"), limit(15));
@@ -124,17 +116,17 @@ async function startNotificationSystem(role, email) {
         q = query(collection(db, "tickets"), where("ownerEmail", "==", email), orderBy("updatedAt", "desc"), limit(15));
     }
 
-    // 3. Listen แบบ Real-time
+    // Listen Real-time
     onSnapshot(q, (snapshot) => {
         let html = "";
         const allDocs = snapshot.docs;
 
-        allDocs.forEach((doc) => {
-            const data = doc.data();
-            const docId = doc.id;
-            const isRead = readIds.includes(docId);
+        allDocs.forEach((docSnap) => {
+            const data = docSnap.data();
+            const docId = docSnap.id;
+            const readBy = data.readBy || [];
+            const isRead = readBy.includes(email); // เช็คการอ่านจาก Database
 
-            // เงื่อนไขแจ้งเตือน: Admin ทุกอัน / User เฉพาะที่ไม่ใช่ Pending
             const shouldNotify = (role === 'admin') || (role !== 'admin' && data.status !== "Pending");
             if (!shouldNotify) return;
 
@@ -143,7 +135,6 @@ async function startNotificationSystem(role, email) {
             const ts = (role === 'admin' ? data.createdAt : data.updatedAt);
             const timeStr = ts ? ts.toDate().toLocaleTimeString('th-TH', { hour: '2-digit', minute: '2-digit' }) + " น." : "";
 
-            // UI: Highlight สีพื้นหลังถ้ายังไม่อ่าน
             const unreadClass = isRead ? "bg-white" : (role === 'admin' ? "bg-emerald-50/60" : "bg-blue-50/60");
             const targetPage = role === 'admin' ? 'user-management.html' : 'my-ticket.html';
 
@@ -161,7 +152,6 @@ async function startNotificationSystem(role, email) {
                     </div>
                     <div class="text-[11px] ${isRead ? 'text-slate-400' : 'text-slate-600'} leading-relaxed pl-4">
                         <b>หัวข้อ:</b> ${topic}
-                        ${!isRead && role !== 'admin' ? `<br><b>สถานะ:</b> <span class="text-orange-600">${data.status}</span>` : ''}
                     </div>
                 </div>`;
         });
@@ -170,27 +160,23 @@ async function startNotificationSystem(role, email) {
         updateBadge(allDocs);
     });
 
-    // 4. ปุ่ม Clear All (ทำงานร่วมกับ LocalStorage)
+    // ✅ ปุ่ม Clear All (บันทึกทุกลายการลง Database ว่าอ่านแล้ว)
     if (clearAllBtn) {
         clearAllBtn.onclick = async (e) => {
             e.stopPropagation();
             const snap = await getDocs(q);
-            snap.docs.forEach(doc => {
-                if (!readIds.includes(doc.id)) readIds.push(doc.id);
+            const batchPromises = snap.docs.map(docSnap => {
+                return updateDoc(doc(db, "tickets", docSnap.id), {
+                    readBy: arrayUnion(email)
+                });
             });
-            localStorage.setItem(storageKey, JSON.stringify(readIds));
-            // UI จะอัปเดตเองอัตโนมัติจาก onSnapshot
+            await Promise.all(batchPromises);
         };
     }
 
-    // 5. ระบบ Dropdown
+    // ระบบเปิด-ปิด Dropdown
     if (notiBtn && notiDrop) {
-        notiBtn.onclick = (e) => {
-            e.stopPropagation();
-            notiDrop.classList.toggle('hidden');
-        };
-        window.addEventListener('click', () => {
-            if (!notiDrop.classList.contains('hidden')) notiDrop.classList.add('hidden');
-        });
+        notiBtn.onclick = (e) => { e.stopPropagation(); notiDrop.classList.toggle('hidden'); };
+        window.addEventListener('click', () => { if (!notiDrop.classList.contains('hidden')) notiDrop.classList.add('hidden'); });
     }
 }

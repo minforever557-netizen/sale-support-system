@@ -96,17 +96,18 @@ async function startNotificationSystem(role, email) {
     };
 
     // ✅ ฟังก์ชันเมื่อคลิกอ่าน (บันทึกลง Database ทันที)
-    window.markAsRead = async (docId, targetPage) => {
-        try {
-            const ticketRef = doc(db, "tickets", docId);
-            await updateDoc(ticketRef, {
-                readBy: arrayUnion(email) // เพิ่ม email เราเข้าไปในกลุ่มคนที่อ่านแล้ว
-            });
-        } catch (err) {
-            console.error("Error marking as read:", err);
-        }
-        window.location.href = targetPage;
-    };
+    window.markAsRead = async function(docId, targetPage) {
+    console.log("Marking as read:", docId); // เพิ่ม Log เช็คการทำงาน
+    try {
+        const ticketRef = doc(db, "tickets", docId);
+        await updateDoc(ticketRef, {
+            readBy: arrayUnion(email)
+        });
+    } catch (err) {
+        console.error("Error updating read status:", err);
+    }
+    window.location.href = targetPage;
+};
 
     // การ Query (Admin ดูงานใหม่ / User ดูงานอัปเดต)
     let q;
@@ -127,8 +128,8 @@ async function startNotificationSystem(role, email) {
             const readBy = data.readBy || [];
             const isRead = readBy.includes(email); // เช็คการอ่านจาก Database
 
-            const shouldNotify = (role === 'admin') || (role !== 'admin' && data.status !== "Pending");
-            if (!shouldNotify) return;
+            const shouldNotify = (role === 'admin') || (role !== 'admin' && data.status && data.status !== "Pending");
+if (!shouldNotify) return;
 
             const internetNo = data.internetNo || data.id_number || '-';
             const topic = data.topic || 'ไม่มีหัวข้อ';
@@ -140,7 +141,7 @@ async function startNotificationSystem(role, email) {
 
             html += `
                 <div onclick="markAsRead('${docId}', '${targetPage}')" 
-                     class="p-4 border-b border-slate-50 transition cursor-pointer group ${unreadClass} hover:bg-slate-50 relative">
+         class="p-4 border-b border-slate-50 transition cursor-pointer group ${unreadClass} hover:bg-slate-50 relative">
                     <div class="flex justify-between items-start mb-1">
                         <div class="flex items-center gap-2">
                             ${!isRead ? `<span class="w-2 h-2 ${role === 'admin' ? 'bg-emerald-500' : 'bg-blue-500'} rounded-full animate-pulse"></span>` : ''}

@@ -4,26 +4,27 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Admin Management - Sale Support System</title>
-<script src="https://cdn.tailwindcss.com"></script>
-<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
-
-<link href="https://fonts.googleapis.com/css2?family=Kanit:wght@300;400;600&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="./css/style.css">
-
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Kanit:wght@300;400;600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="./css/style.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        /* เพิ่มสไตล์พรีวิวรูป */
+        .img-preview {
+            width: 40px; height: 40px;
+            object-fit: cover;
+            border-radius: 8px;
+            cursor: pointer;
+            border: 1px solid #e2e8f0;
+        }
+    </style>
 </head>
-<body class="flex h-screen overflow-hidden bg-slate-50">
+<body class="flex h-screen overflow-hidden bg-slate-50 font-[Kanit]">
 
-    <!-- SIDEBAR -->
-<aside id="sidebar-container"
-class="w-64 shrink-0 h-full bg-white border-r border-slate-200">
-</aside>
+    <aside id="sidebar-container" class="w-64 shrink-0 h-full bg-white border-r border-slate-200"></aside>
 
-
-
-    <!-- RIGHT AREA -->
     <div class="flex-1 flex flex-col min-w-0">
-
-       <div class="flex-1 flex flex-col min-w-0">
         <div id="topbar-container"></div>
 
         <main class="h-full overflow-y-auto p-6 md:p-10 max-w-7xl mx-auto w-full space-y-8 custom-scroll">
@@ -35,24 +36,28 @@ class="w-64 shrink-0 h-full bg-white border-r border-slate-200">
             </div>
 
             <div class="glass-card border border-slate-100 flex flex-col" style="max-height: 70vh;">
-    <div class="overflow-x-auto overflow-y-auto custom-scrollbar">
-        <table class="w-full text-left border-collapse sticky-header">
-            <thead class="sticky top-0 z-10 bg-white shadow-sm">
-                <tr class="bg-slate-50/50 border-b border-slate-100">
-                    <th class="p-6 text-[10px] font-black text-slate-400 uppercase tracking-widest">ผู้แจ้ง</th>
-                    <th class="p-6 text-[10px] font-black text-slate-400 uppercase tracking-widest">Internet No.</th>
-                    <th class="p-6 text-[10px] font-black text-slate-400 uppercase tracking-widest">หัวข้อ (SLA)</th>
-                    <th class="p-6 text-[10px] font-black text-slate-400 uppercase tracking-widest text-center">สถานะ</th>
-                    <th class="p-6 text-[10px] font-black text-slate-400 uppercase tracking-widest">วันเวลาที่ครบกำหนด</th>
-                    <th class="p-6 text-[10px] font-black text-slate-400 uppercase tracking-widest text-right">จัดการ</th>
-                </tr>
-            </thead>
-            <tbody id="admin-ticket-list" class="divide-y divide-slate-50 text-sm">
-                </tbody>
-        </table>
-    </div>
-</div>
+                <div class="overflow-x-auto overflow-y-auto custom-scrollbar">
+                    <table class="w-full text-left border-collapse sticky-header">
+                        <thead class="sticky top-0 z-10 bg-white shadow-sm">
+                            <tr class="bg-slate-50/50 border-b border-slate-100">
+                                <th class="p-6 text-[10px] font-black text-slate-400 uppercase tracking-widest">รูป</th>
+                                <th class="p-6 text-[10px] font-black text-slate-400 uppercase tracking-widest">ผู้แจ้ง</th>
+                                <th class="p-6 text-[10px] font-black text-slate-400 uppercase tracking-widest">Internet No.</th>
+                                <th class="p-6 text-[10px] font-black text-slate-400 uppercase tracking-widest">หัวข้อ (SLA)</th>
+                                <th class="p-6 text-[10px] font-black text-slate-400 uppercase tracking-widest text-center">สถานะ</th>
+                                <th class="p-6 text-[10px] font-black text-slate-400 uppercase tracking-widest">วันเวลาที่ครบกำหนด</th>
+                                <th class="p-6 text-[10px] font-black text-slate-400 uppercase tracking-widest text-right">จัดการ</th>
+                            </tr>
+                        </thead>
+                        <tbody id="admin-ticket-list" class="divide-y divide-slate-50 text-sm"></tbody>
+                    </table>
+                </div>
+            </div>
         </main>
+    </div>
+
+    <div id="imageModal" class="hidden fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm" onclick="this.classList.add('hidden')">
+        <img id="fullImage" src="" class="max-w-full max-h-full rounded-xl shadow-2xl">
     </div>
 
     <div id="adminActionModal" class="hidden fixed inset-0 z-[60] flex items-center justify-center p-4">
@@ -75,209 +80,184 @@ class="w-64 shrink-0 h-full bg-white border-r border-slate-200">
                     </button>
                 </div>
                 <textarea id="admin-note-input" rows="4" placeholder="ระบุรายละเอียดการแก้ไขหรือสาเหตุที่ Reject..." class="w-full p-5 bg-slate-50 border-2 border-slate-100 rounded-[1.5rem] outline-none focus:border-[#5c56f1] transition-all"></textarea>
+                <div class="flex gap-4">
+                    <button onclick="closeAdminModal()" class="flex-1 px-6 py-4 rounded-2xl font-bold text-slate-500 hover:bg-slate-100 transition-all">ยกเลิก</button>
+                    <button id="save-btn" onclick="saveAdminAction()" class="flex-1 bg-[#5c56f1] text-white py-4 rounded-2xl font-black text-sm shadow-xl transition-all hover:bg-indigo-700">บันทึกข้อมูล</button>
+                </div>
             </div>
-            <div class="flex gap-4 mt-8">
-    <button onclick="closeAdminModal()" 
-            class="flex-1 px-6 py-4 rounded-2xl font-bold text-slate-500 hover:bg-slate-100 transition-all">
-        ยกเลิก
-    </button>
-    <button id="save-btn" 
-            onclick="saveAdminAction()" 
-            class="flex-1 bg-[#5c56f1] text-white py-4 rounded-2xl font-black text-sm shadow-xl transition-all hover:bg-indigo-700">
-        บันทึกข้อมูล
-    </button>
-</div>
         </div>
     </div>
-  <script type="module">
-    import { db, auth } from "./js/firebase.js"; 
-    import { 
-        collection, query, orderBy, onSnapshot, getDoc, doc, updateDoc, serverTimestamp 
-    } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
-    import { onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
 
-    let currentTickets = [];
-    let unsubscribe = null;
+    <script type="module">
+        import { db, auth } from "./js/firebase.js"; 
+        import { collection, query, orderBy, onSnapshot, getDoc, doc, updateDoc, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+        import { onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
 
-    // --- ฟังก์ชันคำนวณ SLA ---
-    function getBusinessDueDate(startDate, hoursToAdd) {
-        let date = new Date(startDate);
-        let addedHours = 0;
-        while (addedHours < hoursToAdd) {
-            date.setHours(date.getHours() + 1);
-            if (date.getDay() !== 0 && date.getDay() !== 6) { addedHours++; }
-        }
-        return date;
-    }
+        let currentTickets = [];
+        let unsubscribe = null;
 
-    // --- ดึงข้อมูล Real-time ---
-    function initTicketsListener() {
-        if (unsubscribe) unsubscribe();
-        const q = query(collection(db, "tickets"), orderBy("createdAt", "asc"));
-        unsubscribe = onSnapshot(q, (snapshot) => {
-            currentTickets = snapshot.docs.map(d => ({ id: d.id, ...d.data() }));
-            renderAdminTickets(currentTickets);
-        }, (error) => {
-            console.error("Firebase Error:", error);
-        });
-    }
-
-    function renderAdminTickets(tickets) {
-        const list = document.getElementById('admin-ticket-list');
-        if (!list) return;
-        const searchTerm = document.getElementById('adminSearchInput')?.value.toLowerCase() || "";
-        
-        const filtered = tickets.filter(t => 
-            ["Pending", "Open", "On Progress"].includes(t.status) &&
-            ((t.owner?.toLowerCase().includes(searchTerm)) || 
-             (t.internetNo?.toLowerCase().includes(searchTerm)) ||
-             (t.id_number?.toLowerCase().includes(searchTerm)))
-        );
-
-        if (filtered.length === 0) {
-            list.innerHTML = '<tr><td colspan="6" class="p-10 text-center text-slate-400">ไม่พบข้อมูลใบงาน</td></tr>';
-            return;
+        // --- ฟังก์ชันใหม่: แสดงวันที่แบบไทย พ.ศ. ---
+        function formatThaiDate(date) {
+            if (!date) return '-';
+            return new Date(date).toLocaleString('th-TH', {
+                year: 'numeric', month: 'short', day: 'numeric',
+                hour: '2-digit', minute: '2-digit'
+            });
         }
 
-        list.innerHTML = filtered.map(t => {
-            const start = t.createdAt ? t.createdAt.toDate() : new Date();
-            const due = getBusinessDueDate(start, t.sla_hours || 0);
+        // --- ฟังก์ชันใหม่: ดูรูปใหญ่ ---
+        window.viewImage = (url) => {
+            const modal = document.getElementById('imageModal');
+            document.getElementById('fullImage').src = url;
+            modal.classList.remove('hidden');
+        };
+
+        function getBusinessDueDate(startDate, hoursToAdd) {
+            let date = new Date(startDate);
+            let addedHours = 0;
+            while (addedHours < hoursToAdd) {
+                date.setHours(date.getHours() + 1);
+                if (date.getDay() !== 0 && date.getDay() !== 6) { addedHours++; }
+            }
+            return date;
+        }
+
+        function initTicketsListener() {
+            if (unsubscribe) unsubscribe();
+            const q = query(collection(db, "tickets"), orderBy("createdAt", "asc"));
+            unsubscribe = onSnapshot(q, (snapshot) => {
+                currentTickets = snapshot.docs.map(d => ({ id: d.id, ...d.data() }));
+                renderAdminTickets(currentTickets);
+            });
+        }
+
+        function renderAdminTickets(tickets) {
+            const list = document.getElementById('admin-ticket-list');
+            if (!list) return;
+            const searchTerm = document.getElementById('adminSearchInput')?.value.toLowerCase() || "";
             
-            // ดึงข้อความล่าสุดมาแสดงในตาราง (ตัดประวัติเก่าออก)
-            const noteArray = t.adminNote ? t.adminNote.split(/\[\d{2}\/\d{2}\/\d{2}\s\d{2}:\d{2}\]/g).filter(x => x.trim()) : [];
-            const displayNote = noteArray.length > 0 ? noteArray[noteArray.length - 1].trim() : 'ยังไม่มีโน้ต';
-            
-            let statusColor = t.status === 'On Progress' ? 'bg-orange-100 text-orange-600' : 'bg-indigo-100 text-indigo-600';
-            if(t.status === 'Pending') statusColor = 'bg-blue-100 text-blue-600 animate-pulse';
+            const filtered = tickets.filter(t => 
+                ["Pending", "Open", "On Progress"].includes(t.status) &&
+                ((t.owner?.toLowerCase().includes(searchTerm)) || 
+                 (t.id_number?.toLowerCase().includes(searchTerm)))
+            );
 
-            return `
-                <tr class="hover:bg-slate-50/50 transition-all border-b border-slate-50 last:border-0">
-                    <td class="p-6 font-bold text-slate-800">${t.owner || '-'}</td>
-                    <td class="p-6 font-bold text-slate-600">${t.internetNo || t.id_number || '-'}</td>
-                    <td class="p-6">
-                        <p class="font-bold text-slate-700">${t.topic || 'No Topic'}</p>
-                        <p class="text-[10px] text-indigo-500 mt-1 italic line-clamp-1">${displayNote}</p>
-                    </td>
-                    <td class="p-6 text-center">
-                        <span class="px-3 py-1 rounded-full text-[9px] font-black uppercase tracking-widest ${statusColor}">${t.status}</span>
-                    </td>
-                    <td class="p-6 text-[13px] font-bold text-slate-600">${due.toLocaleString('th-TH')}</td>
-                    <td class="p-6 text-right">
-                        <button onclick="openManageModal('${t.id}', '${t.status}')" 
-                                class="bg-[#5c56f1] text-white px-6 py-2.5 rounded-xl text-xs font-bold shadow-lg hover:bg-indigo-700 transition active:scale-95">
-                            จัดการ
-                        </button>
-                    </td>
-                </tr>
-            `;
-        }).join('');
-    }
+            if (filtered.length === 0) {
+                list.innerHTML = '<tr><td colspan="7" class="p-10 text-center text-slate-400">ไม่พบข้อมูลใบงาน</td></tr>';
+                return;
+            }
 
-    // --- ระบบ Modal ---
-    window.openManageModal = async (id, status) => {
-        const modal = document.getElementById('adminActionModal');
-        if (!modal) return;
-
-        try {
-            // ดึงข้อมูลล่าสุดจาก DB เพื่อเอา adminNote เดิมมาเก็บไว้
-            const docSnap = await getDoc(doc(db, "tickets", id));
-            if (docSnap.exists()) {
-                const data = docSnap.data();
-                window.oldAdminNote = data.adminNote || ""; // เก็บโน้ตเก่าไว้เพื่อ Append
-                window.currentId = id;
-
-                modal.classList.remove('hidden');
-                document.getElementById('admin-note-input').value = ""; // เคลียร์ช่องพิมพ์เพื่อให้ใส่เฉพาะของใหม่
+            list.innerHTML = filtered.map(t => {
+                const start = t.createdAt ? t.createdAt.toDate() : new Date();
+                const due = getBusinessDueDate(start, t.sla_hours || 0);
                 
-                const initialStatus = (status === 'Pending' || status === 'Open') ? 'On Progress' : status;
-                window.updateSelectedStatus(initialStatus);
+                // รูปพรีวิว
+                const imgPreview = t.attachmentUrl 
+                    ? `<img src="${t.attachmentUrl}" class="img-preview" onclick="viewImage('${t.attachmentUrl}')">`
+                    : `<div class="w-10 h-10 bg-slate-100 rounded-lg flex items-center justify-center text-slate-300"><i class="fa-solid fa-image text-xs"></i></div>`;
 
-                // Reset ปุ่ม
-                const btn = document.getElementById('save-btn');
+                const noteArray = t.adminNote ? t.adminNote.split(/\[\d{2}\/\d{2}\/\d{2}\s\d{2}:\d{2}\]/g).filter(x => x.trim()) : [];
+                const displayNote = noteArray.length > 0 ? noteArray[noteArray.length - 1].trim() : 'ยังไม่มีโน้ต';
+                
+                let statusColor = t.status === 'On Progress' ? 'bg-orange-100 text-orange-600' : 'bg-indigo-100 text-indigo-600';
+                if(t.status === 'Pending') statusColor = 'bg-blue-100 text-blue-600 animate-pulse';
+
+                return `
+                    <tr class="hover:bg-slate-50/50 transition-all border-b border-slate-50 last:border-0">
+                        <td class="p-6">${imgPreview}</td>
+                        <td class="p-6 font-bold text-slate-800">${t.owner || '-'}</td>
+                        <td class="p-6 font-bold text-slate-600">${t.id_number || t.internetNo || '-'}</td>
+                        <td class="p-6">
+                            <p class="font-bold text-slate-700">${t.topic || 'No Topic'}</p>
+                            <p class="text-[10px] text-indigo-500 mt-1 italic line-clamp-1">${displayNote}</p>
+                        </td>
+                        <td class="p-6 text-center">
+                            <span class="px-3 py-1 rounded-full text-[9px] font-black uppercase tracking-widest ${statusColor}">${t.status}</span>
+                        </td>
+                        <td class="p-6 text-[13px] font-bold text-slate-600">${formatThaiDate(due)}</td>
+                        <td class="p-6 text-right">
+                            <button onclick="openManageModal('${t.id}', '${t.status}')" 
+                                    class="bg-[#5c56f1] text-white px-6 py-2.5 rounded-xl text-xs font-bold shadow-lg hover:bg-indigo-700 transition active:scale-95">
+                                จัดการ
+                            </button>
+                        </td>
+                    </tr>
+                `;
+            }).join('');
+        }
+
+        // --- ระบบ Modal (Logic เดิมของนาย) ---
+        window.openManageModal = async (id, status) => {
+            const modal = document.getElementById('adminActionModal');
+            try {
+                const docSnap = await getDoc(doc(db, "tickets", id));
+                if (docSnap.exists()) {
+                    window.oldAdminNote = docSnap.data().adminNote || "";
+                    window.currentId = id;
+                    modal.classList.remove('hidden');
+                    document.getElementById('admin-note-input').value = ""; 
+                    window.updateSelectedStatus((status === 'Pending' || status === 'Open') ? 'On Progress' : status);
+                }
+            } catch (e) { console.error(e); }
+        };
+
+        window.closeAdminModal = () => document.getElementById('adminActionModal').classList.add('hidden');
+
+        window.updateSelectedStatus = (st) => {
+            window.selectedStatus = st;
+            document.querySelectorAll('.status-btn').forEach(btn => {
+                btn.classList.remove('ring-4', 'ring-indigo-200', 'border-indigo-500', 'bg-indigo-50');
+            });
+            const activeBtn = document.getElementById(`btn-status-${st}`);
+            if (activeBtn) activeBtn.classList.add('ring-4', 'ring-indigo-200', 'border-indigo-500', 'bg-indigo-50');
+        };
+
+        window.saveAdminAction = async () => {
+            const noteInput = document.getElementById('admin-note-input');
+            const btn = document.getElementById('save-btn');
+            const newText = noteInput.value.trim();
+            if (!newText) return alert("กรุณาระบุรายละเอียดการอัปเดต");
+
+            btn.disabled = true;
+            btn.innerHTML = `<i class="fas fa-spinner fa-spin mr-2"></i> กำลังบันทึก...`;
+
+            let currentAdminName = "Unknown Admin";
+            try {
+                const adminDoc = await getDoc(doc(db, "admin", auth.currentUser.uid));
+                if (adminDoc.exists()) currentAdminName = adminDoc.data().name || "Admin";
+            } catch (e) { console.error(e); }
+
+            // ใช้ Format วันที่ไทยใน Note ด้วย
+            const timeHeader = `[${formatThaiDate(new Date())}]`;
+            const updatedNote = window.oldAdminNote ? `${window.oldAdminNote}\n${timeHeader} ${newText}` : `${timeHeader} ${newText}`;
+
+            try {
+                await updateDoc(doc(db, "tickets", window.currentId), {
+                    status: window.selectedStatus,
+                    adminNote: updatedNote,
+                    adminName: currentAdminName,
+                    updatedAt: serverTimestamp(),
+                    ...( ['Success', 'Reject'].includes(window.selectedStatus) ? { closedAt: serverTimestamp() } : {} )
+                });
+                btn.classList.replace('bg-[#5c56f1]', 'bg-green-500');
+                btn.innerHTML = `สำเร็จ!`;
+                setTimeout(() => { closeAdminModal(); }, 800);
+            } catch (error) {
+                alert("Error: " + error.message);
                 btn.disabled = false;
                 btn.innerHTML = "บันทึกข้อมูล";
-                btn.className = "flex-1 bg-[#5c56f1] text-white py-4 rounded-2xl font-black text-sm shadow-xl";
             }
-        } catch (e) { console.error(e); }
-    };
+        };
 
-    window.closeAdminModal = () => {
-        document.getElementById('adminActionModal').classList.add('hidden');
-    };
-
-    window.updateSelectedStatus = (st) => {
-        window.selectedStatus = st;
-        document.querySelectorAll('.status-btn').forEach(btn => {
-            btn.classList.remove('ring-4', 'ring-indigo-200', 'border-indigo-500', 'bg-indigo-50');
+        onAuthStateChanged(auth, (user) => {
+            if (user) { initTicketsListener(); } 
+            else { window.location.replace("login.html"); }
         });
-        const activeBtn = document.getElementById(`btn-status-${st}`);
-        if (activeBtn) activeBtn.classList.add('ring-4', 'ring-indigo-200', 'border-indigo-500', 'bg-indigo-50');
-    };
 
-    // --- บันทึกข้อมูล (Append Mode) ---
-    window.saveAdminAction = async () => {
-    const noteInput = document.getElementById('admin-note-input');
-    const btn = document.getElementById('save-btn');
-    const newText = noteInput.value.trim();
-
-    if (!newText) return alert("กรุณาระบุรายละเอียดการอัปเดต");
-
-    btn.disabled = true;
-    btn.innerHTML = `<i class="fas fa-spinner fa-spin mr-2"></i> กำลังบันทึก...`;
-
-    // 1. ดึงข้อมูลชื่อ Admin จากคอลเลกชัน admin (โดยใช้ UID ของผู้ที่ Login อยู่)
-    let currentAdminName = "Unknown Admin";
-    try {
-        const adminDoc = await getDoc(doc(db, "admin", auth.currentUser.uid));
-        if (adminDoc.exists()) {
-            currentAdminName = adminDoc.data().name || "Admin";
-        }
-    } catch (e) { console.error("Error fetching admin name:", e); }
-
-    // สร้าง Timestamp Header
-    const now = new Date();
-    const d = now.getDate().toString().padStart(2, '0');
-    const mo = (now.getMonth() + 1).toString().padStart(2, '0');
-    const y = (now.getFullYear() + 543).toString().slice(-2);
-    const h = now.getHours().toString().padStart(2, '0');
-    const mi = now.getMinutes().toString().padStart(2, '0');
-    const timeHeader = `[${d}/${mo}/${y} ${h}:${mi}]`;
-    
-    const updatedNote = window.oldAdminNote 
-        ? `${window.oldAdminNote}\n${timeHeader} ${newText}` 
-        : `${timeHeader} ${newText}`;
-
-    try {
-        const ticketRef = doc(db, "tickets", window.currentId);
-        
-        // 2. เพิ่มฟิลด์ adminName ลงใน object ที่จะ update
-        await updateDoc(ticketRef, {
-            status: window.selectedStatus,
-            adminNote: updatedNote,
-            adminName: currentAdminName, // 🔥 บันทึกชื่อผู้ดูแลลงไปที่นี่
-            updatedAt: serverTimestamp(),
-            ...( ['Success', 'Reject'].includes(window.selectedStatus) ? { closedAt: serverTimestamp() } : {} )
-        });
-        
-        btn.classList.replace('bg-[#5c56f1]', 'bg-green-500');
-        btn.innerHTML = `สำเร็จ!`;
-        setTimeout(() => { window.closeAdminModal(); }, 800);
-    } catch (error) {
-        alert("Error: " + error.message);
-        btn.disabled = false;
-        btn.innerHTML = "บันทึกข้อมูล";
-    }
-};
-
-    onAuthStateChanged(auth, (user) => {
-        if (user) { initTicketsListener(); } 
-        else { window.location.replace("login.html"); }
-    });
-
-    document.getElementById('adminSearchInput')?.addEventListener('input', () => renderAdminTickets(currentTickets));
-</script>
-<script src="./js/layout.js"></script>
-<script type="module" src="./js/sidebar-role.js"></script>
-<script type="module" src="firebase.js"></script>
+        document.getElementById('adminSearchInput')?.addEventListener('input', () => renderAdminTickets(currentTickets));
+    </script>
+    <script src="./js/layout.js"></script>
+    <script type="module" src="./js/sidebar-role.js"></script>
+    <script type="module" src="firebase.js"></script>
 </body>
 </html>

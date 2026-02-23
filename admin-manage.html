@@ -98,12 +98,18 @@
 
         // --- ฟังก์ชันใหม่: แสดงวันที่แบบไทย พ.ศ. ---
         function formatThaiDate(date) {
-            if (!date) return '-';
-            return new Date(date).toLocaleString('th-TH', {
-                year: 'numeric', month: 'short', day: 'numeric',
-                hour: '2-digit', minute: '2-digit'
-            });
-        }
+    if (!date) return '-';
+    const d = new Date(date);
+    return d.toLocaleString('th-TH', {
+        year: 'numeric',
+        month: 'short',
+        day: 'numeric',
+        hour: '2-digit',
+        minute: '2-digit',
+        hour12: false,
+        timeZone: 'Asia/Bangkok' // บังคับให้เป็นเวลาไทย
+    }) + ' น.';
+}
 
         // --- ฟังก์ชันใหม่: ดูรูปใหญ่ ---
         window.viewImage = (url) => {
@@ -112,15 +118,32 @@
             modal.classList.remove('hidden');
         };
 
-        function getBusinessDueDate(startDate, hoursToAdd) {
-            let date = new Date(startDate);
-            let addedHours = 0;
-            while (addedHours < hoursToAdd) {
-                date.setHours(date.getHours() + 1);
-                if (date.getDay() !== 0 && date.getDay() !== 6) { addedHours++; }
-            }
-            return date;
+        // --- แก้ไข: คำนวณ SLA เฉพาะเวลาทำการ (จ-ศ 08:30 - 17:30) ---
+function getBusinessDueDate(startDate, hoursToAdd) {
+    let date = new Date(startDate);
+    let remainingHours = hoursToAdd;
+
+    while (remainingHours > 0) {
+        // เพิ่มทีละ 1 ชั่วโมง
+        date.setHours(date.getHours() + 1);
+        
+        const day = date.getDay(); // 0 = อาทิตย์, 6 = เสาร์
+        const hour = date.getHours();
+        const min = date.getMinutes();
+        
+        // ตรวจสอบว่าเป็นวันทำการ (จันทร์-ศุกร์) 
+        // และอยู่ในช่วงเวลา 08:30 - 17:30
+        const isWorkingDay = (day !== 0 && day !== 6);
+        const currentTimeInMin = (hour * 60) + min;
+        const workStartInMin = (8 * 60) + 30; // 08:30
+        const workEndInMin = (17 * 60) + 30;  // 17:30
+
+        if (isWorkingDay && currentTimeInMin > workStartInMin && currentTimeInMin <= workEndInMin) {
+            remainingHours--;
         }
+    }
+    return date;
+}
 
         function initTicketsListener() {
             if (unsubscribe) unsubscribe();

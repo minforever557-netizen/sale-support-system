@@ -10,15 +10,15 @@
     <link rel="stylesheet" href="./css/style.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 </head>
-<body class="flex h-screen overflow-hidden bg-slate-50">
+<body class="flex min-h-screen bg-slate-50 font-[Kanit]">
 
-    <aside id="sidebar-container" class="w-64 shrink-0 h-full bg-white border-r border-slate-200"></aside>
+    <aside id="sidebar-container" class="w-64 shrink-0 bg-white border-r border-slate-200 hidden md:block"></aside>
 
     <div class="flex-1 flex flex-col min-w-0">
 
-        <div id="topbar-container"></div>
+        <div id="topbar-container" class="sticky top-0 z-50"></div>
 
-        <main class="h-screen overflow-y-auto w-full p-4 md:p-8 space-y-6 custom-scroll animate-in fade-in slide-in-from-bottom-4 duration-700">
+        <main class="flex-1 p-4 md:p-8 pb-12 space-y-6 animate-in fade-in slide-in-from-bottom-4 duration-700">
             
             <div class="px-2">
                 <h2 class="text-2xl md:text-3xl font-black text-slate-800 tracking-tight flex items-center gap-3">
@@ -30,7 +30,7 @@
                 <p class="text-slate-500 mt-1 font-medium text-xs md:text-sm">กรอกข้อมูลเพื่อแจ้งปัญหาหรือขอรับบริการให้ครบถ้วน</p>
             </div>
 
-            <div class="glass-card rounded-[2.5rem] overflow-hidden border-0 shadow-2xl flex flex-col bg-white w-full">
+            <div class="glass-card rounded-[2.5rem] overflow-hidden border-0 shadow-2xl flex flex-col bg-white w-full mb-10">
                 
                 <div class="bg-gradient-to-r from-emerald-600 to-teal-500 p-4 md:p-6 text-white relative overflow-hidden">
                     <div class="relative z-10 flex items-center justify-between">
@@ -127,14 +127,12 @@
             import { collection, addDoc, getDoc, doc, onSnapshot, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
             import { onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
 
-            // --- CLOUDINARY SETTINGS ---
             const CLOUDINARY_URL = "https://api.cloudinary.com/v1_1/diqcoq5rl/image/upload";
             const UPLOAD_PRESET = "SaleSupport";
 
             let topicsData = {};
             let userDataGlobal = null;
 
-            // --- AUTHENTICATION & USER DATA ---
             onAuthStateChanged(auth, async (user) => {
                 if (user) {
                     try {
@@ -156,7 +154,6 @@
                 }
             });
 
-            // --- LOAD TOPICS ---
             onSnapshot(collection(db, "topics"), (snapshot) => {
                 const topicSelect = document.getElementById('topic');
                 topicSelect.innerHTML = '<option value="">เลือกหัวข้อปัญหา</option>';
@@ -169,7 +166,6 @@
                 });
             });
 
-            // --- TOPIC CHANGE EVENT ---
             document.getElementById('topic').addEventListener('change', (e) => {
                 const topic = topicsData[e.target.value];
                 const detailInput = document.getElementById('detail-input');
@@ -181,55 +177,40 @@
                 }
             });
 
-            // --- CLOUDINARY UPLOAD FUNCTION ---
             async function uploadImage(file) {
                 if (!file) return "";
-                
-                // เช็คขนาดไฟล์ (2MB)
                 if (file.size > 2 * 1024 * 1024) {
                     throw new Error("ขนาดรูปภาพห้ามเกิน 2MB");
                 }
-
                 const formData = new FormData();
                 formData.append("file", file);
                 formData.append("upload_preset", UPLOAD_PRESET);
-
                 const response = await fetch(CLOUDINARY_URL, { method: "POST", body: formData });
                 const data = await response.json();
-                
                 if (data.secure_url) {
                     return data.secure_url.replace("/upload/", "/upload/f_auto,q_auto,w_1000/");
                 }
                 throw new Error("การอัปโหลดรูปภาพล้มเหลว");
             }
 
-            // --- FORM SUBMISSION ---
             document.getElementById('ticketForm').addEventListener('submit', async (e) => {
                 e.preventDefault();
                 const btn = document.getElementById('submitBtn');
-                
                 if(!userDataGlobal) {
                     alert("ไม่พบข้อมูลผู้ใช้ กรุณารีเฟรชหน้าจอ");
                     return;
                 }
-
                 btn.disabled = true;
                 btn.innerHTML = `<i class="fa-solid fa-spinner animate-spin"></i> กำลังดำเนินการ...`;
-
                 try {
                     const fileInput = document.getElementById('ticket-image');
                     const file = fileInput.files[0];
-                    
-                    // 1. อัปโหลดรูปภาพ
                     const imageUrl = await uploadImage(file);
-
                     const topicId = document.getElementById('topic').value;
                     const selectedTopic = topicsData[topicId];
                     const slaHours = parseInt(selectedTopic.sla) || 0;
                     const dDate = new Date();
                     dDate.setHours(dDate.getHours() + slaHours);
-
-                    // 2. บันทึกลง Firestore
                     await addDoc(collection(db, "tickets"), {
                         topic: selectedTopic.name,
                         topicId: topicId,
@@ -249,8 +230,6 @@
                         adminNote: "",
                         adminName: ""
                     });
-
-                    // 3. แสดงผลสำเร็จ
                     const overlay = document.getElementById('success-overlay');
                     const content = document.getElementById('success-content');
                     overlay.style.display = 'flex';
@@ -258,11 +237,7 @@
                         content.classList.replace('opacity-0', 'opacity-100');
                         content.classList.replace('scale-95', 'scale-100');
                     }, 50);
-
-                    setTimeout(() => { 
-                        window.location.href = "my-ticket.html"; 
-                    }, 2200);
-
+                    setTimeout(() => { window.location.href = "my-ticket.html"; }, 2200);
                 } catch (error) {
                     console.error("Submit error:", error);
                     Swal.fire({ icon: 'error', title: 'เกิดข้อผิดพลาด', text: error.message });
@@ -271,7 +246,6 @@
                 }
             });
 
-            // --- LOGOUT LOGIC (GLOBAL ACCESS) ---
             window.handleLogout = async () => {
                 const result = await Swal.fire({
                     title: 'ยืนยันการออกจากระบบ?',

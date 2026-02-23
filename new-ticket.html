@@ -12,7 +12,7 @@
 </head>
 <body class="flex min-h-screen bg-slate-50 font-[Kanit]">
 
-    <aside id="sidebar-container" class="w-64 shrink-0 bg-white border-r border-slate-200 hidden md:block"></aside>
+    <aside id="sidebar-container" class="w-64 shrink-0 bg-white border-r border-slate-200 hidden md:block sticky top-0 h-screen"></aside>
 
     <div class="flex-1 flex flex-col min-w-0">
 
@@ -30,7 +30,7 @@
                 <p class="text-slate-500 mt-1 font-medium text-xs md:text-sm">กรอกข้อมูลเพื่อแจ้งปัญหาหรือขอรับบริการให้ครบถ้วน</p>
             </div>
 
-            <div class="glass-card rounded-[2.5rem] overflow-hidden border-0 shadow-2xl flex flex-col bg-white w-full mb-10">
+            <div class="glass-card rounded-[2.5rem] overflow-hidden border-0 shadow-2xl flex flex-col bg-white w-full">
                 
                 <div class="bg-gradient-to-r from-emerald-600 to-teal-500 p-4 md:p-6 text-white relative overflow-hidden">
                     <div class="relative z-10 flex items-center justify-between">
@@ -127,12 +127,14 @@
             import { collection, addDoc, getDoc, doc, onSnapshot, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
             import { onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
 
+            // --- CLOUDINARY SETTINGS ---
             const CLOUDINARY_URL = "https://api.cloudinary.com/v1_1/diqcoq5rl/image/upload";
             const UPLOAD_PRESET = "SaleSupport";
 
             let topicsData = {};
             let userDataGlobal = null;
 
+            // --- AUTHENTICATION & USER DATA ---
             onAuthStateChanged(auth, async (user) => {
                 if (user) {
                     try {
@@ -154,6 +156,7 @@
                 }
             });
 
+            // --- LOAD TOPICS ---
             onSnapshot(collection(db, "topics"), (snapshot) => {
                 const topicSelect = document.getElementById('topic');
                 topicSelect.innerHTML = '<option value="">เลือกหัวข้อปัญหา</option>';
@@ -166,6 +169,7 @@
                 });
             });
 
+            // --- TOPIC CHANGE EVENT ---
             document.getElementById('topic').addEventListener('change', (e) => {
                 const topic = topicsData[e.target.value];
                 const detailInput = document.getElementById('detail-input');
@@ -177,6 +181,7 @@
                 }
             });
 
+            // --- CLOUDINARY UPLOAD FUNCTION ---
             async function uploadImage(file) {
                 if (!file) return "";
                 if (file.size > 2 * 1024 * 1024) {
@@ -193,6 +198,7 @@
                 throw new Error("การอัปโหลดรูปภาพล้มเหลว");
             }
 
+            // --- FORM SUBMISSION ---
             document.getElementById('ticketForm').addEventListener('submit', async (e) => {
                 e.preventDefault();
                 const btn = document.getElementById('submitBtn');
@@ -246,6 +252,7 @@
                 }
             });
 
+            // --- LOGOUT LOGIC ---
             window.handleLogout = async () => {
                 const result = await Swal.fire({
                     title: 'ยืนยันการออกจากระบบ?',

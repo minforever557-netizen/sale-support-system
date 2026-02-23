@@ -137,7 +137,7 @@ if (!shouldNotify) return;
             const timeStr = ts ? ts.toDate().toLocaleTimeString('th-TH', { hour: '2-digit', minute: '2-digit' }) + " น." : "";
 
             const unreadClass = isRead ? "bg-white" : (role === 'admin' ? "bg-emerald-50/60" : "bg-blue-50/60");
-            const targetPage = role === 'admin' ? 'user-management.html' : 'my-ticket.html';
+            const targetPage = role === 'admin' ? 'admin-manage.html' : 'my-ticket.html';
 
             html += `
                 <div onclick="markAsRead('${docId}', '${targetPage}')" 

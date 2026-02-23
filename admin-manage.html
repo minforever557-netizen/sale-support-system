@@ -107,8 +107,8 @@
         hour: '2-digit',
         minute: '2-digit',
         hour12: false,
-        timeZone: 'Asia/Bangkok' // บังคับให้เป็นเวลาไทย
-    }) + ' น.';
+        timeZone: 'Asia/Bangkok'
+    }).replace('u.', 'น.').replace('น.น.', 'น.'); // กันพลาดเรื่อง format ซ้ำ
 }
 
         // --- ฟังก์ชันใหม่: ดูรูปใหญ่ ---
@@ -155,59 +155,64 @@ function getBusinessDueDate(startDate, hoursToAdd) {
         }
 
         function renderAdminTickets(tickets) {
-            const list = document.getElementById('admin-ticket-list');
-            if (!list) return;
-            const searchTerm = document.getElementById('adminSearchInput')?.value.toLowerCase() || "";
-            
-            const filtered = tickets.filter(t => 
-                ["Pending", "Open", "On Progress"].includes(t.status) &&
-                ((t.owner?.toLowerCase().includes(searchTerm)) || 
-                 (t.id_number?.toLowerCase().includes(searchTerm)))
-            );
+    const list = document.getElementById('admin-ticket-list');
+    if (!list) return;
+    const searchTerm = document.getElementById('adminSearchInput')?.value.toLowerCase() || "";
+    
+    const filtered = tickets.filter(t => 
+        ["Pending", "Open", "On Progress"].includes(t.status) &&
+        ((t.owner?.toLowerCase().includes(searchTerm)) || 
+         (t.id_number?.toLowerCase().includes(searchTerm)))
+    );
 
-            if (filtered.length === 0) {
-                list.innerHTML = '<tr><td colspan="7" class="p-10 text-center text-slate-400">ไม่พบข้อมูลใบงาน</td></tr>';
-                return;
-            }
+    if (filtered.length === 0) {
+        list.innerHTML = '<tr><td colspan="7" class="p-10 text-center text-slate-400">ไม่พบข้อมูลใบงาน</td></tr>';
+        return;
+    }
 
-            list.innerHTML = filtered.map(t => {
-                const start = t.createdAt ? t.createdAt.toDate() : new Date();
-                const due = getBusinessDueDate(start, t.sla_hours || 0);
-                
-                // รูปพรีวิว
-                const imgPreview = t.attachmentUrl 
-                    ? `<img src="${t.attachmentUrl}" class="img-preview" onclick="viewImage('${t.attachmentUrl}')">`
-                    : `<div class="w-10 h-10 bg-slate-100 rounded-lg flex items-center justify-center text-slate-300"><i class="fa-solid fa-image text-xs"></i></div>`;
+    list.innerHTML = filtered.map(t => {
+        const start = t.createdAt ? t.createdAt.toDate() : new Date();
+        const due = getBusinessDueDate(start, t.sla_hours || 0);
+        
+        // --- ส่วนที่แก้: รองรับ PDF และ Icon ---
+        const fileUrl = t.attachmentUrl || "";
+        const isPDF = fileUrl.toLowerCase().endsWith('.pdf');
+        const imgPreview = fileUrl 
+            ? (isPDF 
+                ? `<div class="w-10 h-10 bg-red-50 rounded-lg flex items-center justify-center text-red-500 border border-red-100 cursor-pointer" onclick="window.open('${fileUrl}', '_blank')"><i class="fa-solid fa-file-pdf"></i></div>`
+                : `<img src="${fileUrl}" class="img-preview" onclick="viewImage('${fileUrl}')">`)
+            : `<div class="w-10 h-10 bg-slate-100 rounded-lg flex items-center justify-center text-slate-300"><i class="fa-solid fa-image text-xs"></i></div>`;
 
-                const noteArray = t.adminNote ? t.adminNote.split(/\[\d{2}\/\d{2}\/\d{2}\s\d{2}:\d{2}\]/g).filter(x => x.trim()) : [];
-                const displayNote = noteArray.length > 0 ? noteArray[noteArray.length - 1].trim() : 'ยังไม่มีโน้ต';
-                
-                let statusColor = t.status === 'On Progress' ? 'bg-orange-100 text-orange-600' : 'bg-indigo-100 text-indigo-600';
-                if(t.status === 'Pending') statusColor = 'bg-blue-100 text-blue-600 animate-pulse';
+        // --- ส่วนที่แก้: ดึงเฉพาะข้อความล่าสุดมาโชว์ในตาราง (ไม่เอาวันที่มาด้วย) ---
+        const notes = t.adminNote ? t.adminNote.split(/\[.*?\]/g).filter(x => x.trim()) : [];
+        const lastNote = notes.length > 0 ? notes[notes.length - 1].trim() : 'ยังไม่มีโน้ต';
+        
+        let statusColor = t.status === 'On Progress' ? 'bg-orange-100 text-orange-600' : 'bg-indigo-100 text-indigo-600';
+        if(t.status === 'Pending') statusColor = 'bg-blue-100 text-blue-600 animate-pulse';
 
-                return `
-                    <tr class="hover:bg-slate-50/50 transition-all border-b border-slate-50 last:border-0">
-                        <td class="p-6">${imgPreview}</td>
-                        <td class="p-6 font-bold text-slate-800">${t.owner || '-'}</td>
-                        <td class="p-6 font-bold text-slate-600">${t.id_number || t.internetNo || '-'}</td>
-                        <td class="p-6">
-                            <p class="font-bold text-slate-700">${t.topic || 'No Topic'}</p>
-                            <p class="text-[10px] text-indigo-500 mt-1 italic line-clamp-1">${displayNote}</p>
-                        </td>
-                        <td class="p-6 text-center">
-                            <span class="px-3 py-1 rounded-full text-[9px] font-black uppercase tracking-widest ${statusColor}">${t.status}</span>
-                        </td>
-                        <td class="p-6 text-[13px] font-bold text-slate-600">${formatThaiDate(due)}</td>
-                        <td class="p-6 text-right">
-                            <button onclick="openManageModal('${t.id}', '${t.status}')" 
-                                    class="bg-[#5c56f1] text-white px-6 py-2.5 rounded-xl text-xs font-bold shadow-lg hover:bg-indigo-700 transition active:scale-95">
-                                จัดการ
-                            </button>
-                        </td>
-                    </tr>
-                `;
-            }).join('');
-        }
+        return `
+            <tr class="hover:bg-slate-50/50 transition-all border-b border-slate-50 last:border-0">
+                <td class="p-6">${imgPreview}</td>
+                <td class="p-6 font-bold text-slate-800">${t.owner || '-'}</td>
+                <td class="p-6 font-bold text-slate-600">${t.id_number || t.internetNo || '-'}</td>
+                <td class="p-6">
+                    <p class="font-bold text-slate-700">${t.topic || 'No Topic'}</p>
+                    <p class="text-[10px] text-indigo-500 mt-1 italic line-clamp-1">${lastNote}</p>
+                </td>
+                <td class="p-6 text-center">
+                    <span class="px-3 py-1 rounded-full text-[9px] font-black uppercase tracking-widest ${statusColor}">${t.status}</span>
+                </td>
+                <td class="p-6 text-[13px] font-bold text-slate-600">${formatThaiDate(due)}</td>
+                <td class="p-6 text-right">
+                    <button onclick="openManageModal('${t.id}', '${t.status}')" 
+                            class="bg-[#5c56f1] text-white px-6 py-2.5 rounded-xl text-xs font-bold shadow-lg hover:bg-indigo-700 transition active:scale-95">
+                        จัดการ
+                    </button>
+                </td>
+            </tr>
+        `;
+    }).join('');
+}
 
         // --- ระบบ Modal (Logic เดิมของนาย) ---
         window.openManageModal = async (id, status) => {

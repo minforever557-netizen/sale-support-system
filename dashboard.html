@@ -59,7 +59,7 @@
             </div>
 
             <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
-                <div class="lg:col-span-2 space-y-6">
+             <div class="lg:col-span-2 space-y-4">
     <div class="flex items-center justify-between px-2">
         <h4 class="font-bold text-slate-800 flex items-center gap-2">
             <i class="fa-solid fa-bullhorn text-indigo-500"></i>
@@ -68,18 +68,20 @@
         <span class="text-[10px] font-black text-slate-400 uppercase tracking-widest">15 รายการล่าสุด</span>
     </div>
     
-    <div class="grid grid-cols-12 gap-4 px-6 mb-2 text-[10px] font-black text-slate-400 uppercase tracking-widest">
-        <div class="col-span-3">วันเวลา</div>
-        <div class="col-span-6">หัวข้อประกาศ</div>
-        <div class="col-span-3 text-right">รายละเอียด</div>
-    </div>
+    <div class="glass-card overflow-hidden bg-white border border-slate-100 shadow-sm">
+        <div class="grid grid-cols-12 gap-4 px-6 py-4 bg-slate-50/50 border-b border-slate-100 text-[10px] font-black text-slate-400 uppercase tracking-[0.15em]">
+            <div class="col-span-3">วันเวลา</div>
+            <div class="col-span-6">หัวข้อประกาศ</div>
+            <div class="col-span-3 text-right pr-4">รายละเอียด</div>
+        </div>
 
-    <div id="broadcast-container" class="space-y-2 max-h-[500px] overflow-y-auto pr-2 custom-scroll">
-        <div class="glass-card p-10 flex items-center justify-center text-slate-400 text-sm italic">
-            กำลังโหลดข้อมูล...
+        <div id="broadcast-container" class="max-h-[500px] overflow-y-auto custom-scroll">
+            <div class="p-10 text-center text-slate-400 text-sm italic">
+                กำลังโหลดข้อมูล...
+            </div>
         </div>
     </div>
-</div>
+</div>  
 
                 <div class="space-y-6">
                     <h4 class="font-bold text-slate-800 px-2 flex items-center gap-2">
@@ -199,64 +201,77 @@
         }
 
         // --- 4. Broadcast System Logic ---
-        async function loadBroadcastData() {
-            const container = document.getElementById('broadcast-container');
-            try {
-                // ดึง 15 รายการล่าสุด เรียงตามเวลา
-                const q = query(collection(db, "broadcasts"), orderBy("createdAt", "desc"), limit(15));
-                const snap = await getDocs(q);
-                
-                if (snap.empty) {
-                    container.innerHTML = `<div class="glass-card p-10 text-center text-slate-400 text-sm italic">ไม่มีงานที่ต้องประกาศในขณะนี้ ✨</div>`;
-                    return;
-                }
-
-                let html = '';
-                snap.forEach(docSnap => {
-                    const data = docSnap.data();
-                    const date = data.createdAt ? data.createdAt.toDate().toLocaleString('th-TH', {
-                        day: '2-digit', month: '2-digit', year: '2-digit', hour: '2-digit', minute: '2-digit'
-                    }) : '-';
-
-                    html += `
-                        <div onclick="viewBroadcast('${docSnap.id}')" class="glass-card p-5 flex items-center justify-between border-l-[6px] border-indigo-500 hover:bg-slate-50 transition-all cursor-pointer active:scale-[0.98]">
-                            <div class="flex-1 pr-4 truncate">
-                                <h5 class="font-bold text-slate-800 truncate">${data.subject || 'ไม่มีหัวข้อ'}</h5>
-                                <p class="text-[10px] text-slate-400 font-black uppercase tracking-widest mt-1">วันที่ประกาศ: ${date} น.</p>
-                            </div>
-                            <div class="shrink-0">
-                                <i class="fa-solid fa-chevron-right text-slate-300"></i>
-                            </div>
-                        </div>
-                    `;
-                });
-                container.innerHTML = html;
-
-                // เพิ่ม function เปิด modal (ผูกเข้ากับ window เพื่อให้กดจาก HTML ได้)
-                window.viewBroadcast = async (id) => {
-                    const bDoc = await getDoc(doc(db, "broadcasts", id));
-                    if (bDoc.exists()) {
-                        const bData = bDoc.data();
-                        Swal.fire({
-                            title: `<div class="text-left font-bold text-slate-800">${bData.subject}</div>`,
-                            html: `<div class="text-left text-slate-600 text-sm leading-relaxed mt-4 pt-4 border-t border-slate-100">${bData.detail || 'ไม่มีรายละเอียด'}</div>`,
-                            confirmButtonText: 'ปิดหน้าต่าง',
-                            confirmButtonColor: '#5c67f2',
-                            width: '600px',
-                            padding: '2rem',
-                            customClass: {
-                                popup: 'rounded-3xl font-kanit',
-                                title: 'text-2xl'
-                            }
-                        });
-                    }
-                };
-
-            } catch (err) {
-                console.error("Broadcast error:", err);
-                container.innerHTML = `<div class="glass-card p-10 text-center text-red-400 text-sm">ไม่สามารถโหลดข้อมูลประกาศได้</div>`;
-            }
+        // --- 4. Broadcast System Logic (Updated) ---
+async function loadBroadcastData() {
+    const container = document.getElementById('broadcast-container');
+    try {
+        const q = query(collection(db, "broadcasts"), orderBy("createdAt", "desc"), limit(15));
+        const snap = await getDocs(q);
+        
+        if (snap.empty) {
+            container.innerHTML = `<div class="p-10 text-center text-slate-400 text-sm italic">ไม่มีงานที่ต้องประกาศในขณะนี้ ✨</div>`;
+            return;
         }
+
+        let html = '';
+        snap.forEach(docSnap => {
+            const data = docSnap.data();
+            const date = data.createdAt ? data.createdAt.toDate().toLocaleString('th-TH', {
+                day: '2-digit', month: '2-digit', year: '2-digit', hour: '2-digit', minute: '2-digit'
+            }) : '-';
+
+            html += `
+                <div class="grid grid-cols-12 gap-4 px-6 py-4 items-center hover:bg-indigo-50/30 transition-all border-b border-slate-50 last:border-0 group">
+                    <div class="col-span-3">
+                        <span class="text-[11px] font-bold text-slate-500">${date} น.</span>
+                    </div>
+                    
+                    <div class="col-span-6">
+                        <h5 class="font-bold text-slate-700 truncate group-hover:text-indigo-600 transition-colors" title="${data.subject}">
+                            ${data.subject || 'ไม่มีหัวข้อ'}
+                        </h5>
+                    </div>
+                    
+                    <div class="col-span-3 text-right">
+                        <button onclick="viewBroadcast('${docSnap.id}')" 
+                                class="inline-flex items-center gap-1.5 text-[10px] font-black text-indigo-500 hover:text-indigo-700 uppercase tracking-widest bg-indigo-50 hover:bg-indigo-100 px-4 py-2 rounded-xl transition-all active:scale-95">
+                            เปิดอ่าน <i class="fa-solid fa-chevron-right text-[8px]"></i>
+                        </button>
+                    </div>
+                </div>
+            `;
+        });
+        container.innerHTML = html;
+
+        // Function สำหรับเปิด Modal (คงเดิมแต่ปรับแต่ง UI)
+        window.viewBroadcast = async (id) => {
+            const bDoc = await getDoc(doc(db, "broadcasts", id));
+            if (bDoc.exists()) {
+                const bData = bDoc.data();
+                Swal.fire({
+                    title: `<div class="text-left font-bold text-slate-800">${bData.subject}</div>`,
+                    html: `
+                        <div class="text-left text-slate-600 text-sm leading-relaxed mt-4 pt-4 border-t border-slate-100 min-h-[100px]">
+                            ${bData.detail.replace(/\n/g, '<br>')}
+                        </div>
+                        <div class="text-[10px] text-right text-slate-400 mt-6 uppercase tracking-widest font-bold">
+                            โดย: ${bData.updatedBy || 'ระบบ'}
+                        </div>
+                    `,
+                    confirmButtonText: 'รับทราบ',
+                    confirmButtonColor: '#5c67f2',
+                    width: '600px',
+                    padding: '2rem',
+                    customClass: { popup: 'rounded-[2rem] font-kanit' }
+                });
+            }
+        };
+
+    } catch (err) {
+        console.error("Broadcast error:", err);
+        container.innerHTML = `<div class="p-10 text-center text-red-400 text-sm">ไม่สามารถโหลดข้อมูลได้</div>`;
+    }
+}
 
         // --- 5. Global UI Controls ---
         window.openLogoutModal = () => {

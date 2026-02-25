@@ -60,17 +60,26 @@
 
             <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
                 <div class="lg:col-span-2 space-y-6">
-                    <div class="flex items-center justify-between px-2">
-                        <h4 class="font-bold text-slate-800 flex items-center gap-2">
-                            <i class="fa-solid fa-bullhorn text-indigo-500"></i>
-                            ประกาศข่าวสารระบบ
-                        </h4>
-                        <span class="text-[10px] font-black text-slate-400 uppercase tracking-widest">ข่าวสารล่าสุด 15 รายการ</span>
-                    </div>
-                    <div id="broadcast-container" class="space-y-3 max-h-[520px] overflow-y-auto pr-2 custom-scroll">
-                        <div class="glass-card p-10 flex items-center justify-center text-slate-400 text-sm italic">กำลังโหลดข้อมูล...</div>
-                    </div>
-                </div>
+    <div class="flex items-center justify-between px-2">
+        <h4 class="font-bold text-slate-800 flex items-center gap-2">
+            <i class="fa-solid fa-bullhorn text-indigo-500"></i>
+            ประกาศข่าวสารระบบ
+        </h4>
+        <span class="text-[10px] font-black text-slate-400 uppercase tracking-widest">15 รายการล่าสุด</span>
+    </div>
+    
+    <div class="grid grid-cols-12 gap-4 px-6 mb-2 text-[10px] font-black text-slate-400 uppercase tracking-widest">
+        <div class="col-span-3">วันเวลา</div>
+        <div class="col-span-6">หัวข้อประกาศ</div>
+        <div class="col-span-3 text-right">รายละเอียด</div>
+    </div>
+
+    <div id="broadcast-container" class="space-y-2 max-h-[500px] overflow-y-auto pr-2 custom-scroll">
+        <div class="glass-card p-10 flex items-center justify-center text-slate-400 text-sm italic">
+            กำลังโหลดข้อมูล...
+        </div>
+    </div>
+</div>
 
                 <div class="space-y-6">
                     <h4 class="font-bold text-slate-800 px-2 flex items-center gap-2">

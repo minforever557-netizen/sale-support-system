@@ -1,0 +1,93 @@
+<div class="p-6 md:p-10 fade-in-up">
+    <div class="mb-8">
+        <h2 class="text-3xl font-black text-slate-700 tracking-tighter">สถานะระบบ</h2>
+        <p class="text-emerald-500 font-bold tracking-[0.1em] text-xs uppercase">System Health & Performance Monitoring</p>
+    </div>
+
+    <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-10">
+        
+        <div class="bg-white p-8 rounded-[2.5rem] shadow-xl border-b-[8px] border-emerald-500 relative overflow-hidden group">
+            <div class="absolute -top-6 -right-6 w-24 h-24 bg-emerald-50 rounded-full transition-transform group-hover:scale-150 duration-500"></div>
+            <div class="relative">
+                <div class="flex justify-between items-center mb-6">
+                    <div class="w-12 h-12 bg-emerald-100 rounded-2xl flex items-center justify-center text-emerald-600 text-xl">
+                        <i class="fas fa-database"></i>
+                    </div>
+                    <span class="flex items-center space-x-2 px-3 py-1 bg-emerald-50 text-emerald-600 rounded-full text-[10px] font-black uppercase">
+                        <span class="w-2 h-2 bg-emerald-500 rounded-full animate-pulse"></span>
+                        <span>Normal</span>
+                    </span>
+                </div>
+                <h3 class="text-gray-400 text-xs font-bold uppercase tracking-widest">Database (Firebase)</h3>
+                <p class="text-2xl font-black text-slate-700 mt-1">Operational</p>
+                <div class="mt-4 pt-4 border-t border-slate-50 flex justify-between items-center">
+                    <span class="text-xs text-gray-400">Response Time</span>
+                    <span class="text-xs font-bold text-emerald-500">42ms</span>
+                </div>
+            </div>
+        </div>
+
+        <div class="bg-white p-8 rounded-[2.5rem] shadow-xl border-b-[8px] border-blue-500 relative overflow-hidden group">
+            <div class="absolute -top-6 -right-6 w-24 h-24 bg-blue-50 rounded-full transition-transform group-hover:scale-150 duration-500"></div>
+            <div class="relative">
+                <div class="flex justify-between items-center mb-6">
+                    <div class="w-12 h-12 bg-blue-100 rounded-2xl flex items-center justify-center text-blue-600 text-xl">
+                        <i class="fas fa-user-shield"></i>
+                    </div>
+                    <span class="flex items-center space-x-2 px-3 py-1 bg-blue-50 text-blue-600 rounded-full text-[10px] font-black uppercase">
+                        <span class="w-2 h-2 bg-blue-500 rounded-full animate-pulse"></span>
+                        <span>Active</span>
+                    </span>
+                </div>
+                <h3 class="text-gray-400 text-xs font-bold uppercase tracking-widest">Auth Service</h3>
+                <p class="text-2xl font-black text-slate-700 mt-1">Secure</p>
+                <div class="mt-4 pt-4 border-t border-slate-50 flex justify-between items-center">
+                    <span class="text-xs text-gray-400">Uptime</span>
+                    <span class="text-xs font-bold text-blue-500">99.9%</span>
+                </div>
+            </div>
+        </div>
+
+        <div class="bg-white p-8 rounded-[2.5rem] shadow-xl border-b-[8px] border-orange-500 relative overflow-hidden group">
+            <div class="absolute -top-6 -right-6 w-24 h-24 bg-orange-50 rounded-full transition-transform group-hover:scale-150 duration-500"></div>
+            <div class="relative">
+                <div class="flex justify-between items-center mb-6">
+                    <div class="w-12 h-12 bg-orange-100 rounded-2xl flex items-center justify-center text-orange-600 text-xl">
+                        <i class="fas fa-folder-open"></i>
+                    </div>
+                    <span class="flex items-center space-x-2 px-3 py-1 bg-orange-50 text-orange-600 rounded-full text-[10px] font-black uppercase">
+                        <span>Healthy</span>
+                    </span>
+                </div>
+                <h3 class="text-gray-400 text-xs font-bold uppercase tracking-widest">File Storage</h3>
+                <p class="text-2xl font-black text-slate-700 mt-1">82.5 GB <span class="text-sm font-medium text-gray-400">/ 100GB</span></p>
+                <div class="mt-4 w-full bg-slate-100 h-2 rounded-full overflow-hidden">
+                    <div class="bg-orange-500 h-full" style="width: 82%"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="bg-white rounded-[3rem] shadow-2xl p-8 border-t-4 border-slate-100">
+        <div class="flex justify-between items-center mb-6">
+            <h3 class="text-lg font-black text-slate-700">ประวัติเหตุการณ์ล่าสุด</h3>
+            <button class="text-emerald-600 font-bold text-xs uppercase hover:underline">View All Logs</button>
+        </div>
+        <div class="space-y-4">
+            <div class="flex items-center justify-between p-4 bg-slate-50 rounded-2xl border border-slate-100">
+                <div class="flex items-center space-x-4">
+                    <div class="w-2 h-2 bg-emerald-500 rounded-full"></div>
+                    <span class="text-sm font-bold text-slate-600">Database backup completed</span>
+                </div>
+                <span class="text-[10px] font-bold text-slate-400 uppercase">10:45 AM</span>
+            </div>
+            <div class="flex items-center justify-between p-4 bg-slate-50 rounded-2xl border border-slate-100">
+                <div class="flex items-center space-x-4">
+                    <div class="w-2 h-2 bg-blue-500 rounded-full"></div>
+                    <span class="text-sm font-bold text-slate-600">Admin login from unauthorized IP blocked</span>
+                </div>
+                <span class="text-[10px] font-bold text-slate-400 uppercase">09:12 AM</span>
+            </div>
+        </div>
+    </div>
+</div>

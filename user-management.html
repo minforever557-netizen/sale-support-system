@@ -4,243 +4,304 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>User Management - Sale Support System</title>
-    <script src="https://cdn.tailwindcss.com"></script>
-    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
-    <link href="https://fonts.googleapis.com/css2?family=Kanit:wght@300;400;600&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="./css/style.css">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <style>
-        body { font-family: 'Kanit', sans-serif; }
-        .custom-scroll::-webkit-scrollbar { width: 6px; }
-        .custom-scroll::-webkit-scrollbar-track { background: #f1f1f1; }
-        .custom-scroll::-webkit-scrollbar-thumb { background: #10b981; border-radius: 10px; }
-    </style>
+<script src="https://cdn.tailwindcss.com"></script>
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+
+<link href="https://fonts.googleapis.com/css2?family=Kanit:wght@300;400;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="./css/style.css">
+
 </head>
 <body class="flex h-screen overflow-hidden bg-slate-50">
 
-    <aside id="sidebar-container" class="w-64 shrink-0 h-full bg-white border-r border-slate-200 hidden md:block"></aside>
+    <!-- SIDEBAR -->
+<aside id="sidebar-container"
+class="w-64 shrink-0 h-full bg-white border-r border-slate-200">
+</aside>
 
-    <div class="flex-1 flex flex-col min-w-0 h-full overflow-hidden">
+
+
+    <!-- RIGHT AREA -->
+   <div class="flex-1 flex flex-col min-w-0 h-full overflow-hidden">
+
+        <!-- TOPBAR -->
         <div id="topbar-container"></div>
 
-        <main class="flex-1 overflow-y-auto custom-scroll p-4 md:p-10">
+        <!-- MAIN CONTENT -->
+       <main class="flex-1 overflow-y-auto custom-scroll p-6 md:p-10">
             <div class="max-w-7xl mx-auto w-full space-y-8">
-                
-                <div class="flex flex-col md:flex-row md:items-end justify-between gap-4 mb-6">
+                <div class="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-10">
                     <div>
-                        <h2 class="text-3xl font-black text-slate-800 tracking-tight flex items-center gap-3">
-                            <i class="fa-solid fa-users-gear text-indigo-500"></i>
-                            จัดการผู้ใช้งาน
-                        </h2>
-                        <p class="text-slate-500 mt-1 font-medium">ตรวจสอบและแก้ไขระดับสิทธิ์หรือข้อมูลทีมของพนักงาน</p>
+                        <h2 class="text-3xl font-bold text-slate-800 tracking-tight">จัดการผู้ใช้งาน</h2>
+                        <p class="text-slate-500 mt-1">ตรวจสอบและแก้ไขข้อมูลสมาชิกในระบบทั้งหมด</p>
                     </div>
                 </div>
 
-                <div class="bg-white rounded-[2.5rem] shadow-xl shadow-slate-200/50 border border-slate-100 overflow-hidden">
-                    <div class="overflow-x-auto">
-                        <table class="w-full text-left border-collapse">
-                            <thead>
-                                <tr class="bg-slate-900 text-white">
-                                    <th class="px-8 py-5 text-[10px] font-black uppercase tracking-[0.2em]">พนักงาน</th>
-                                    <th class="px-6 py-5 text-[10px] font-black uppercase tracking-[0.2em]">ทีม / สังกัด</th>
-                                    <th class="px-6 py-5 text-[10px] font-black uppercase tracking-[0.2em]">ระดับสิทธิ์</th>
-                                    <th class="px-6 py-5 text-[10px] font-black uppercase tracking-[0.2em] text-center">สถานะ</th>
-                                    <th class="px-6 py-5 text-[10px] font-black uppercase tracking-[0.2em] text-right">จัดการ</th>
-                                </tr>
-                            </thead>
-                            <tbody id="user-table-body" class="divide-y divide-slate-50">
-                                <tr>
-                                    <td colspan="5" class="py-20 text-center text-slate-400">
-                                        <i class="fa-solid fa-circle-notch animate-spin text-3xl mb-4 text-indigo-500"></i>
-                                        <p class="font-medium">กำลังโหลดข้อมูลพนักงาน...</p>
-                                    </td>
-                                </tr>
-                            </tbody>
-                        </table>
-                    </div>
+            <div id="user-list" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                <div class="col-span-full py-20 text-center text-slate-400">
+                    <i class="fa-solid fa-circle-notch animate-spin text-3xl mb-4 text-indigo-500"></i>
+                    <p class="font-medium tracking-wide">กำลังโหลดข้อมูลพนักงาน...</p>
                 </div>
             </div>
         </main>
     </div>
 
-    <div id="editModal" class="hidden fixed inset-0 z-[100] flex items-center justify-center p-4">
-        <div class="absolute inset-0 bg-slate-900/60 backdrop-blur-sm" onclick="closeModal()"></div>
-        <div class="relative bg-white w-full max-w-2xl rounded-[2.5rem] shadow-2xl overflow-hidden">
-            <div class="bg-slate-900 p-8 text-white">
-                <div class="flex justify-between items-center">
+   <div id="editModal" class="hidden fixed inset-0 z-[100] flex items-center justify-center p-4">
+    <div class="absolute inset-0 bg-slate-900/60 backdrop-blur-sm" onclick="closeModal()"></div>
+    
+    <div class="relative bg-white w-full max-w-2xl rounded-[2.5rem] shadow-2xl overflow-hidden animate-in fade-in zoom-in duration-300">
+        <div class="bg-slate-900 p-8 text-white relative overflow-hidden">
+            <div class="relative z-10 flex justify-between items-start">
+                <div>
                     <h3 class="text-2xl font-bold flex items-center gap-3">
-                        <i class="fa-solid fa-user-pen text-indigo-400"></i> แก้ไขข้อมูลพนักงาน
+                        <i class="fa-solid fa-user-pen text-indigo-400"></i> จัดการโปรไฟล์พนักงาน
                     </h3>
-                    <button onclick="closeModal()" class="text-slate-400 hover:text-white transition-colors">
-                        <i class="fa-solid fa-xmark text-2xl"></i>
-                    </button>
+                    <p class="text-slate-400 text-xs mt-2 uppercase tracking-widest font-medium">Update User Profile Information</p>
+                </div>
+                <button onclick="closeModal()" class="bg-white/10 hover:bg-white/20 p-3 rounded-2xl transition-all active:scale-95">
+                    <i class="fa-solid fa-xmark w-5 h-5 flex items-center justify-center"></i>
+                </button>
+            </div>
+            <div class="absolute -right-10 -top-10 w-40 h-40 bg-indigo-500/10 rounded-full blur-3xl"></div>
+        </div>
+
+        <form id="edit-user-form" class="max-h-[70vh] overflow-y-auto custom-scroll p-8">
+            <input type="hidden" id="edit-uid">
+            
+            <div class="space-y-8">
+                <div class="space-y-4">
+                    <div class="flex items-center gap-2 text-indigo-500">
+                        <span class="text-[10px] font-black uppercase tracking-[0.2em]">Login Credentials</span>
+                        <div class="h-px flex-1 bg-indigo-50"></div>
+                    </div>
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        <div class="space-y-2">
+                            <label class="text-[11px] font-bold text-slate-400 ml-1">Username</label>
+                            <input type="text" id="edit-username" class="w-full px-5 py-3.5 bg-slate-50 border border-slate-100 rounded-2xl focus:ring-4 focus:ring-indigo-500/5 focus:border-indigo-500 transition-all font-medium text-slate-700 outline-none" placeholder="ไอดีผู้ใช้">
+                        </div>
+                        <div class="space-y-2">
+                            <label class="text-[11px] font-bold text-slate-400 ml-1">Email Address</label>
+                            <input type="email" id="edit-email" class="w-full px-5 py-3.5 bg-slate-50 border border-slate-100 rounded-2xl focus:ring-4 focus:ring-indigo-500/5 focus:border-indigo-500 transition-all font-medium text-slate-700 outline-none" placeholder="email@company.com">
+                        </div>
+                    </div>
+                </div>
+
+                <div class="space-y-4">
+                    <div class="flex items-center gap-2 text-emerald-500">
+                        <span class="text-[10px] font-black uppercase tracking-[0.2em]">Profile Details</span>
+                        <div class="h-px flex-1 bg-emerald-50"></div>
+                    </div>
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        <div class="md:col-span-2 space-y-2">
+                            <label class="text-[11px] font-bold text-slate-400 ml-1">ชื่อ-นามสกุลจริง</label>
+                            <input type="text" id="edit-name" required class="w-full px-5 py-3.5 bg-slate-50 border border-slate-100 rounded-2xl focus:ring-4 focus:ring-emerald-500/5 focus:border-emerald-500 transition-all font-medium text-slate-700 outline-none" placeholder="ระบุชื่อจริง">
+                        </div>
+                        <div class="space-y-2">
+                            <label class="text-[11px] font-bold text-slate-400 ml-1">เบอร์โทรศัพท์</label>
+                            <input type="text" id="edit-phone" class="w-full px-5 py-3.5 bg-slate-50 border border-slate-100 rounded-2xl focus:ring-4 focus:ring-emerald-500/5 focus:border-emerald-500 transition-all font-medium text-slate-700 outline-none" placeholder="08x-xxx-xxxx">
+                        </div>
+                        <div class="space-y-2">
+                            <label class="text-[11px] font-bold text-slate-400 ml-1">บทบาท (Role)</label>
+                            <select id="edit-role" class="w-full px-5 py-3.5 bg-slate-50 border border-slate-100 rounded-2xl focus:ring-4 focus:ring-emerald-500/5 focus:border-emerald-500 transition-all font-bold text-slate-600 outline-none appearance-none">
+                                <option value="user">User (Sale)</option>
+                                <option value="admin">Admin (Support)</option>
+                            </select>
+                        </div>
+                        <div class="space-y-2">
+                            <label class="text-[11px] font-bold text-slate-400 ml-1">ทีมหลัก (Main Team)</label>
+                            <select id="edit-main-team" required class="w-full px-5 py-3.5 bg-slate-50 border border-slate-100 rounded-2xl focus:ring-4 focus:ring-emerald-500/5 focus:border-emerald-500 transition-all font-bold text-slate-600 outline-none"></select>
+                        </div>
+                        <div class="space-y-2">
+                            <label class="text-[11px] font-bold text-slate-400 ml-1">ทีมย่อย (Sub Team)</label>
+                            <select id="edit-sub-team" class="w-full px-5 py-3.5 bg-slate-50 border border-slate-100 rounded-2xl focus:ring-4 focus:ring-emerald-500/5 focus:border-emerald-500 transition-all font-bold text-slate-600 outline-none"></select>
+                        </div>
+                    </div>
                 </div>
             </div>
-            <form id="edit-user-form" class="p-8 space-y-6">
-                <input type="hidden" id="edit-uid">
-                <div class="grid grid-cols-2 gap-4">
-                    <div class="col-span-2 space-y-1">
-                        <label class="text-xs font-bold text-slate-400">ชื่อ-นามสกุล</label>
-                        <input type="text" id="edit-name" class="w-full p-3 bg-slate-50 border border-slate-100 rounded-xl outline-none focus:border-indigo-500">
-                    </div>
-                    <div class="space-y-1">
-                        <label class="text-xs font-bold text-slate-400">อีเมล</label>
-                        <input type="email" id="edit-email" readonly class="w-full p-3 bg-slate-100 border border-slate-100 rounded-xl text-slate-500 cursor-not-allowed">
-                    </div>
-                    <div class="space-y-1">
-                        <label class="text-xs font-bold text-slate-400">เบอร์โทรศัพท์</label>
-                        <input type="text" id="edit-phone" class="w-full p-3 bg-slate-50 border border-slate-100 rounded-xl outline-none focus:border-indigo-500">
-                    </div>
-                    <div class="space-y-1">
-                        <label class="text-xs font-bold text-slate-400">ทีมหลัก</label>
-                        <select id="edit-main-team" class="w-full p-3 bg-slate-50 border border-slate-100 rounded-xl outline-none focus:border-indigo-500"></select>
-                    </div>
-                    <div class="space-y-1">
-                        <label class="text-xs font-bold text-slate-400">ทีมย่อย</label>
-                        <select id="edit-sub-team" class="w-full p-3 bg-slate-50 border border-slate-100 rounded-xl outline-none focus:border-indigo-500"></select>
-                    </div>
-                    <div class="col-span-2 space-y-1">
-                        <label class="text-xs font-bold text-slate-400">สิทธิ์การใช้งาน (Role)</label>
-                        <select id="edit-role" class="w-full p-3 bg-slate-50 border border-slate-100 rounded-xl outline-none focus:border-indigo-500">
-                            <option value="user">User (Sale)</option>
-                            <option value="admin">Admin (Support)</option>
-                        </select>
-                    </div>
-                </div>
-                <div class="flex gap-3 pt-4">
-                    <button type="button" onclick="closeModal()" class="flex-1 py-3 bg-slate-100 text-slate-500 rounded-xl font-bold">ยกเลิก</button>
-                    <button type="submit" id="saveBtn" class="flex-[2] py-3 bg-indigo-600 text-white rounded-xl font-bold shadow-lg">บันทึกข้อมูล</button>
-                </div>
-            </form>
-        </div>
+
+            <div class="mt-10 flex gap-4 sticky bottom-0 bg-white pt-6 border-t border-slate-50">
+                <button type="button" onclick="closeModal()" class="flex-1 py-4 bg-slate-100 text-slate-500 rounded-2xl font-bold hover:bg-slate-200 transition-all active:scale-95">
+                    ยกเลิก
+                </button>
+                <button type="submit" id="saveBtn" class="flex-[2] py-4 bg-indigo-600 text-white rounded-2xl font-bold shadow-xl shadow-indigo-100 hover:bg-indigo-700 transition-all active:scale-95 flex items-center justify-center gap-2">
+                    <i class="fa-solid fa-floppy-disk"></i> บันทึกข้อมูลพนักงาน
+                </button>
+            </div>
+        </form>
     </div>
+</div>
 
-    <script type="module">
-        import { db, auth } from "./js/firebase.js";
-        import { collection, query, onSnapshot, getDoc, getDocs, doc, updateDoc } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
-        import { onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
+  <script type="module">
+    // นำเข้าเฉพาะที่จำเป็น และต้องระบุเส้นทางให้ถูกต้อง
+    import { db, auth } from "./js/firebase.js";
+    import { 
+    collection, query, where, orderBy,
+    onSnapshot, getDoc, getDocs,
+    doc, updateDoc
+} from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+    import { onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
 
-        let allTeams = [];
-        const tableBody = document.getElementById('user-table-body');
+    let allTeams = [];
 
-        // 1. ดึงทีมมาใส่ Select
-        async function fetchTeams() {
+    // --- 1. ฟังก์ชันดึงข้อมูลทีม (ใช้ getDocs) ---
+    async function fetchTeams() {
+        try {
             const snap = await getDocs(collection(db, "teams"));
             allTeams = snap.docs.map(d => ({ id: d.id, ...d.data() }));
             const mainSelect = document.getElementById('edit-main-team');
-            mainSelect.innerHTML = '<option value="">-- เลือกทีมหลัก --</option>';
-            allTeams.filter(t => t.type === "main").forEach(t => mainSelect.add(new Option(t.name, t.id)));
+            if (mainSelect) {
+                mainSelect.innerHTML = '<option value="">-- เลือกทีมหลัก --</option>';
+                allTeams.filter(t => t.type === "main").forEach(t => { 
+                    mainSelect.add(new Option(t.name, t.id)); 
+                });
+            }
+        } catch (error) {
+            console.error("Fetch Teams Error:", error);
         }
+    }
 
-        // 2. ดึงข้อมูล User (เปลี่ยนจาก "admin" เป็น "users")
-        function listenToUsers() {
-            // **จุดสำคัญ: เปลี่ยนจาก "admin" เป็น "users" เพื่อให้ข้อมูลขึ้น**
-            onSnapshot(collection(db, "users"), (snapshot) => {
-                if (snapshot.empty) {
-                    tableBody.innerHTML = `<tr><td colspan="5" class="py-10 text-center text-slate-400 font-medium">ไม่พบข้อมูลผู้ใช้</td></tr>`;
-                    return;
-                }
+    // --- 2. ฟังก์ชันดึงข้อมูลพนักงานแบบ Real-time (ใช้ onSnapshot) ---
+    function listenToUsers() {
+        const container = document.getElementById('user-list');
+        
+        onSnapshot(collection(db, "admin"), (snapshot) => {
+            if (snapshot.empty) {
+                container.innerHTML = `<div class="col-span-full py-20 text-center text-slate-400">ไม่พบข้อมูลพนักงานในระบบ</div>`;
+                return;
+            }
 
-                tableBody.innerHTML = snapshot.docs.map(docSnap => {
-                    const u = docSnap.data();
-                    const initial = (u.name || "U")[0].toUpperCase();
-                    const roleColor = u.role === 'admin' ? 'bg-rose-50 text-rose-600' : 'bg-emerald-50 text-emerald-600';
-                    
-                    return `
-                        <tr class="hover:bg-slate-50/80 transition-colors group">
-                            <td class="px-8 py-5">
-                                <div class="flex items-center gap-4">
-                                    <div class="w-10 h-10 bg-indigo-100 text-indigo-600 rounded-xl flex items-center justify-center font-black text-sm">${initial}</div>
-                                    <div>
-                                        <p class="font-bold text-slate-800 tracking-tight">${u.name || 'ไม่ระบุชื่อ'}</p>
-                                        <p class="text-xs text-slate-400 font-medium">${u.email || ''}</p>
-                                    </div>
-                                </div>
-                            </td>
-                            <td class="px-6 py-5">
-                                <p class="font-bold text-slate-600 text-sm">${u.Team || '-'}</p>
-                                <p class="text-[10px] text-slate-400 uppercase">${u["Sub Team"] || ''}</p>
-                            </td>
-                            <td class="px-6 py-5">
-                                <span class="px-3 py-1 ${roleColor} text-[10px] font-black rounded-full uppercase">${u.role || 'user'}</span>
-                            </td>
-                            <td class="px-6 py-5 text-center">
-                                <span class="px-3 py-1 bg-emerald-100 text-emerald-600 text-[10px] font-black rounded-full uppercase">Active</span>
-                            </td>
-                            <td class="px-6 py-5 text-right">
-                                <button onclick="openEditModal('${docSnap.id}')" class="w-9 h-9 bg-slate-100 text-slate-400 rounded-lg hover:bg-indigo-600 hover:text-white transition-all">
-                                    <i class="fa-solid fa-pen-to-square text-xs"></i>
-                                </button>
-                            </td>
-                        </tr>
-                    `;
-                }).join('');
-            });
-        }
+            container.innerHTML = snapshot.docs.map(docSnap => {
+                const u = docSnap.data();
+                const initial = (u.name || "U")[0];
+                const roleColor = u.role === 'admin' ? 'bg-indigo-100 text-indigo-600' : 'bg-slate-100 text-slate-600';
+                
+                return `
+                    <div class="user-card bg-white p-6 rounded-[2.5rem] flex flex-col items-center border border-slate-100 hover:shadow-xl hover:shadow-slate-200/50 transition-all duration-300">
+                        <div class="w-20 h-20 ${roleColor} rounded-[1.8rem] flex items-center justify-center text-2xl font-bold mb-4 shadow-inner">
+                            ${initial}
+                        </div>
+                        <h3 class="font-bold text-slate-800 text-lg">${u.name || 'ไม่ระบุชื่อ'}</h3>
+                        <span class="px-3 py-1 bg-slate-50 text-[10px] text-slate-400 rounded-full uppercase tracking-tighter font-black mt-1 mb-6 border border-slate-100">
+                            ${u.role || 'user'}
+                        </span>
+                        
+                        <div class="w-full text-[13px] space-y-3 mb-6 px-2">
+                            <div class="flex justify-between items-center pb-2 border-b border-slate-50">
+                                <span class="text-slate-400 font-medium">Team</span>
+                                <span class="text-slate-700 font-bold">${u.Team || '-'}</span>
+                            </div>
+                            <div class="flex justify-between items-center pb-2 border-b border-slate-50">
+                                <span class="text-slate-400 font-medium">Phone</span>
+                                <span class="text-slate-700 font-bold">${u.phone || '-'}</span>
+                            </div>
+                        </div>
+                        
+                        <button onclick="openEditModal('${docSnap.id}')" class="w-full py-4 bg-slate-900 text-white rounded-2xl text-[12px] font-bold hover:bg-indigo-600 transition shadow-lg active:scale-95">
+                            <i class="fa-solid fa-pen-to-square mr-2"></i>แก้ไขข้อมูล
+                        </button>
+                    </div>
+                `;
+            }).join('');
+        }, (error) => {
+            console.error("Listen Users Error:", error);
+            container.innerHTML = `<div class="col-span-full py-20 text-center text-red-400">เกิดข้อผิดพลาดในการโหลดข้อมูล</div>`;
+        });
+    }
 
-        // 3. จัดการ Modal
-        window.openEditModal = async (uid) => {
-            const snap = await getDoc(doc(db, "users", uid)); // เปลี่ยนเป็น users
+    // --- 3. ฟังก์ชันจัดการ Modal (ผูกกับ window เพื่อให้เรียกจาก HTML ได้) ---
+    window.openEditModal = async (uid) => {
+        try {
+            const snap = await getDoc(doc(db, "admin", uid));
             if (!snap.exists()) return;
             const u = snap.data();
 
             document.getElementById('edit-uid').value = uid;
             document.getElementById('edit-name').value = u.name || "";
+            document.getElementById('edit-username').value = u.username || "";
             document.getElementById('edit-email').value = u.email || "";
-            document.getElementById('edit-phone').value = u.phone || "";
+            document.getElementById('edit-phone').value =u.phone || "";
             document.getElementById('edit-role').value = u.role || "user";
             
             const mainTeam = allTeams.find(t => t.name === u.Team && t.type === "main");
             if (mainTeam) {
                 document.getElementById('edit-main-team').value = mainTeam.id;
                 renderSubTeams(mainTeam.id, u["Sub Team"]);
+            } else {
+                document.getElementById('edit-main-team').value = "";
+                renderSubTeams(null);
             }
             document.getElementById('editModal').classList.remove('hidden');
-        };
-
-        window.closeModal = () => document.getElementById('editModal').classList.add('hidden');
-
-        // ฟังก์ชันทีมย่อย
-        document.getElementById('edit-main-team').onchange = (e) => renderSubTeams(e.target.value);
-        function renderSubTeams(parentId, currentSub = null) {
-            const subSelect = document.getElementById('edit-sub-team');
-            const subs = allTeams.filter(t => t.type === "sub" && t.parentId === parentId);
-            subSelect.innerHTML = '<option value="">-- ไม่มีทีมย่อย --</option>';
-            subs.forEach(t => {
-                const opt = new Option(t.name, t.name);
-                if (t.name === currentSub) opt.selected = true;
-                subSelect.add(opt);
-            });
+            document.body.style.overflow = 'hidden';
+        } catch (error) {
+            console.error("Open Modal Error:", error);
         }
+    };
 
-        // 4. บันทึกข้อมูล
-        document.getElementById('edit-user-form').onsubmit = async (e) => {
-            e.preventDefault();
-            const uid = document.getElementById('edit-uid').value;
+    window.closeModal = () => {
+        document.getElementById('editModal').classList.add('hidden');
+        document.body.style.overflow = 'auto';
+    }
+
+    // --- 4. ฟังก์ชันจัดการทีมย่อย ---
+    document.getElementById('edit-main-team').onchange = (e) => renderSubTeams(e.target.value);
+
+    function renderSubTeams(parentId, currentSub = null) {
+        const subSelect = document.getElementById('edit-sub-team');
+        const subs = allTeams.filter(t => t.type === "sub" && t.parentId === parentId);
+        subSelect.innerHTML = '<option value="">-- ไม่มีทีมย่อย --</option>';
+        subSelect.disabled = (subs.length === 0);
+        subs.forEach(t => {
+            const opt = new Option(t.name, t.name);
+            if (t.name === currentSub) opt.selected = true;
+            subSelect.add(opt);
+        });
+    }
+
+    // --- 5. ฟังก์ชันบันทึกข้อมูล ---
+    document.getElementById('edit-user-form').onsubmit = async (e) => {
+        e.preventDefault();
+        const uid = document.getElementById('edit-uid').value;
+        const btn = document.getElementById('saveBtn');
+        
+        btn.disabled = true;
+        btn.innerHTML = `<i class="fa-solid fa-circle-notch animate-spin"></i> กำลังบันทึก...`;
+
+        try {
             const mainSelect = document.getElementById('edit-main-team');
             const mainTeamName = mainSelect.options[mainSelect.selectedIndex].text;
+            const adminRef = doc(db, "admin", uid);
 
-            try {
-                await updateDoc(doc(db, "users", uid), {
-                    name: document.getElementById('edit-name').value.trim(),
-                    role: document.getElementById('edit-role').value,
-                    Team: mainTeamName.includes("เลือกทีม") ? "" : mainTeamName,
-                    "Sub Team": document.getElementById('edit-sub-team').value,
-                    phone: document.getElementById('edit-phone').value.trim()
-                });
-                closeModal();
-                Swal.fire({ icon: 'success', title: 'สำเร็จ', text: 'อัปเดตข้อมูลแล้ว', timer: 1500, showConfirmButton: false });
-            } catch (err) {
-                Swal.fire({ icon: 'error', title: 'ผิดพลาด', text: err.message });
-            }
-        };
+            await updateDoc(adminRef, {
+    name: document.getElementById('edit-name').value.trim(),
+    username: document.getElementById('edit-username').value.trim(),
+    email: document.getElementById('edit-email').value.trim(),
+    role: document.getElementById('edit-role').value,
+    Team: mainTeamName.includes("เลือกทีม") ? "" : mainTeamName,
+    "Sub Team": document.getElementById('edit-sub-team').value,
+    phone: document.getElementById('edit-phone').value.trim()
+});
 
-        onAuthStateChanged(auth, (user) => {
-            if (user) { fetchTeams(); listenToUsers(); }
-            else { window.location.replace("login.html"); }
-        });
-    </script>
-    <script src="./js/layout.js"></script>
-    <script type="module" src="./js/sidebar-role.js"></script>
+            closeModal();
+            Swal.fire({ icon: 'success', title: 'สำเร็จ', text: 'อัปเดตข้อมูลพนักงานเรียบร้อยแล้ว', timer: 2000 });
+        } catch (err) { 
+            console.error(err);
+            Swal.fire({ icon: 'error', title: 'เกิดข้อผิดพลาด', text: err.message });
+        } finally { 
+            btn.disabled = false; 
+            btn.innerHTML = `<i class="fa-solid fa-floppy-disk"></i> บันทึกข้อมูลพนักงาน`; 
+        }
+    };
+
+    // --- 6. เริ่มต้นทำงานเมื่อ Auth เปลี่ยนสถานะ ---
+    onAuthStateChanged(auth, (user) => {
+        if (user) {
+            fetchTeams();
+            listenToUsers();
+        } else {
+            window.location.replace("login.html");
+        }
+    });
+</script>
+            <script src="./js/layout.js"></script>
+<script type="module" src="./js/sidebar-role.js"></script>
 </body>
 </html>

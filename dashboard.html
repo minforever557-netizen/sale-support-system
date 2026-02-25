@@ -11,7 +11,9 @@
     <link href="https://fonts.googleapis.com/css2?family=Kanit:wght@300;400;600&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="./css/style.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <style>body { font-family: 'Kanit', sans-serif; }</style>
+    <style>
+        body { font-family: 'Kanit', sans-serif; }
+    </style>
 </head>
 
 <body class="flex h-screen overflow-hidden bg-slate-50">
@@ -23,6 +25,7 @@
         <div id="topbar-container"></div>
 
         <main class="h-full overflow-y-auto p-6 md:p-10 max-w-7xl mx-auto w-full space-y-8 custom-scroll">
+            
             <div class="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-8">
                 <div>
                     <h2 class="text-3xl font-bold text-slate-800 tracking-tight">แผงควบคุมระบบ</h2>
@@ -60,24 +63,18 @@
             </div>
 
             <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
-                <div class="lg:col-span-2 space-y-4">
+                <div class="lg:col-span-2 space-y-6">
                     <div class="flex items-center justify-between px-2">
                         <h4 class="font-bold text-slate-800 flex items-center gap-2">
-                            <i class="fa-solid fa-bullhorn text-indigo-500"></i>
-                            ประกาศข่าวสารระบบ
+                            <i class="fa-solid fa-clock-rotate-left text-orange-500"></i>
+                            งานที่ต้องเร่งดำเนินการ (SLA)
                         </h4>
+                        <a href="my-ticket.html" class="text-xs font-black text-[#5c67f2] hover:underline uppercase tracking-wider">ดูทั้งหมด</a>
                     </div>
-                    <div class="glass-card overflow-hidden bg-white border border-slate-100 shadow-sm rounded-[2rem]">
-                        <div class="grid grid-cols-12 gap-4 px-6 py-4 bg-slate-50/50 border-b border-slate-100 text-[10px] font-black text-slate-400 uppercase tracking-[0.15em]">
-                            <div class="col-span-3">วันเวลา</div>
-                            <div class="col-span-6">หัวข้อประกาศ</div>
-                            <div class="col-span-3 text-right pr-4">รายละเอียด</div>
-                        </div>
-                        <div id="broadcast-container" class="max-h-[500px] overflow-y-auto custom-scroll">
-                            <div class="p-10 text-center text-slate-400 text-sm italic">กำลังโหลดข้อมูล...</div>
-                        </div>
+                    <div id="sla-container" class="space-y-4">
+                        <div class="glass-card p-10 flex items-center justify-center text-slate-400 text-sm italic rounded-[2rem]">กำลังโหลดข้อมูล...</div>
                     </div>
-                </div>  
+                </div>
 
                 <div class="space-y-6">
                     <h4 class="font-bold text-slate-800 px-2 flex items-center gap-2">
@@ -105,11 +102,24 @@
     </div>
 
     <script type="module">
-        import { db, auth } from "./js/firebase.js";
-        import { doc, getDoc, collection, getDocs, query, where, orderBy, limit } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
-        import { onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
+        import { initializeApp, getApps } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
+        import { getFirestore, doc, getDoc, collection, getDocs, query, where } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+        import { getAuth, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
 
-        // --- 1. Load Layout (Sidebar & Topbar) & Role Check ---
+        const firebaseConfig = {
+            apiKey: "AIzaSyAa2uSD_tjNqYE2eXnZcn75h_jAVscDG-c",
+            authDomain: "salesupportsystemapp.firebaseapp.com",
+            projectId: "salesupportsystemapp",
+            storageBucket: "salesupportsystemapp.firebasestorage.app",
+            messagingSenderId: "840890441207",
+            appId: "1:840890441207:web:f3a5076d46e963a90de2f2"
+        };
+
+        const app = getApps().length === 0 ? initializeApp(firebaseConfig) : getApps()[0];
+        const db = getFirestore(app);
+        const auth = getAuth(app);
+
+        // --- 1. Load Layout & Role Check ---
         async function loadLayout(userData, email) {
             const comps = [
                 { id: 'sidebar-container', url: './components/sidebar.html' },
@@ -126,17 +136,17 @@
                 } catch (e) { console.error("Layout load error:", e); }
             }
 
-            // จัดการข้อมูล User ใน UI
+            // Sync User Data & Role Management
             const checkExist = setInterval(() => {
                 const nameEl = document.querySelector('#topbar-user-name');
-                const adminMenu = document.getElementById('admin-menu-section'); // ตรวจสอบ ID ใน sidebar.html ของคุณ
+                const adminMenu = document.getElementById('admin-menu-section'); // ต้องตรงกับ ID ใน sidebar.html
 
                 if (nameEl) {
                     nameEl.innerText = userData.name || "User";
                     document.querySelector('#topbar-user-email').innerText = email;
                     document.querySelector('#topbar-avatar-text').innerText = (userData.name || "U")[0].toUpperCase();
                     
-                    // จัดการ Role (ซ่อน/แสดงเมนู Admin)
+                    // แสดงเมนู Admin เฉพาะคนที่เป็น admin
                     if (adminMenu) {
                         adminMenu.style.display = (userData.role === 'admin') ? 'block' : 'none';
                     }
@@ -153,9 +163,7 @@
                     const userData = adminDoc.data();
                     await loadLayout(userData, user.email);
                     loadDashboardData(user.email);
-                    loadBroadcastData();
                 } else {
-                    // กรณีไม่มีข้อมูลในคอลเลกชัน admin ให้ Logout ทันที
                     signOut(auth).then(() => window.location.replace("login.html"));
                 }
             } else {
@@ -170,10 +178,15 @@
                 const snap = await getDocs(q);
                 
                 let total = 0, progress = 0, closed = 0;
+                let slaTasks = [];
+
                 snap.forEach(docSnap => {
                     const d = docSnap.data();
                     total++;
-                    if (["On Progress", "Pending", "Open"].includes(d.status)) progress++;
+                    if (["In Progress", "Pending", "Open"].includes(d.status)) {
+                        progress++;
+                        if(d.sla_due) slaTasks.push({id: docSnap.id, ...d});
+                    }
                     if (["Success", "Success (SLA)", "Closed"].includes(d.status)) closed++;
                 });
 
@@ -184,68 +197,41 @@
                 const rate = total > 0 ? Math.round((closed / total) * 100) : 0;
                 document.getElementById('eff-percent').innerText = rate + '%';
                 document.getElementById('progress-circle').setAttribute('stroke-dasharray', `${rate} 100`);
+
+                renderSLATasks(slaTasks);
             } catch (err) { console.error("Dashboard data error:", err); }
         }
 
-        // --- 4. Broadcast System Logic ---
-        async function loadBroadcastData() {
-            const container = document.getElementById('broadcast-container');
-            try {
-                const q = query(collection(db, "broadcasts"), orderBy("createdAt", "desc"), limit(15));
-                const snap = await getDocs(q);
-                
-                if (snap.empty) {
-                    container.innerHTML = `<div class="p-10 text-center text-slate-400 text-sm italic">ไม่มีประกาศในขณะนี้ ✨</div>`;
-                    return;
-                }
+        function renderSLATasks(tasks) {
+            const container = document.getElementById('sla-container');
+            if (tasks.length === 0) {
+                container.innerHTML = `<div class="glass-card p-10 text-center text-slate-400 text-sm italic rounded-[2rem]">ไม่มีงานที่ต้องเร่งดำเนินการในขณะนี้ ✨</div>`;
+                return;
+            }
 
-                let html = '';
-                snap.forEach(docSnap => {
-                    const data = docSnap.data();
-                    const date = data.createdAt ? data.createdAt.toDate().toLocaleString('th-TH', {
-                        day: '2-digit', month: '2-digit', year: '2-digit', hour: '2-digit', minute: '2-digit'
-                    }) : '-';
+            tasks.sort((a, b) => (a.sla_due?.seconds || 0) - (b.sla_due?.seconds || 0));
 
-                    html += `
-                        <div class="grid grid-cols-12 gap-4 px-6 py-4 items-center hover:bg-indigo-50/30 transition-all border-b border-slate-50 last:border-0 group">
-                            <div class="col-span-3">
-                                <span class="text-[11px] font-bold text-slate-500">${date} น.</span>
-                            </div>
-                            <div class="col-span-6">
-                                <h5 class="font-bold text-slate-700 truncate group-hover:text-indigo-600 transition-colors" title="${data.subject}">
-                                    ${data.subject || 'ไม่มีหัวข้อ'}
-                                </h5>
-                            </div>
-                            <div class="col-span-3 text-right">
-                                <button onclick="viewBroadcast('${docSnap.id}')" 
-                                        class="inline-flex items-center gap-1.5 text-[10px] font-black text-indigo-500 hover:text-indigo-700 uppercase tracking-widest bg-indigo-50 hover:bg-indigo-100 px-4 py-2 rounded-xl transition-all active:scale-95">
-                                    เปิดอ่าน <i class="fa-solid fa-chevron-right text-[8px]"></i>
-                                </button>
-                            </div>
+            container.innerHTML = tasks.slice(0, 3).map(t => {
+                const dueDate = t.sla_due ? t.sla_due.toDate() : new Date();
+                const isOverdue = dueDate < new Date();
+                return `
+                    <div class="glass-card p-6 flex items-center justify-between border-l-[6px] rounded-2xl bg-white border border-slate-100 ${isOverdue ? 'border-red-500' : 'border-orange-400'}">
+                        <div>
+                            <h5 class="font-bold text-slate-800">${t.topic || 'ไม่มีหัวข้อ'}</h5>
+                            <p class="text-[10px] text-slate-400 font-black uppercase tracking-widest mt-1">ID: ${t.id_number || '-'}</p>
                         </div>
-                    `;
-                });
-                container.innerHTML = html;
-
-                window.viewBroadcast = async (id) => {
-                    const bDoc = await getDoc(doc(db, "broadcasts", id));
-                    if (bDoc.exists()) {
-                        const bData = bDoc.data();
-                        Swal.fire({
-                            title: `<div class="text-left font-bold text-slate-800">${bData.subject}</div>`,
-                            html: `<div class="text-left text-slate-600 text-sm leading-relaxed mt-4 pt-4 border-t border-slate-100 min-h-[100px]">${bData.detail.replace(/\n/g, '<br>')}</div>
-                                   <div class="text-[10px] text-right text-slate-400 mt-6 uppercase tracking-widest font-bold">โดย: ${bData.updatedBy || 'ระบบ'}</div>`,
-                            confirmButtonText: 'รับทราบ',
-                            confirmButtonColor: '#5c67f2',
-                            width: '600px',
-                            customClass: { popup: 'rounded-[2.5rem] font-kanit' }
-                        });
-                    }
-                };
-            } catch (err) { console.error("Broadcast error:", err); }
+                        <div class="text-right">
+                            <p class="text-[10px] font-black ${isOverdue ? 'text-red-500 animate-pulse' : 'text-slate-400'} uppercase">
+                                ${isOverdue ? 'เกินกำหนด' : 'ครบกำหนดใน'}
+                            </p>
+                            <p class="text-sm font-bold text-slate-700">${dueDate.toLocaleTimeString('th-TH', {hour:'2-digit', minute:'2-digit'})} น.</p>
+                        </div>
+                    </div>
+                `;
+            }).join('');
         }
 
-        // --- 5. Logout System (เหมือนหน้า My Ticket) ---
+        // --- 4. Global Logout (มาตรฐาน SweetAlert2) ---
         window.openLogoutModal = () => {
             Swal.fire({
                 title: 'ออกจากระบบ?',
@@ -256,7 +242,9 @@
                 cancelButtonColor: '#cbd5e1',
                 confirmButtonText: 'ยืนยัน',
                 cancelButtonText: 'ยกเลิก',
-                customClass: { popup: 'rounded-[2rem] font-kanit' }
+                customClass: {
+                    popup: 'rounded-[2rem] font-kanit'
+                }
             }).then((result) => {
                 if (result.isConfirmed) {
                     signOut(auth).then(() => window.location.replace("login.html"));
@@ -264,6 +252,7 @@
             });
         };
 
+        // Event Listener สำหรับปุ่ม Logout ใน Sidebar (Delegation)
         document.addEventListener('click', (e) => {
             const logoutTrigger = e.target.closest('#main-logout-btn') || e.target.closest('#logoutBtn');
             if (logoutTrigger) {
@@ -273,8 +262,7 @@
         });
 
     </script>
-    <script src="./js/layout.js"></script>
 
-    <script type="module" src="./js/sidebar-role.js"></script> 
+    <script src="./js/layout.js"></script>
 </body>
 </html>

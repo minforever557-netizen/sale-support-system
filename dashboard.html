@@ -11,6 +11,7 @@
     <link href="https://fonts.googleapis.com/css2?family=Kanit:wght@300;400;600&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="./css/style.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>body { font-family: 'Kanit', sans-serif; }</style>
 </head>
 
 <body class="flex h-screen overflow-hidden bg-slate-50">
@@ -33,7 +34,7 @@
             </div>
 
             <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
-                <div class="glass-card p-8 bg-white border-b-4 border-blue-500 shadow-sm hover:shadow-md transition-shadow">
+                <div class="glass-card p-8 bg-white border-b-4 border-blue-500 shadow-sm hover:shadow-md transition-shadow rounded-[2rem]">
                     <div class="w-14 h-14 rounded-2xl bg-blue-50 text-blue-600 flex items-center justify-center mb-6 text-2xl shadow-inner">
                         <i class="fa-solid fa-layer-group"></i>
                     </div>
@@ -41,7 +42,7 @@
                     <h3 id="stat-total" class="text-5xl font-bold text-slate-800">0</h3>
                 </div>
 
-                <div class="glass-card p-8 bg-white border-b-4 border-amber-500 shadow-sm hover:shadow-md transition-shadow">
+                <div class="glass-card p-8 bg-white border-b-4 border-amber-500 shadow-sm hover:shadow-md transition-shadow rounded-[2rem]">
                     <div class="w-14 h-14 rounded-2xl bg-amber-50 text-amber-600 flex items-center justify-center mb-6 text-2xl shadow-inner">
                         <i class="fa-solid fa-arrows-spin fa-spin-pulse"></i>
                     </div>
@@ -49,7 +50,7 @@
                     <h3 id="stat-progress" class="text-5xl font-bold text-slate-800">0</h3>
                 </div>
 
-                <div class="glass-card p-8 bg-white border-b-4 border-emerald-500 shadow-sm hover:shadow-md transition-shadow">
+                <div class="glass-card p-8 bg-white border-b-4 border-emerald-500 shadow-sm hover:shadow-md transition-shadow rounded-[2rem]">
                     <div class="w-14 h-14 rounded-2xl bg-emerald-50 text-emerald-600 flex items-center justify-center mb-6 text-2xl shadow-inner">
                         <i class="fa-solid fa-clipboard-check"></i>
                     </div>
@@ -59,40 +60,35 @@
             </div>
 
             <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
-             <div class="lg:col-span-2 space-y-4">
-    <div class="flex items-center justify-between px-2">
-        <h4 class="font-bold text-slate-800 flex items-center gap-2">
-            <i class="fa-solid fa-bullhorn text-indigo-500"></i>
-            ประกาศข่าวสารระบบ
-        </h4>
-        <span class="text-[10px] font-black text-slate-400 uppercase tracking-widest">15 รายการล่าสุด</span>
-    </div>
-    
-    <div class="glass-card overflow-hidden bg-white border border-slate-100 shadow-sm">
-        <div class="grid grid-cols-12 gap-4 px-6 py-4 bg-slate-50/50 border-b border-slate-100 text-[10px] font-black text-slate-400 uppercase tracking-[0.15em]">
-            <div class="col-span-3">วันเวลา</div>
-            <div class="col-span-6">หัวข้อประกาศ</div>
-            <div class="col-span-3 text-right pr-4">รายละเอียด</div>
-        </div>
-
-        <div id="broadcast-container" class="max-h-[500px] overflow-y-auto custom-scroll">
-            <div class="p-10 text-center text-slate-400 text-sm italic">
-                กำลังโหลดข้อมูล...
-            </div>
-        </div>
-    </div>
-</div>  
+                <div class="lg:col-span-2 space-y-4">
+                    <div class="flex items-center justify-between px-2">
+                        <h4 class="font-bold text-slate-800 flex items-center gap-2">
+                            <i class="fa-solid fa-bullhorn text-indigo-500"></i>
+                            ประกาศข่าวสารระบบ
+                        </h4>
+                    </div>
+                    <div class="glass-card overflow-hidden bg-white border border-slate-100 shadow-sm rounded-[2rem]">
+                        <div class="grid grid-cols-12 gap-4 px-6 py-4 bg-slate-50/50 border-b border-slate-100 text-[10px] font-black text-slate-400 uppercase tracking-[0.15em]">
+                            <div class="col-span-3">วันเวลา</div>
+                            <div class="col-span-6">หัวข้อประกาศ</div>
+                            <div class="col-span-3 text-right pr-4">รายละเอียด</div>
+                        </div>
+                        <div id="broadcast-container" class="max-h-[500px] overflow-y-auto custom-scroll">
+                            <div class="p-10 text-center text-slate-400 text-sm italic">กำลังโหลดข้อมูล...</div>
+                        </div>
+                    </div>
+                </div>  
 
                 <div class="space-y-6">
                     <h4 class="font-bold text-slate-800 px-2 flex items-center gap-2">
                         <i class="fa-solid fa-chart-line text-[#5c67f2]"></i>
                         ประสิทธิภาพเดือนนี้
                     </h4>
-                    <div class="glass-card p-8 flex flex-col items-center">
+                    <div class="glass-card p-8 flex flex-col items-center bg-white rounded-[2rem] border border-slate-100">
                         <div class="relative w-40 h-40">
                             <svg class="w-full h-full transform -rotate-90" viewBox="0 0 36 36">
                                 <circle cx="18" cy="18" r="16" fill="none" class="stroke-slate-100" stroke-width="3"></circle>
-                                <circle id="progress-circle" cx="18" cy="18" r="16" fill="none" class="stroke-[#5c67f2]" stroke-width="3" stroke-dasharray="0 100" stroke-linecap="round"></circle>
+                                <circle id="progress-circle" cx="18" cy="18" r="16" fill="none" class="stroke-[#5c67f2]" stroke-width="3" stroke-dasharray="0 100" stroke-linecap="round" style="transition: stroke-dasharray 1s ease-in-out;"></circle>
                             </svg>
                             <div class="absolute inset-0 flex flex-col items-center justify-center">
                                 <span id="eff-percent" class="text-3xl font-black text-slate-800 tracking-tighter">0%</span>
@@ -109,24 +105,11 @@
     </div>
 
     <script type="module">
-        import { initializeApp, getApps } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
-        import { getFirestore, doc, getDoc, collection, getDocs, query, where, orderBy, limit } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
-        import { getAuth, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
+        import { db, auth } from "./js/firebase.js";
+        import { doc, getDoc, collection, getDocs, query, where, orderBy, limit } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+        import { onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
 
-        const firebaseConfig = {
-            apiKey: "AIzaSyAa2uSD_tjNqYE2eXnZcn75h_jAVscDG-c",
-            authDomain: "salesupportsystemapp.firebaseapp.com",
-            projectId: "salesupportsystemapp",
-            storageBucket: "salesupportsystemapp.firebasestorage.app",
-            messagingSenderId: "840890441207",
-            appId: "1:840890441207:web:f3a5076d46e963a90de2f2"
-        };
-
-        const app = getApps().length === 0 ? initializeApp(firebaseConfig) : getApps()[0];
-        const db = getFirestore(app);
-        const auth = getAuth(app);
-
-        // --- 1. Load Layout (Sidebar & Topbar) ---
+        // --- 1. Load Layout (Sidebar & Topbar) & Role Check ---
         async function loadLayout(userData, email) {
             const comps = [
                 { id: 'sidebar-container', url: './components/sidebar.html' },
@@ -139,29 +122,30 @@
                     if (res.ok) {
                         const el = document.getElementById(comp.id);
                         el.innerHTML = await res.text();
-                        
-                        el.querySelectorAll("script").forEach(oldScript => {
-                            const newScript = document.createElement("script");
-                            newScript.type = "module";
-                            newScript.textContent = oldScript.textContent;
-                            document.head.appendChild(newScript);
-                        });
                     }
                 } catch (e) { console.error("Layout load error:", e); }
             }
 
+            // จัดการข้อมูล User ใน UI
             const checkExist = setInterval(() => {
                 const nameEl = document.querySelector('#topbar-user-name');
+                const adminMenu = document.getElementById('admin-menu-section'); // ตรวจสอบ ID ใน sidebar.html ของคุณ
+
                 if (nameEl) {
                     nameEl.innerText = userData.name || "User";
                     document.querySelector('#topbar-user-email').innerText = email;
                     document.querySelector('#topbar-avatar-text').innerText = (userData.name || "U")[0].toUpperCase();
+                    
+                    // จัดการ Role (ซ่อน/แสดงเมนู Admin)
+                    if (adminMenu) {
+                        adminMenu.style.display = (userData.role === 'admin') ? 'block' : 'none';
+                    }
                     clearInterval(checkExist);
                 }
             }, 100);
         }
 
-        // --- 2. Auth State & Initialize ---
+        // --- 2. Auth State ---
         onAuthStateChanged(auth, async (user) => {
             if (user) {
                 const adminDoc = await getDoc(doc(db, "admin", user.uid));
@@ -169,7 +153,10 @@
                     const userData = adminDoc.data();
                     await loadLayout(userData, user.email);
                     loadDashboardData(user.email);
-                    loadBroadcastData(); // เรียกโหลดประกาศ
+                    loadBroadcastData();
+                } else {
+                    // กรณีไม่มีข้อมูลในคอลเลกชัน admin ให้ Logout ทันที
+                    signOut(auth).then(() => window.location.replace("login.html"));
                 }
             } else {
                 window.location.replace("login.html");
@@ -183,10 +170,10 @@
                 const snap = await getDocs(q);
                 
                 let total = 0, progress = 0, closed = 0;
-                snap.forEach(doc => {
-                    const d = doc.data();
+                snap.forEach(docSnap => {
+                    const d = docSnap.data();
                     total++;
-                    if (["In Progress", "Pending"].includes(d.status)) progress++;
+                    if (["On Progress", "Pending", "Open"].includes(d.status)) progress++;
                     if (["Success", "Success (SLA)", "Closed"].includes(d.status)) closed++;
                 });
 
@@ -201,113 +188,91 @@
         }
 
         // --- 4. Broadcast System Logic ---
-        // --- 4. Broadcast System Logic (Updated) ---
-async function loadBroadcastData() {
-    const container = document.getElementById('broadcast-container');
-    try {
-        const q = query(collection(db, "broadcasts"), orderBy("createdAt", "desc"), limit(15));
-        const snap = await getDocs(q);
-        
-        if (snap.empty) {
-            container.innerHTML = `<div class="p-10 text-center text-slate-400 text-sm italic">ไม่มีงานที่ต้องประกาศในขณะนี้ ✨</div>`;
-            return;
+        async function loadBroadcastData() {
+            const container = document.getElementById('broadcast-container');
+            try {
+                const q = query(collection(db, "broadcasts"), orderBy("createdAt", "desc"), limit(15));
+                const snap = await getDocs(q);
+                
+                if (snap.empty) {
+                    container.innerHTML = `<div class="p-10 text-center text-slate-400 text-sm italic">ไม่มีประกาศในขณะนี้ ✨</div>`;
+                    return;
+                }
+
+                let html = '';
+                snap.forEach(docSnap => {
+                    const data = docSnap.data();
+                    const date = data.createdAt ? data.createdAt.toDate().toLocaleString('th-TH', {
+                        day: '2-digit', month: '2-digit', year: '2-digit', hour: '2-digit', minute: '2-digit'
+                    }) : '-';
+
+                    html += `
+                        <div class="grid grid-cols-12 gap-4 px-6 py-4 items-center hover:bg-indigo-50/30 transition-all border-b border-slate-50 last:border-0 group">
+                            <div class="col-span-3">
+                                <span class="text-[11px] font-bold text-slate-500">${date} น.</span>
+                            </div>
+                            <div class="col-span-6">
+                                <h5 class="font-bold text-slate-700 truncate group-hover:text-indigo-600 transition-colors" title="${data.subject}">
+                                    ${data.subject || 'ไม่มีหัวข้อ'}
+                                </h5>
+                            </div>
+                            <div class="col-span-3 text-right">
+                                <button onclick="viewBroadcast('${docSnap.id}')" 
+                                        class="inline-flex items-center gap-1.5 text-[10px] font-black text-indigo-500 hover:text-indigo-700 uppercase tracking-widest bg-indigo-50 hover:bg-indigo-100 px-4 py-2 rounded-xl transition-all active:scale-95">
+                                    เปิดอ่าน <i class="fa-solid fa-chevron-right text-[8px]"></i>
+                                </button>
+                            </div>
+                        </div>
+                    `;
+                });
+                container.innerHTML = html;
+
+                window.viewBroadcast = async (id) => {
+                    const bDoc = await getDoc(doc(db, "broadcasts", id));
+                    if (bDoc.exists()) {
+                        const bData = bDoc.data();
+                        Swal.fire({
+                            title: `<div class="text-left font-bold text-slate-800">${bData.subject}</div>`,
+                            html: `<div class="text-left text-slate-600 text-sm leading-relaxed mt-4 pt-4 border-t border-slate-100 min-h-[100px]">${bData.detail.replace(/\n/g, '<br>')}</div>
+                                   <div class="text-[10px] text-right text-slate-400 mt-6 uppercase tracking-widest font-bold">โดย: ${bData.updatedBy || 'ระบบ'}</div>`,
+                            confirmButtonText: 'รับทราบ',
+                            confirmButtonColor: '#5c67f2',
+                            width: '600px',
+                            customClass: { popup: 'rounded-[2.5rem] font-kanit' }
+                        });
+                    }
+                };
+            } catch (err) { console.error("Broadcast error:", err); }
         }
 
-        let html = '';
-        snap.forEach(docSnap => {
-            const data = docSnap.data();
-            const date = data.createdAt ? data.createdAt.toDate().toLocaleString('th-TH', {
-                day: '2-digit', month: '2-digit', year: '2-digit', hour: '2-digit', minute: '2-digit'
-            }) : '-';
-
-            html += `
-                <div class="grid grid-cols-12 gap-4 px-6 py-4 items-center hover:bg-indigo-50/30 transition-all border-b border-slate-50 last:border-0 group">
-                    <div class="col-span-3">
-                        <span class="text-[11px] font-bold text-slate-500">${date} น.</span>
-                    </div>
-                    
-                    <div class="col-span-6">
-                        <h5 class="font-bold text-slate-700 truncate group-hover:text-indigo-600 transition-colors" title="${data.subject}">
-                            ${data.subject || 'ไม่มีหัวข้อ'}
-                        </h5>
-                    </div>
-                    
-                    <div class="col-span-3 text-right">
-                        <button onclick="viewBroadcast('${docSnap.id}')" 
-                                class="inline-flex items-center gap-1.5 text-[10px] font-black text-indigo-500 hover:text-indigo-700 uppercase tracking-widest bg-indigo-50 hover:bg-indigo-100 px-4 py-2 rounded-xl transition-all active:scale-95">
-                            เปิดอ่าน <i class="fa-solid fa-chevron-right text-[8px]"></i>
-                        </button>
-                    </div>
-                </div>
-            `;
-        });
-        container.innerHTML = html;
-
-        // Function สำหรับเปิด Modal (คงเดิมแต่ปรับแต่ง UI)
-        window.viewBroadcast = async (id) => {
-            const bDoc = await getDoc(doc(db, "broadcasts", id));
-            if (bDoc.exists()) {
-                const bData = bDoc.data();
-                Swal.fire({
-                    title: `<div class="text-left font-bold text-slate-800">${bData.subject}</div>`,
-                    html: `
-                        <div class="text-left text-slate-600 text-sm leading-relaxed mt-4 pt-4 border-t border-slate-100 min-h-[100px]">
-                            ${bData.detail.replace(/\n/g, '<br>')}
-                        </div>
-                        <div class="text-[10px] text-right text-slate-400 mt-6 uppercase tracking-widest font-bold">
-                            โดย: ${bData.updatedBy || 'ระบบ'}
-                        </div>
-                    `,
-                    confirmButtonText: 'รับทราบ',
-                    confirmButtonColor: '#5c67f2',
-                    width: '600px',
-                    padding: '2rem',
-                    customClass: { popup: 'rounded-[2rem] font-kanit' }
-                });
-            }
+        // --- 5. Logout System (เหมือนหน้า My Ticket) ---
+        window.openLogoutModal = () => {
+            Swal.fire({
+                title: 'ออกจากระบบ?',
+                text: "คุณต้องการออกจากระบบ Sale Support หรือไม่",
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonColor: '#5c67f2',
+                cancelButtonColor: '#cbd5e1',
+                confirmButtonText: 'ยืนยัน',
+                cancelButtonText: 'ยกเลิก',
+                customClass: { popup: 'rounded-[2rem] font-kanit' }
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    signOut(auth).then(() => window.location.replace("login.html"));
+                }
+            });
         };
 
-    } catch (err) {
-        console.error("Broadcast error:", err);
-        container.innerHTML = `<div class="p-10 text-center text-red-400 text-sm">ไม่สามารถโหลดข้อมูลได้</div>`;
-    }
-}
-
-        // --- 5. Global UI Controls ---
-       // --- 5. Global UI Controls (ปรับให้รองรับทุกหน้า) ---
-window.openLogoutModal = () => {
-    Swal.fire({
-        title: 'ออกจากระบบ?',
-        text: "คุณต้องการออกจากระบบ Sale Support หรือไม่",
-        icon: 'warning',
-        showCancelButton: true,
-        confirmButtonColor: '#5c67f2',
-        cancelButtonColor: '#cbd5e1',
-        confirmButtonText: 'ยืนยัน',
-        cancelButtonText: 'ยกเลิก',
-        customClass: { popup: 'rounded-3xl font-kanit' }
-    }).then((result) => {
-        if (result.isConfirmed) {
-            signOut(auth)
-                .then(() => window.location.replace("login.html"))
-                .catch(err => console.error("Logout error:", err));
-        }
-    });
-};
-
-// ดักจับ Event แบบ Delegation เพื่อให้ครอบคลุม Element ที่โหลดมาทีหลัง
-document.addEventListener('click', (e) => {
-    // ดักจับทั้ง ID 'main-logout-btn' และ 'logoutBtn' 
-    const logoutTrigger = e.target.closest('#main-logout-btn') || e.target.closest('#logoutBtn');
-    if (logoutTrigger) {
-        e.preventDefault();
-        openLogoutModal();
-    }
-});
+        document.addEventListener('click', (e) => {
+            const logoutTrigger = e.target.closest('#main-logout-btn') || e.target.closest('#logoutBtn');
+            if (logoutTrigger) {
+                e.preventDefault();
+                openLogoutModal();
+            }
+        });
 
     </script>
     <script src="./js/layout.js"></script>
-    <script type="module" src="./js/sidebar-role.js"></script>
-
 </body>
 </html>

@@ -1,11 +1,7 @@
-<!-- SIDEBAR WRAPPER -->
 <div id="sidebar-wrapper" class="h-full flex flex-col justify-between min-h-0">
 
-    <!-- MENU AREA -->
     <div class="pt-6 flex-1 overflow-y-auto custom-scroll min-h-0">
-
         <nav class="space-y-1">
-
             <p class="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] px-4 mb-4 sidebar-text">
                 Main Menu
             </p>
@@ -35,9 +31,7 @@
                 <span class="sidebar-text font-medium">ข้อมูลส่วนตัว</span>
             </a>
 
-            <!-- ADMIN -->
             <div id="admin-menu-section" class="pt-6 border-t border-slate-100 mt-4" style="display:none;">
-
                 <p class="px-4 text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2 sidebar-text">
                     Admin Control
                 </p>
@@ -62,77 +56,9 @@
                     <span class="sidebar-text">จัดการทีม</span>
                 </a>
 
-                <a href="report.html" class="nav-link-modern" data-page="report.html">
-                    <span class="nav-icon">📊</span>
-                    <span class="sidebar-text">Report Dashboard</span>
-                </a>
-
-                <a href="logs.html" class="nav-link-modern" data-page="logs.html">
-                    <span class="nav-icon">📜</span>
-                    <span class="sidebar-text">System Logs</span>
-                </a>
-                <!-- SIDEBAR WRAPPER -->
-<div id="sidebar-wrapper" class="h-full flex flex-col justify-between min-h-0">
-
-    <!-- MENU AREA -->
-    <div class="pt-6 flex-1 overflow-y-auto custom-scroll min-h-0">
-
-        <nav class="space-y-1">
-
-            <p class="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] px-4 mb-4 sidebar-text">
-                Main Menu
-            </p>
-
-            <a href="dashboard.html" class="nav-link-modern" data-page="dashboard.html">
-                <span class="nav-icon">🏠</span>
-                <span class="sidebar-text font-medium">Dashboard</span>
-            </a>
-
-            <a href="new-ticket.html" class="nav-link-modern" data-page="new-ticket.html">
-                <span class="nav-icon">➕</span>
-                <span class="sidebar-text font-medium">สร้าง Ticket</span>
-            </a>
-
-            <a href="my-ticket.html" class="nav-link-modern" data-page="my-ticket.html">
-                <span class="nav-icon">📋</span>
-                <span class="sidebar-text font-medium">ใบงานของฉัน</span>
-            </a>
-
-            <a href="all-ticket.html" class="nav-link-modern" data-page="all-ticket.html">
-                <span class="nav-icon">🎫</span>
-                <span class="sidebar-text font-medium">ใบงานทั้งหมด</span>
-            </a>
-
-            <a href="profile.html" class="nav-link-modern" data-page="profile.html">
-                <span class="nav-icon">👤</span>
-                <span class="sidebar-text font-medium">ข้อมูลส่วนตัว</span>
-            </a>
-
-            <!-- ADMIN -->
-            <div id="admin-menu-section" class="pt-6 border-t border-slate-100 mt-4" style="display:none;">
-
-                <p class="px-4 text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2 sidebar-text">
-                    Admin Control
-                </p>
-
-                <a href="admin-manage.html" class="nav-link-modern font-bold" data-page="admin-manage.html">
-                    <span class="nav-icon">🛠️</span>
-                    <span class="sidebar-text">จัดการงาน Admin</span>
-                </a>
-
-                <a href="user-management.html" class="nav-link-modern" data-page="user-management.html">
-                    <span class="nav-icon">👥</span>
-                    <span class="sidebar-text">จัดการผู้ใช้งาน</span>
-                </a>
-
-                <a href="topic-management.html" class="nav-link-modern" data-page="topic-management.html">
-                    <span class="nav-icon">📂</span>
-                    <span class="sidebar-text">จัดการหัวข้อร้องเรียน</span>
-                </a>
-
-                <a href="team-management.html" class="nav-link-modern" data-page="team-management.html">
-                    <span class="nav-icon">🛡️</span>
-                    <span class="sidebar-text">จัดการทีม</span>
+                <a href="admin-broadcast.html" class="nav-link-modern" data-page="admin-broadcast.html">
+                    <span class="nav-icon">📢</span>
+                    <span class="sidebar-text">จัดการประกาศ</span>
                 </a>
 
                 <a href="report.html" class="nav-link-modern" data-page="report.html">
@@ -144,46 +70,24 @@
                     <span class="nav-icon">📜</span>
                     <span class="sidebar-text">System Logs</span>
                 </a>
-                <a href="system-status.html" class="nav-link-modern" data-page="system-status.html">
-                    <span class="nav-icon">💓</span>
-                    <span class="sidebar-text">สถานะระบบ</span>
-                </a>
             </div>
 
+            <a href="system-status.html" class="nav-link-modern" data-page="system-status.html">
+                <span class="nav-icon">💓</span>
+                <span class="sidebar-text">สถานะระบบ</span>
+            </a>
         </nav>
     </div>
+
     <div class="mt-auto border-t border-slate-100">
-    <a href="about.html" class="flex items-center gap-3 px-6 py-4 text-slate-500 hover:text-emerald-600 hover:bg-emerald-50 transition-all mx-2 my-1 rounded-xl group overflow-hidden">
-        <div class="w-6 h-6 flex items-center justify-center shrink-0">
-            <i class="fa-solid fa-circle-info text-lg"></i>
-        </div>
-        <span class="sidebar-text text-sm font-medium whitespace-nowrap italic">เกี่ยวกับระบบ</span>
-    </a>
-</div>
-    <!-- LOGOUT -->
-    <div class="p-4 border-t border-slate-100">
-        <button id="logoutBtn" class="logout-btn-modern">
-            <i class="fa-solid fa-right-from-bracket"></i>
-            <span class="sidebar-text">ออกจากระบบ</span>
-        </button>
-    </div>
-</div>
+        <a href="about.html" class="flex items-center gap-3 px-6 py-4 text-slate-500 hover:text-emerald-600 hover:bg-emerald-50 transition-all mx-2 my-1 rounded-xl group overflow-hidden">
+            <div class="w-6 h-6 flex items-center justify-center shrink-0">
+                <i class="fa-solid fa-circle-info text-lg"></i>
             </div>
-<a href="system-status.html" class="nav-link-modern" data-page="system-status.html">
-                    <span class="nav-icon">💓</span>
-                    <span class="sidebar-text">สถานะระบบ</span>
-                </a>
-        </nav>
+            <span class="sidebar-text text-sm font-medium whitespace-nowrap italic">เกี่ยวกับระบบ</span>
+        </a>
     </div>
-    <div class="mt-auto border-t border-slate-100">
-    <a href="about.html" class="flex items-center gap-3 px-6 py-4 text-slate-500 hover:text-emerald-600 hover:bg-emerald-50 transition-all mx-2 my-1 rounded-xl group overflow-hidden">
-        <div class="w-6 h-6 flex items-center justify-center shrink-0">
-            <i class="fa-solid fa-circle-info text-lg"></i>
-        </div>
-        <span class="sidebar-text text-sm font-medium whitespace-nowrap italic">เกี่ยวกับระบบ</span>
-    </a>
-</div>
-    <!-- LOGOUT -->
+
     <div class="p-4 border-t border-slate-100">
         <button id="logoutBtn" class="logout-btn-modern">
             <i class="fa-solid fa-right-from-bracket"></i>

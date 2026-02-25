@@ -1,33 +1,29 @@
 <!DOCTYPE html>
 <html lang="th">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Dashboard - Sale Support System</title>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dashboard - Sale Support System</title>
 
-<script src="https://cdn.tailwindcss.com"></script>
-<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 
-<link href="https://fonts.googleapis.com/css2?family=Kanit:wght@300;400;600&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="./css/style.css">
- <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Kanit:wght@300;400;600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="./css/style.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 </head>
 
 <body class="flex h-screen overflow-hidden bg-slate-50">
 
-<!-- SIDEBAR -->
-<aside id="sidebar-container"
-class="w-64 shrink-0 h-full bg-white border-r border-slate-200"></aside>
+    <aside id="sidebar-container" class="w-64 shrink-0 h-full bg-white border-r border-slate-200"></aside>
 
-<!-- RIGHT AREA -->
-<div class="flex-1 flex flex-col min-w-0">
+    <div class="flex-1 flex flex-col min-w-0">
 
-        <!-- TOPBAR -->
         <div id="topbar-container"></div>
 
-<main class="h-full overflow-y-auto p-6 md:p-10 max-w-7xl mx-auto w-full space-y-8 custom-scroll">
-    <div class="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-8">
-<div>
+        <main class="h-full overflow-y-auto p-6 md:p-10 max-w-7xl mx-auto w-full space-y-8 custom-scroll">
+            <div class="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-8">
+                <div>
                     <h2 class="text-3xl font-bold text-slate-800 tracking-tight">แผงควบคุมระบบ</h2>
                     <p class="text-slate-500 mt-1">สรุปข้อมูลการดำเนินงานประจำวันของคุณ</p>
                 </div>
@@ -36,31 +32,59 @@ class="w-64 shrink-0 h-full bg-white border-r border-slate-200"></aside>
                 </a>
             </div>
 
-         <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
-    <div class="glass-card p-8 bg-white border-b-4 border-blue-500 shadow-sm hover:shadow-md transition-shadow">
-        <div class="w-14 h-14 rounded-2xl bg-blue-50 text-blue-600 flex items-center justify-center mb-6 text-2xl shadow-inner">
-            <i class="fa-solid fa-layer-group"></i>
-        </div>
-        <p class="text-[11px] font-black text-slate-400 uppercase tracking-widest mb-1">ใบงานทั้งหมด</p>
-        <h3 id="stat-total" class="text-5xl font-bold text-slate-800">0</h3>
-    </div>
+            <section class="space-y-4">
+                <div class="flex items-center justify-between px-2">
+                    <h4 class="font-bold text-slate-800 flex items-center gap-2">
+                        <i class="fa-solid fa-bullhorn text-[#5c67f2]"></i>
+                        ประกาศข่าวสารระบบ
+                    </h4>
+                    <span class="text-[10px] font-black text-slate-400 uppercase tracking-widest">10 รายการล่าสุด</span>
+                </div>
+                <div class="bg-white rounded-[2rem] border border-slate-100 shadow-sm overflow-hidden">
+                    <div class="overflow-x-auto">
+                        <table class="w-full text-left">
+                            <thead class="bg-slate-50/50 border-b border-slate-50">
+                                <tr>
+                                    <th class="px-6 py-4 text-[11px] font-black text-slate-400 uppercase tracking-widest w-1/4">วันที่ เวลา</th>
+                                    <th class="px-6 py-4 text-[11px] font-black text-slate-400 uppercase tracking-widest w-1/2">หัวข้อประกาศ</th>
+                                    <th class="px-6 py-4 text-[11px] font-black text-slate-400 uppercase tracking-widest text-center">เพิ่มเติม</th>
+                                </tr>
+                            </thead>
+                            <tbody id="broadcast-list-body" class="divide-y divide-slate-50">
+                                <tr>
+                                    <td colspan="3" class="px-6 py-10 text-center text-slate-400 text-sm italic">กำลังโหลดประกาศ...</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </section>
 
-    <div class="glass-card p-8 bg-white border-b-4 border-amber-500 shadow-sm hover:shadow-md transition-shadow">
-        <div class="w-14 h-14 rounded-2xl bg-amber-50 text-amber-600 flex items-center justify-center mb-6 text-2xl shadow-inner">
-            <i class="fa-solid fa-arrows-spin fa-spin-pulse"></i>
-        </div>
-        <p class="text-[11px] font-black text-slate-400 uppercase tracking-widest mb-1">กำลังดำเนินการ</p>
-        <h3 id="stat-progress" class="text-5xl font-bold text-slate-800">0</h3>
-    </div>
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                <div class="glass-card p-8 bg-white border-b-4 border-blue-500 shadow-sm hover:shadow-md transition-shadow">
+                    <div class="w-14 h-14 rounded-2xl bg-blue-50 text-blue-600 flex items-center justify-center mb-6 text-2xl shadow-inner">
+                        <i class="fa-solid fa-layer-group"></i>
+                    </div>
+                    <p class="text-[11px] font-black text-slate-400 uppercase tracking-widest mb-1">ใบงานทั้งหมด</p>
+                    <h3 id="stat-total" class="text-5xl font-bold text-slate-800">0</h3>
+                </div>
 
-    <div class="glass-card p-8 bg-white border-b-4 border-emerald-500 shadow-sm hover:shadow-md transition-shadow">
-        <div class="w-14 h-14 rounded-2xl bg-emerald-50 text-emerald-600 flex items-center justify-center mb-6 text-2xl shadow-inner">
-            <i class="fa-solid fa-clipboard-check"></i>
-        </div>
-        <p class="text-[11px] font-black text-slate-400 uppercase tracking-widest mb-1">ปิดงานแล้ว</p>
-        <h3 id="stat-closed" class="text-5xl font-bold text-slate-800">0</h3>
-    </div>
-</div>
+                <div class="glass-card p-8 bg-white border-b-4 border-amber-500 shadow-sm hover:shadow-md transition-shadow">
+                    <div class="w-14 h-14 rounded-2xl bg-amber-50 text-amber-600 flex items-center justify-center mb-6 text-2xl shadow-inner">
+                        <i class="fa-solid fa-arrows-spin fa-spin-pulse"></i>
+                    </div>
+                    <p class="text-[11px] font-black text-slate-400 uppercase tracking-widest mb-1">กำลังดำเนินการ</p>
+                    <h3 id="stat-progress" class="text-5xl font-bold text-slate-800">0</h3>
+                </div>
+
+                <div class="glass-card p-8 bg-white border-b-4 border-emerald-500 shadow-sm hover:shadow-md transition-shadow">
+                    <div class="w-14 h-14 rounded-2xl bg-emerald-50 text-emerald-600 flex items-center justify-center mb-6 text-2xl shadow-inner">
+                        <i class="fa-solid fa-clipboard-check"></i>
+                    </div>
+                    <p class="text-[11px] font-black text-slate-400 uppercase tracking-widest mb-1">ปิดงานแล้ว</p>
+                    <h3 id="stat-closed" class="text-5xl font-bold text-slate-800">0</h3>
+                </div>
+            </div>
 
             <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
                 <div class="lg:col-span-2 space-y-6">
@@ -101,9 +125,33 @@ class="w-64 shrink-0 h-full bg-white border-r border-slate-200"></aside>
         </main>
     </div>
 
+    <div id="broadcast-modal" class="fixed inset-0 z-[60] hidden flex items-center justify-center p-4">
+        <div id="broadcast-modal-backdrop" class="absolute inset-0 bg-slate-900/40 backdrop-blur-sm transition-opacity opacity-0" onclick="closeBroadcastModal()"></div>
+        <div id="broadcast-modal-content" class="relative bg-white w-full max-w-lg rounded-[2.5rem] p-8 shadow-2xl transform transition-all scale-90 opacity-0">
+            <div class="flex justify-between items-start mb-6">
+                <div class="w-12 h-12 bg-indigo-50 text-indigo-600 rounded-2xl flex items-center justify-center text-xl">
+                    <i class="fa-solid fa-bullhorn"></i>
+                </div>
+                <button onclick="closeBroadcastModal()" class="text-slate-400 hover:text-slate-600 transition-colors">
+                    <i class="fa-solid fa-xmark text-2xl"></i>
+                </button>
+            </div>
+            <div>
+                <p id="modal-date" class="text-[10px] font-black text-indigo-500 uppercase tracking-widest mb-2"></p>
+                <h3 id="modal-topic" class="text-2xl font-bold text-slate-800 mb-4"></h3>
+                <div class="max-h-[40vh] overflow-y-auto custom-scroll">
+                    <p id="modal-detail" class="text-slate-600 leading-relaxed whitespace-pre-line text-sm"></p>
+                </div>
+            </div>
+            <div class="mt-8">
+                <button onclick="closeBroadcastModal()" class="w-full bg-slate-100 hover:bg-slate-200 text-slate-600 font-bold py-3.5 rounded-2xl transition-all">ปิดหน้าต่าง</button>
+            </div>
+        </div>
+    </div>
+
     <script type="module">
         import { initializeApp, getApps } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
-        import { getFirestore, doc, getDoc, collection, getDocs, query, where } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+        import { getFirestore, doc, getDoc, collection, getDocs, query, where, orderBy, limit } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
         import { getAuth, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
 
         const firebaseConfig = {
@@ -119,11 +167,11 @@ class="w-64 shrink-0 h-full bg-white border-r border-slate-200"></aside>
         const db = getFirestore(app);
         const auth = getAuth(app);
 
-        // --- 1. Load Layout (Sidebar & Topbar) ---
+        // --- 1. Load Layout ---
         async function loadLayout(userData, email) {
             const comps = [
-                { id: 'sidebar-placeholder', url: './components/sidebar.html' },
-                { id: 'topbar-placeholder', url: './components/topbar.html' }
+                { id: 'sidebar-container', url: './components/sidebar.html' },
+                { id: 'topbar-container', url: './components/topbar.html' }
             ];
 
             for (const comp of comps) {
@@ -132,9 +180,7 @@ class="w-64 shrink-0 h-full bg-white border-r border-slate-200"></aside>
                     if (res.ok) {
                         const el = document.getElementById(comp.id);
                         el.innerHTML = await res.text();
-                        el.classList.remove('hidden');
                         
-                        // Execute scripts in components
                         el.querySelectorAll("script").forEach(oldScript => {
                             const newScript = document.createElement("script");
                             newScript.type = "module";
@@ -145,7 +191,6 @@ class="w-64 shrink-0 h-full bg-white border-r border-slate-200"></aside>
                 } catch (e) { console.error("Layout load error:", e); }
             }
 
-            // Sync User Data to Topbar
             const checkExist = setInterval(() => {
                 const nameEl = document.querySelector('#topbar-user-name');
                 if (nameEl) {
@@ -157,7 +202,7 @@ class="w-64 shrink-0 h-full bg-white border-r border-slate-200"></aside>
             }, 100);
         }
 
-        // --- 2. Auth State & Initialize ---
+        // --- 2. Auth State ---
         onAuthStateChanged(auth, async (user) => {
             if (user) {
                 const adminDoc = await getDoc(doc(db, "admin", user.uid));
@@ -165,13 +210,60 @@ class="w-64 shrink-0 h-full bg-white border-r border-slate-200"></aside>
                     const userData = adminDoc.data();
                     await loadLayout(userData, user.email);
                     loadDashboardData(user.email);
+                    loadBroadcasts(); // โหลดข่าวสาร
                 }
             } else {
                 window.location.replace("login.html");
             }
         });
 
-        // --- 3. Dashboard Data Fetching ---
+        // --- 3. Broadcast Data ---
+        async function loadBroadcasts() {
+            const tbody = document.getElementById('broadcast-list-body');
+            try {
+                // ต้องมี Field: timestamp (Timestamp) ใน Collection: broadcasts
+                const q = query(collection(db, "broadcasts"), orderBy("timestamp", "desc"), limit(10));
+                const snap = await getDocs(q);
+
+                if (snap.empty) {
+                    tbody.innerHTML = `<tr><td colspan="3" class="px-6 py-10 text-center text-slate-400 text-sm italic">ไม่มีประกาศในขณะนี้</td></tr>`;
+                    return;
+                }
+
+                tbody.innerHTML = snap.docs.map(doc => {
+                    const d = doc.data();
+                    const date = d.timestamp ? d.timestamp.toDate() : new Date();
+                    const dateStr = date.toLocaleDateString('th-TH', {day:'2-digit', month:'2-digit', year:'2-digit'});
+                    const timeStr = date.toLocaleTimeString('th-TH', {hour:'2-digit', minute:'2-digit'});
+
+                    return `
+                        <tr class="hover:bg-slate-50/50 transition-colors">
+                            <td class="px-6 py-4">
+                                <div class="text-sm font-bold text-slate-700">${dateStr}</div>
+                                <div class="text-[10px] text-slate-400 font-medium">${timeStr} น.</div>
+                            </td>
+                            <td class="px-6 py-4">
+                                <p class="text-sm font-semibold text-slate-800 line-clamp-1">${d.topic || 'ไม่มีหัวข้อ'}</p>
+                            </td>
+                            <td class="px-6 py-4 text-center">
+                                <button onclick='showBroadcastDetail(${JSON.stringify({
+                                    topic: d.topic,
+                                    detail: d.message || d.detail,
+                                    date: dateStr + " " + timeStr + " น."
+                                })})' class="text-[#5c67f2] hover:scale-110 transition-transform active:scale-95">
+                                    <i class="fa-solid fa-circle-chevron-right text-xl"></i>
+                                </button>
+                            </td>
+                        </tr>
+                    `;
+                }).join('');
+            } catch (err) {
+                console.error("Broadcast error:", err);
+                tbody.innerHTML = `<tr><td colspan="3" class="px-6 py-4 text-center text-red-400 text-xs">โหลดข้อมูลล้มเหลว (เช็ค Firestore Index)</td></tr>`;
+            }
+        }
+
+        // --- 4. Dashboard Stats ---
         async function loadDashboardData(userEmail) {
             try {
                 const q = query(collection(db, "tickets"), where("ownerEmail", "==", userEmail));
@@ -199,9 +291,7 @@ class="w-64 shrink-0 h-full bg-white border-r border-slate-200"></aside>
                 document.getElementById('progress-circle').setAttribute('stroke-dasharray', `${rate} 100`);
 
                 renderSLATasks(slaTasks);
-            } catch (err) {
-                console.error("Dashboard data error:", err);
-            }
+            } catch (err) { console.error("Dashboard data error:", err); }
         }
 
         function renderSLATasks(tasks) {
@@ -210,9 +300,7 @@ class="w-64 shrink-0 h-full bg-white border-r border-slate-200"></aside>
                 container.innerHTML = `<div class="glass-card p-10 text-center text-slate-400 text-sm italic">ไม่มีงานที่ต้องเร่งดำเนินการในขณะนี้ ✨</div>`;
                 return;
             }
-
             tasks.sort((a, b) => (a.sla_due?.seconds || 0) - (b.sla_due?.seconds || 0));
-
             container.innerHTML = tasks.slice(0, 3).map(t => {
                 const dueDate = t.sla_due ? t.sla_due.toDate() : new Date();
                 const isOverdue = dueDate < new Date();
@@ -233,31 +321,40 @@ class="w-64 shrink-0 h-full bg-white border-r border-slate-200"></aside>
             }).join('');
         }
 
-        // --- 4. Global UI Controls (Logout) ---
-        window.openLogoutModal = () => {
-            const modal = document.getElementById('logout-modal');
+        // --- Modal & Global UI ---
+        window.showBroadcastDetail = (data) => {
+            document.getElementById('modal-topic').innerText = data.topic;
+            document.getElementById('modal-detail').innerText = data.detail;
+            document.getElementById('modal-date').innerText = "ประกาศเมื่อ: " + data.date;
+
+            const modal = document.getElementById('broadcast-modal');
             modal.classList.remove('hidden');
-            document.body.classList.add('modal-active');
             setTimeout(() => {
-                document.getElementById('logout-backdrop').classList.add('opacity-100');
-                document.getElementById('logout-content').classList.remove('scale-90', 'opacity-0');
+                document.getElementById('broadcast-modal-backdrop').classList.replace('opacity-0', 'opacity-100');
+                document.getElementById('broadcast-modal-content').classList.replace('scale-90', 'scale-100');
+                document.getElementById('broadcast-modal-content').classList.replace('opacity-0', 'opacity-100');
             }, 10);
         };
 
+        window.closeBroadcastModal = () => {
+            document.getElementById('broadcast-modal-backdrop').classList.replace('opacity-100', 'opacity-0');
+            document.getElementById('broadcast-modal-content').classList.replace('scale-100', 'scale-90');
+            document.getElementById('broadcast-modal-content').classList.replace('opacity-100', 'opacity-0');
+            setTimeout(() => document.getElementById('broadcast-modal').classList.add('hidden'), 300);
+        };
 
-        document.getElementById('close-logout').onclick = closeLogoutModal;
-        document.getElementById('confirm-logout').onclick = () => signOut(auth).then(() => window.location.replace("login.html"));
+        window.openLogoutModal = () => {
+            // โค้ดส่วน Logout Modal เดิมของนาย
+        };
 
-        // Global Click Listener for Sidebar Buttons
         document.addEventListener('click', (e) => {
             if (e.target.closest('#main-logout-btn')) openLogoutModal();
         });
 
     </script>
 
-
-<script src="./js/layout.js"></script>
-<script type="module" src="./js/sidebar-role.js"></script>
+    <script src="./js/layout.js"></script>
+    <script type="module" src="./js/sidebar-role.js"></script>
 
 </body>
 </html>

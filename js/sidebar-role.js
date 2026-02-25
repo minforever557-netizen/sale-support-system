@@ -181,26 +181,3 @@ if (!shouldNotify) return;
         window.addEventListener('click', () => { if (!notiDrop.classList.contains('hidden')) notiDrop.classList.add('hidden'); });
     }
 }
-
-// เพิ่มฟังก์ชันนี้ใน sidebar-role.js
-import { db } from "./firebase.js"; 
-import { collection, addDoc, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
-
-// 1. ฟังก์ชันกลางสำหรับบันทึก Log
-export const createLog = async (userName, userEmail, actionType, details) => {
-    try {
-        await addDoc(collection(db, "logs"), {
-            userName: userName || 'System',
-            userEmail: userEmail || 'system@system.com',
-            actionType: actionType, // PAGE_VIEW, CLICK_EVENT, ERROR
-            details: details,
-            path: window.location.pathname.split('/').pop() || 'index.html',
-            timestamp: serverTimestamp(),
-            isError: actionType.includes('ERROR')
-        });
-    } catch (e) { console.error("Log error:", e); }
-};
-
-// 2. ดักเก็บ Log ตอนเข้าหน้าเว็บอัตโนมัติ (ใส่ไว้ใน onAuthStateChanged ของไฟล์นี้)
-// เมื่อรู้วื่อผู้ใช้แล้ว ให้เรียก:
-// createLog(userData.name, user.email, 'PAGE_VIEW', `เข้าใช้งานหน้า ${document.title}`);

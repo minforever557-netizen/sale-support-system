@@ -1,0 +1,174 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>จัดการสิทธิ์การเข้าถึง - Sale Support System</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Kanit:wght@300;400;600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="./css/style.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        body { font-family: 'Kanit', sans-serif; }
+        .custom-scroll::-webkit-scrollbar { width: 6px; }
+        .custom-scroll::-webkit-scrollbar-track { background: #f1f1f1; }
+        .custom-scroll::-webkit-scrollbar-thumb { background: #10b981; border-radius: 10px; }
+        
+        /* สไตล์สำหรับปุ่มสถานะ */
+        .role-badge-admin { @apply bg-rose-50 text-rose-600 border-rose-100; }
+        .role-badge-user { @apply bg-emerald-50 text-emerald-600 border-emerald-100; }
+    </style>
+</head>
+<body class="bg-slate-50 min-h-screen">
+
+    <div class="flex min-h-screen">
+        <aside id="sidebar-container" class="w-64 shrink-0 bg-white border-r border-slate-200 hidden md:block sticky top-0 h-screen"></aside>
+
+        <div class="flex-1 flex flex-col min-w-0">
+            <div id="topbar-container" class="sticky top-0 z-40 bg-white/80 backdrop-blur-md border-b border-slate-200"></div>
+
+            <main class="p-4 md:p-10 max-w-6xl mx-auto w-full space-y-8 animate-in fade-in duration-700">
+                
+                <div class="flex flex-col md:flex-row md:items-end justify-between gap-4 border-b border-slate-200 pb-6">
+                    <div>
+                        <h2 class="text-3xl font-black text-slate-800 tracking-tight flex items-center gap-3">
+                            <i class="fa-solid fa-user-lock text-indigo-500"></i>
+                            จัดการสิทธิ์การเข้าถึง
+                        </h2>
+                        <p class="text-slate-500 mt-2 font-medium">กำหนดระดับการเข้าถึงเมนู Admin และสิทธิ์การจัดการข้อมูลของพนักงาน</p>
+                    </div>
+                    <div class="text-xs font-bold text-indigo-600 bg-indigo-50 px-4 py-2 rounded-full border border-indigo-100 uppercase tracking-widest">
+                        Role & Permissions
+                    </div>
+                </div>
+
+                <div class="bg-white p-6 rounded-[2rem] shadow-sm border border-slate-100 flex flex-col md:flex-row gap-4 items-center">
+                    <div class="relative flex-1 w-full">
+                        <i class="fa-solid fa-magnifying-glass absolute left-4 top-1/2 -translate-y-1/2 text-slate-400"></i>
+                        <input type="text" id="user-search" placeholder="ค้นหาชื่อพนักงาน หรือ อีเมล..." 
+                            class="w-full pl-12 pr-4 py-3 bg-slate-50 border-2 border-slate-50 rounded-xl focus:bg-white focus:border-indigo-500 outline-none transition-all font-medium text-slate-700">
+                    </div>
+                    <select id="role-filter" class="w-full md:w-48 p-3 bg-slate-50 border-2 border-slate-50 rounded-xl font-bold text-slate-600 outline-none focus:border-indigo-500 cursor-pointer">
+                        <option value="all">ทั้งหมด</option>
+                        <option value="admin">Admin</option>
+                        <option value="user">User</option>
+                    </select>
+                </div>
+
+                <div class="bg-white rounded-[2.5rem] shadow-xl shadow-slate-200/50 border border-slate-100 overflow-hidden mb-10">
+                    <div class="overflow-x-auto">
+                        <table class="w-full text-left border-collapse">
+                            <thead>
+                                <tr class="bg-slate-900 text-white">
+                                    <th class="px-8 py-5 text-[10px] font-black uppercase tracking-[0.2em]">พนักงาน</th>
+                                    <th class="px-6 py-5 text-[10px] font-black uppercase tracking-[0.2em]">ทีม / สังกัด</th>
+                                    <th class="px-6 py-5 text-[10px] font-black uppercase tracking-[0.2em]">ระดับสิทธิ์</th>
+                                    <th class="px-6 py-5 text-[10px] font-black uppercase tracking-[0.2em] text-center">สถานะ</th>
+                                    <th class="px-6 py-5 text-[10px] font-black uppercase tracking-[0.2em] text-right">จัดการ</th>
+                                </tr>
+                            </thead>
+                            <tbody id="user-table-body" class="divide-y divide-slate-50">
+                                </tbody>
+                        </table>
+                    </div>
+                    <div id="loading-state" class="p-20 text-center">
+                        <i class="fa-solid fa-circle-notch animate-spin text-4xl text-indigo-500 mb-4"></i>
+                        <p class="text-slate-400 font-medium">กำลังดึงข้อมูลผู้ใช้งาน...</p>
+                    </div>
+                </div>
+
+            </main>
+        </div>
+    </div>
+
+    <script type="module">
+        import { db, auth } from "./js/firebase.js";
+        import { collection, onSnapshot, doc, updateDoc, query, orderBy } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+        import { onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
+
+        // 1. Auth & Admin Check (นายควรมี logic เช็คว่าคนเข้าหน้านี้ต้องเป็น Admin เท่านั้น)
+        onAuthStateChanged(auth, (user) => {
+            if (!user) window.location.replace("login.html");
+        });
+
+        // 2. Fetch Users Data
+        const userTableBody = document.getElementById('user-table-body');
+        const loadingState = document.getElementById('loading-state');
+
+        function loadUsers() {
+            const q = query(collection(db, "users"), orderBy("name", "asc"));
+            
+            onSnapshot(q, (snapshot) => {
+                loadingState.classList.add('hidden');
+                userTableBody.innerHTML = "";
+                
+                snapshot.forEach((userDoc) => {
+                    const data = userDoc.data();
+                    const userId = userDoc.id;
+                    const role = data.role || 'user';
+                    
+                    const tr = document.createElement('tr');
+                    tr.className = "hover:bg-slate-50/80 transition-colors group";
+                    tr.innerHTML = `
+                        <td class="px-8 py-5">
+                            <div class="flex items-center gap-4">
+                                <div class="w-10 h-10 bg-indigo-100 text-indigo-600 rounded-xl flex items-center justify-center font-black text-sm shadow-sm group-hover:scale-110 transition-transform">
+                                    ${(data.name || "U")[0].toUpperCase()}
+                                </div>
+                                <div>
+                                    <p class="font-bold text-slate-800 tracking-tight">${data.name || 'ไม่ระบุชื่อ'}</p>
+                                    <p class="text-xs text-slate-400 font-medium">${data.email || ''}</p>
+                                </div>
+                            </div>
+                        </td>
+                        <td class="px-6 py-5 font-bold text-slate-600 text-sm">
+                            ${data.Team || '-'} <br>
+                            <span class="text-[10px] text-slate-400 font-normal uppercase">${data["Sub Team"] || ''}</span>
+                        </td>
+                        <td class="px-6 py-5">
+                            <select onchange="updateUserRole('${userId}', this.value)" 
+                                class="bg-white border border-slate-200 text-xs font-black py-2 px-3 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 cursor-pointer uppercase">
+                                <option value="user" ${role === 'user' ? 'selected' : ''}>User</option>
+                                <option value="admin" ${role === 'admin' ? 'selected' : ''}>Admin</option>
+                            </select>
+                        </td>
+                        <td class="px-6 py-5 text-center">
+                            <span class="px-3 py-1 bg-emerald-100 text-emerald-600 text-[10px] font-black rounded-full uppercase tracking-tighter">Active</span>
+                        </td>
+                        <td class="px-6 py-5 text-right">
+                            <button onclick="confirmResetPassword('${data.email}')" class="w-9 h-9 bg-slate-100 text-slate-400 rounded-lg hover:bg-rose-50 hover:text-rose-500 transition-all">
+                                <i class="fa-solid fa-key text-xs"></i>
+                            </button>
+                        </td>
+                    `;
+                    userTableBody.appendChild(tr);
+                });
+            });
+        }
+
+        // 3. Update Function
+        window.updateUserRole = async (uid, newRole) => {
+            try {
+                const userRef = doc(db, "users", uid);
+                await updateDoc(userRef, { role: newRole });
+                Swal.fire({
+                    icon: 'success',
+                    title: 'อัปเดตสิทธิ์สำเร็จ',
+                    toast: true,
+                    position: 'top-end',
+                    showConfirmButton: false,
+                    timer: 3000
+                });
+            } catch (error) {
+                Swal.fire({ icon: 'error', title: 'ไม่สามารถเปลี่ยนสิทธิ์ได้', text: error.message });
+            }
+        };
+
+        // Initialize
+        loadUsers();
+    </script>
+    <script src="./js/layout.js"></script>
+    <script type="module" src="./js/sidebar-role.js"></script>
+</body>
+</html>

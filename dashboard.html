@@ -274,25 +274,36 @@ async function loadBroadcastData() {
 }
 
         // --- 5. Global UI Controls ---
-        window.openLogoutModal = () => {
-            Swal.fire({
-                title: 'ออกจากระบบ?',
-                text: "คุณต้องการออกจากระบบ Sale Support หรือไม่",
-                icon: 'warning',
-                showCancelButton: true,
-                confirmButtonColor: '#5c67f2',
-                cancelButtonColor: '#cbd5e1',
-                confirmButtonText: 'ยืนยัน',
-                cancelButtonText: 'ยกเลิก',
-                customClass: { popup: 'rounded-3xl font-kanit' }
-            }).then((result) => {
-                if (result.isConfirmed) signOut(auth).then(() => window.location.replace("login.html"));
-            });
-        };
+       // --- 5. Global UI Controls (ปรับให้รองรับทุกหน้า) ---
+window.openLogoutModal = () => {
+    Swal.fire({
+        title: 'ออกจากระบบ?',
+        text: "คุณต้องการออกจากระบบ Sale Support หรือไม่",
+        icon: 'warning',
+        showCancelButton: true,
+        confirmButtonColor: '#5c67f2',
+        cancelButtonColor: '#cbd5e1',
+        confirmButtonText: 'ยืนยัน',
+        cancelButtonText: 'ยกเลิก',
+        customClass: { popup: 'rounded-3xl font-kanit' }
+    }).then((result) => {
+        if (result.isConfirmed) {
+            signOut(auth)
+                .then(() => window.location.replace("login.html"))
+                .catch(err => console.error("Logout error:", err));
+        }
+    });
+};
 
-        document.addEventListener('click', (e) => {
-            if (e.target.closest('#main-logout-btn')) openLogoutModal();
-        });
+// ดักจับ Event แบบ Delegation เพื่อให้ครอบคลุม Element ที่โหลดมาทีหลัง
+document.addEventListener('click', (e) => {
+    // ดักจับทั้ง ID 'main-logout-btn' และ 'logoutBtn' 
+    const logoutTrigger = e.target.closest('#main-logout-btn') || e.target.closest('#logoutBtn');
+    if (logoutTrigger) {
+        e.preventDefault();
+        openLogoutModal();
+    }
+});
 
     </script>
     <script src="./js/layout.js"></script>

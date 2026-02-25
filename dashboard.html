@@ -1,308 +1,263 @@
 <!DOCTYPE html>
 <html lang="th">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Profile Settings - Sale Support System</title>
-    <script src="https://cdn.tailwindcss.com"></script>
-    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
-    <link href="https://fonts.googleapis.com/css2?family=Kanit:wght@300;400;600&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="./css/style.css">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <style>
-        body { font-family: 'Kanit', sans-serif; }
-    </style>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Dashboard - Sale Support System</title>
+
+<script src="https://cdn.tailwindcss.com"></script>
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+
+<link href="https://fonts.googleapis.com/css2?family=Kanit:wght@300;400;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="./css/style.css">
+ <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 </head>
+
 <body class="flex h-screen overflow-hidden bg-slate-50">
 
-    <aside id="sidebar-container" class="w-64 shrink-0 h-full bg-white border-r border-slate-200"></aside>
+<!-- SIDEBAR -->
+<aside id="sidebar-container"
+class="w-64 shrink-0 h-full bg-white border-r border-slate-200"></aside>
 
-    <div class="flex-1 flex flex-col min-w-0 h-full overflow-hidden">
-        
+<!-- RIGHT AREA -->
+<div class="flex-1 flex flex-col min-w-0">
+
+        <!-- TOPBAR -->
         <div id="topbar-container"></div>
 
-        <main class="flex-1 overflow-y-auto custom-scroll p-4 md:p-12">
-            <div class="max-w-6xl mx-auto mb-12">
-                <div class="flex items-center gap-6">
-                    <div class="hidden md:flex w-16 h-16 bg-white rounded-3xl shadow-lg shadow-slate-200/50 items-center justify-center text-indigo-600 text-2xl">
-                        <i class="fa-solid fa-user-gear"></i>
-                    </div>
-                    <div>
-                        <h2 class="text-3xl md:text-5xl font-[900] text-slate-800 tracking-tight">ตั้งค่าโปรไฟล์</h2>
-                        <p class="text-slate-500 font-medium mt-1">จัดการข้อมูลส่วนตัวและทีมเพื่อประสิทธิภาพในการประสานงาน</p>
-                    </div>
+<main class="h-full overflow-y-auto p-6 md:p-10 max-w-7xl mx-auto w-full space-y-8 custom-scroll">
+    <div class="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-8">
+<div>
+                    <h2 class="text-3xl font-bold text-slate-800 tracking-tight">แผงควบคุมระบบ</h2>
+                    <p class="text-slate-500 mt-1">สรุปข้อมูลการดำเนินงานประจำวันของคุณ</p>
                 </div>
+                <a href="new-ticket.html" class="bg-[#5c67f2] hover:bg-[#4a54d4] text-white px-8 py-3.5 rounded-2xl font-bold transition-all shadow-lg shadow-indigo-100 flex items-center gap-2 active:scale-95">
+                    <span class="text-xl">+</span> สร้างใบงานใหม่
+                </a>
             </div>
 
-            <div class="grid grid-cols-1 lg:grid-cols-12 gap-12 items-start pb-20">
-                <aside class="lg:col-span-4 lg:sticky lg:top-8">
-                    <div class="bg-white rounded-[3rem] shadow-2xl shadow-slate-200/80 p-10 border border-white relative overflow-hidden group">
-                        <div class="absolute -top-24 -right-24 w-48 h-48 bg-indigo-50 rounded-full blur-3xl group-hover:bg-indigo-100 transition-colors"></div>
-                        <div class="relative z-10 text-center">
-                            <div class="relative inline-block mb-8">
-                                <div id="avatar-display" class="w-40 h-40 bg-gradient-to-tr from-indigo-600 to-violet-500 rounded-[3.5rem] flex items-center justify-center text-6xl text-white font-black shadow-[0_20px_50px_rgba(79,70,229,0.3)] uppercase transition-transform group-hover:scale-105">?</div>
-                                <div class="absolute -bottom-2 -right-2 w-12 h-12 bg-emerald-500 rounded-2xl flex items-center justify-center text-white border-[6px] border-white shadow-xl">
-                                    <i class="fa-solid fa-shield-check"></i>
-                                </div>
-                            </div>
-                            <h3 id="name-display" class="text-3xl font-[900] text-slate-800 tracking-tight mb-2">...</h3>
-                            <div id="role-display" class="inline-flex px-5 py-2 bg-indigo-50 text-indigo-600 rounded-2xl text-[11px] font-[900] uppercase tracking-widest mb-10">LOADING...</div>
+         <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+    <div class="glass-card p-8 bg-white border-b-4 border-blue-500 shadow-sm hover:shadow-md transition-shadow">
+        <div class="w-14 h-14 rounded-2xl bg-blue-50 text-blue-600 flex items-center justify-center mb-6 text-2xl shadow-inner">
+            <i class="fa-solid fa-layer-group"></i>
+        </div>
+        <p class="text-[11px] font-black text-slate-400 uppercase tracking-widest mb-1">ใบงานทั้งหมด</p>
+        <h3 id="stat-total" class="text-5xl font-bold text-slate-800">0</h3>
+    </div>
 
-                            <div class="space-y-4">
-                                <div class="p-5 bg-slate-50/80 rounded-[2rem] border border-slate-100 flex items-center gap-5 transition-all hover:bg-white hover:shadow-xl hover:shadow-slate-100">
-                                    <div class="w-12 h-12 bg-white rounded-2xl shadow-sm flex items-center justify-center text-indigo-500 shadow-indigo-100/50">
-                                        <i class="fa-regular fa-envelope text-xl"></i>
-                                    </div>
-                                    <div class="text-left overflow-hidden">
-                                        <p class="text-[10px] font-black text-slate-400 uppercase tracking-widest">Official Email</p>
-                                        <p id="side-email" class="text-sm font-bold text-slate-700 truncate">...</p>
-                                    </div>
-                                </div>
-                                <div class="p-5 bg-slate-50/80 rounded-[2rem] border border-slate-100 flex items-center gap-5 transition-all hover:bg-white hover:shadow-xl hover:shadow-slate-100">
-                                    <div class="w-12 h-12 bg-white rounded-2xl shadow-sm flex items-center justify-center text-emerald-500 shadow-emerald-100/50">
-                                        <i class="fa-solid fa-users-viewfinder text-xl"></i>
-                                    </div>
-                                    <div class="text-left overflow-hidden">
-                                        <p class="text-[10px] font-black text-slate-400 uppercase tracking-widest">Team Unit</p>
-                                        <p id="side-team" class="text-sm font-bold text-slate-700 truncate">...</p>
-                                    </div>
-                                </div>
+    <div class="glass-card p-8 bg-white border-b-4 border-amber-500 shadow-sm hover:shadow-md transition-shadow">
+        <div class="w-14 h-14 rounded-2xl bg-amber-50 text-amber-600 flex items-center justify-center mb-6 text-2xl shadow-inner">
+            <i class="fa-solid fa-arrows-spin fa-spin-pulse"></i>
+        </div>
+        <p class="text-[11px] font-black text-slate-400 uppercase tracking-widest mb-1">กำลังดำเนินการ</p>
+        <h3 id="stat-progress" class="text-5xl font-bold text-slate-800">0</h3>
+    </div>
+
+    <div class="glass-card p-8 bg-white border-b-4 border-emerald-500 shadow-sm hover:shadow-md transition-shadow">
+        <div class="w-14 h-14 rounded-2xl bg-emerald-50 text-emerald-600 flex items-center justify-center mb-6 text-2xl shadow-inner">
+            <i class="fa-solid fa-clipboard-check"></i>
+        </div>
+        <p class="text-[11px] font-black text-slate-400 uppercase tracking-widest mb-1">ปิดงานแล้ว</p>
+        <h3 id="stat-closed" class="text-5xl font-bold text-slate-800">0</h3>
+    </div>
+</div>
+
+            <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+                <div class="lg:col-span-2 space-y-6">
+                    <div class="flex items-center justify-between px-2">
+                        <h4 class="font-bold text-slate-800 flex items-center gap-2">
+                            <i class="fa-solid fa-clock-rotate-left text-orange-500"></i>
+                            งานที่ต้องเร่งดำเนินการ (SLA)
+                        </h4>
+                        <a href="my-ticket.html" class="text-xs font-black text-[#5c67f2] hover:underline uppercase tracking-wider">ดูทั้งหมด</a>
+                    </div>
+                    <div id="sla-container" class="space-y-4">
+                        <div class="glass-card p-10 flex items-center justify-center text-slate-400 text-sm italic">กำลังโหลดข้อมูล...</div>
+                    </div>
+                </div>
+
+                <div class="space-y-6">
+                    <h4 class="font-bold text-slate-800 px-2 flex items-center gap-2">
+                        <i class="fa-solid fa-chart-line text-[#5c67f2]"></i>
+                        ประสิทธิภาพเดือนนี้
+                    </h4>
+                    <div class="glass-card p-8 flex flex-col items-center">
+                        <div class="relative w-40 h-40">
+                            <svg class="w-full h-full transform -rotate-90" viewBox="0 0 36 36">
+                                <circle cx="18" cy="18" r="16" fill="none" class="stroke-slate-100" stroke-width="3"></circle>
+                                <circle id="progress-circle" cx="18" cy="18" r="16" fill="none" class="stroke-[#5c67f2]" stroke-width="3" stroke-dasharray="0 100" stroke-linecap="round"></circle>
+                            </svg>
+                            <div class="absolute inset-0 flex flex-col items-center justify-center">
+                                <span id="eff-percent" class="text-3xl font-black text-slate-800 tracking-tighter">0%</span>
+                                <span class="text-[9px] font-black text-slate-400 uppercase tracking-widest">Success</span>
                             </div>
+                        </div>
+                        <div class="mt-8 pt-6 border-t border-slate-50 w-full text-center">
+                            <p class="text-xs text-slate-500 leading-relaxed">สัดส่วนการปิดงานสำเร็จเทียบกับงานทั้งหมดของคุณ</p>
                         </div>
                     </div>
-                </aside>
-
-                <div class="lg:col-span-8">
-                    <form id="profile-form" class="bg-white rounded-[3.5rem] shadow-2xl shadow-slate-200/80 border border-white overflow-hidden transition-all">
-                        <div class="bg-slate-900 px-12 py-10 relative overflow-hidden">
-                            <div class="relative z-10">
-                                <span class="text-indigo-400 text-xs font-black uppercase tracking-[0.3em]">Account Settings</span>
-                                <h4 class="text-white font-black text-2xl mt-1 flex items-center gap-3">รายละเอียดข้อมูลส่วนตัว</h4>
-                            </div>
-                            <i class="fa-solid fa-fingerprint absolute -right-6 top-1/2 -translate-y-1/2 text-white/[0.03] text-[10rem]"></i>
-                        </div>
-
-                        <div class="p-8 md:p-14 space-y-12">
-                            <section>
-                                <div class="flex items-center gap-4 mb-8">
-                                    <div class="w-10 h-10 rounded-2xl bg-indigo-50 flex items-center justify-center text-indigo-600"><i class="fa-solid fa-address-card text-lg"></i></div>
-                                    <h5 class="font-black text-slate-800 text-xl tracking-tight">Basic Information</h5>
-                                </div>
-                                <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
-                                    <div class="md:col-span-2 group">
-                                        <label class="block text-[11px] font-black text-slate-400 uppercase ml-4 mb-2 tracking-[0.1em]">ชื่อ-นามสกุล</label>
-                                        <input type="text" id="prof-name" class="w-full px-6 py-5 rounded-[1.5rem] bg-slate-50 border-2 border-slate-50 focus:bg-white focus:border-indigo-500 outline-none transition-all font-bold text-slate-700" placeholder="ระบุชื่อจริงของคุณ">
-                                    </div>
-                                    <div class="group">
-                                        <label class="block text-[11px] font-black text-slate-400 uppercase ml-4 mb-2 tracking-[0.1em]">ชื่อผู้ใช้งาน (ID)</label>
-                                        <div class="relative">
-                                            <input type="text" id="prof-user" class="w-full px-6 py-5 rounded-[1.5rem] bg-slate-100 font-black text-slate-400 cursor-not-allowed outline-none border-2 border-transparent" readonly>
-                                            <i class="fa-solid fa-lock absolute right-6 top-1/2 -translate-y-1/2 text-slate-300"></i>
-                                        </div>
-                                    </div>
-                                    <div class="group">
-                                        <label class="block text-[11px] font-black text-slate-400 uppercase ml-4 mb-2 tracking-[0.1em]">เบอร์โทรศัพท์</label>
-                                        <input type="text" id="prof-phone" class="w-full px-6 py-5 rounded-[1.5rem] bg-slate-50 border-2 border-slate-50 focus:bg-white focus:border-indigo-500 outline-none transition-all font-bold text-slate-700" placeholder="0XXXXXXXXX">
-                                    </div>
-                                    <div class="md:col-span-2 group">
-                                        <label class="block text-[11px] font-black text-slate-400 uppercase ml-4 mb-2 tracking-[0.1em]">อีเมลที่ใช้ในระบบ</label>
-                                        <input type="email" id="prof-email" class="w-full px-6 py-5 rounded-[1.5rem] bg-slate-100 font-bold text-slate-400 cursor-not-allowed outline-none border-2 border-transparent" readonly>
-                                    </div>
-                                </div>
-                            </section>
-
-                            <div class="h-px bg-gradient-to-r from-transparent via-slate-100 to-transparent"></div>
-
-                            <section>
-                                <div class="flex items-center gap-4 mb-8">
-                                    <div class="w-10 h-10 rounded-2xl bg-emerald-50 flex items-center justify-center text-emerald-600"><i class="fa-solid fa-sitemap text-lg"></i></div>
-                                    <h5 class="font-black text-slate-800 text-xl tracking-tight">Organization & Teams</h5>
-                                </div>
-                                <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
-                                    <div class="group">
-                                        <label class="block text-[11px] font-black text-slate-400 uppercase ml-4 mb-2 tracking-[0.1em]">ทีมหลัก (Main Team)</label>
-                                        <select id="prof-main" class="w-full px-6 py-5 rounded-[1.5rem] bg-slate-50 border-2 border-slate-50 font-bold text-slate-700 outline-none appearance-none cursor-pointer focus:border-emerald-500 focus:bg-white transition-all"></select>
-                                    </div>
-                                    <div class="group">
-                                        <label class="block text-[11px] font-black text-slate-400 uppercase ml-4 mb-2 tracking-[0.1em]">ทีมย่อย (Sub Team)</label>
-                                        <select id="prof-sub" class="w-full px-6 py-5 rounded-[1.5rem] bg-slate-50 border-2 border-slate-50 font-bold text-slate-700 outline-none appearance-none cursor-pointer focus:border-emerald-500 focus:bg-white transition-all disabled:opacity-50 disabled:cursor-not-allowed" disabled></select>
-                                    </div>
-                                </div>
-                            </section>
-
-                            <div class="pt-6">
-                                <button type="submit" id="saveBtn" class="group w-full py-6 bg-slate-900 text-white rounded-[2rem] font-black text-xl shadow-2xl hover:bg-indigo-600 transition-all flex items-center justify-center gap-4">
-                                    <span>บันทึกการเปลี่ยนแปลงทั้งหมด</span>
-                                    <i class="fa-solid fa-circle-check text-indigo-400 group-hover:text-white transition-colors"></i>
-                                </button>
-                            </div>
-                        </div>
-                    </form>
                 </div>
             </div>
         </main>
     </div>
 
     <script type="module">
-        import { db, auth } from "./js/firebase.js"; 
-        import { doc, getDoc, getDocs, updateDoc, collection } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
-        import { onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
+        import { initializeApp, getApps } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
+        import { getFirestore, doc, getDoc, collection, getDocs, query, where } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+        import { getAuth, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
 
-        let allTeams = [];
-        let currentUserAuth = null;
+        const firebaseConfig = {
+            apiKey: "AIzaSyAa2uSD_tjNqYE2eXnZcn75h_jAVscDG-c",
+            authDomain: "salesupportsystemapp.firebaseapp.com",
+            projectId: "salesupportsystemapp",
+            storageBucket: "salesupportsystemapp.firebasestorage.app",
+            messagingSenderId: "840890441207",
+            appId: "1:840890441207:web:f3a5076d46e963a90de2f2"
+        };
 
-        // 1. Auth & Data Loading
-        onAuthStateChanged(auth, async (user) => {
-            if (user) {
-                currentUserAuth = user;
-                try {
-                    await fetchTeams(); 
-                    const adminRef = doc(db, "admin", user.uid);
-                    const snap = await getDoc(adminRef);
+        const app = getApps().length === 0 ? initializeApp(firebaseConfig) : getApps()[0];
+        const db = getFirestore(app);
+        const auth = getAuth(app);
 
-                    if (snap.exists()) {
-                        const adminData = snap.data();
-                        await loadLayout(adminData, user.email);
-                        fillProfileUI(adminData, user.email);
-                    }
-                } catch (error) { console.error("Error fetching profile:", error); }
-            } else {
-                window.location.replace("login.html");
-            }
-        });
-
-        // 2. Load Layout (Sidebar/Topbar) & Role Control
+        // --- 1. Load Layout (Sidebar & Topbar) ---
         async function loadLayout(userData, email) {
             const comps = [
-                { id: 'sidebar-container', url: './components/sidebar.html' },
-                { id: 'topbar-container', url: './components/topbar.html' }
+                { id: 'sidebar-placeholder', url: './components/sidebar.html' },
+                { id: 'topbar-placeholder', url: './components/topbar.html' }
             ];
 
             for (const comp of comps) {
-                const res = await fetch(comp.url);
-                if (res.ok) document.getElementById(comp.id).innerHTML = await res.text();
+                try {
+                    const res = await fetch(comp.url);
+                    if (res.ok) {
+                        const el = document.getElementById(comp.id);
+                        el.innerHTML = await res.text();
+                        el.classList.remove('hidden');
+                        
+                        // Execute scripts in components
+                        el.querySelectorAll("script").forEach(oldScript => {
+                            const newScript = document.createElement("script");
+                            newScript.type = "module";
+                            newScript.textContent = oldScript.textContent;
+                            document.head.appendChild(newScript);
+                        });
+                    }
+                } catch (e) { console.error("Layout load error:", e); }
             }
 
-            // Sync User to UI & Handle Admin Menu
+            // Sync User Data to Topbar
             const checkExist = setInterval(() => {
                 const nameEl = document.querySelector('#topbar-user-name');
-                const adminMenu = document.getElementById('admin-menu-section');
                 if (nameEl) {
                     nameEl.innerText = userData.name || "User";
                     document.querySelector('#topbar-user-email').innerText = email;
                     document.querySelector('#topbar-avatar-text').innerText = (userData.name || "U")[0].toUpperCase();
-                    if (adminMenu) adminMenu.style.display = (userData.role === 'admin') ? 'block' : 'none';
                     clearInterval(checkExist);
                 }
             }, 100);
         }
 
-        // 3. Teams Logic
-        async function fetchTeams() {
-            const querySnapshot = await getDocs(collection(db, "teams"));
-            allTeams = querySnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
-            const mainSelect = document.getElementById('prof-main');
-            mainSelect.innerHTML = '<option value="" disabled selected>เลือกทีมหลัก</option>';
-            allTeams.filter(t => t.type === "main").forEach(t => mainSelect.add(new Option(t.name, t.id)));
-        }
-
-        function renderSubTeams(parentId, currentSub = null) {
-            const subSelect = document.getElementById('prof-sub');
-            const mainTeam = allTeams.find(t => t.id === parentId);
-            const subs = allTeams.filter(t => t.type === "sub" && (String(t.parentId) === String(parentId) || String(t.parentId) === String(mainTeam?.name)));
-            
-            subSelect.innerHTML = '<option value="" disabled selected>เลือกทีมย่อย</option>';
-            if (subs.length > 0) {
-                subSelect.disabled = false;
-                subSelect.classList.remove("cursor-not-allowed","opacity-60");
-                subs.forEach(t => {
-                    const opt = new Option(t.name, t.name);
-                    if (currentSub === t.name) opt.selected = true;
-                    subSelect.add(opt);
-                });
-            } else {
-                subSelect.disabled = true;
-                subSelect.classList.add("cursor-not-allowed","opacity-60");
-            }
-        }
-
-        document.getElementById('prof-main').addEventListener('change', (e) => renderSubTeams(e.target.value));
-
-        // 4. Fill UI
-        function fillProfileUI(data, email) {
-            document.getElementById('avatar-display').innerText = data.name ? data.name[0].toUpperCase() : "?";
-            document.getElementById('name-display').innerText = data.name || "User";
-            document.getElementById('side-email').innerText = email || "-";
-            document.getElementById('side-team').innerText = data.Team || "ไม่ได้ระบุทีม";
-            document.getElementById('role-display').innerText = data.role || "MEMBER";
-
-            document.getElementById('prof-name').value = data.name || "";
-            document.getElementById('prof-user').value = data.username || "";
-            document.getElementById('prof-email').value = email || "";
-            document.getElementById('prof-phone').value = data.phone || data["Phone No."] || "";
-
-            if (data.Team) {
-                const team = allTeams.find(t => t.name === data.Team && t.type === "main");
-                if (team) {
-                    document.getElementById('prof-main').value = team.id;
-                    renderSubTeams(team.id, data["Sub Team"]);
+        // --- 2. Auth State & Initialize ---
+        onAuthStateChanged(auth, async (user) => {
+            if (user) {
+                const adminDoc = await getDoc(doc(db, "admin", user.uid));
+                if (adminDoc.exists()) {
+                    const userData = adminDoc.data();
+                    await loadLayout(userData, user.email);
+                    loadDashboardData(user.email);
                 }
-            }
-        }
-
-        // 5. Save Data
-        document.getElementById('profile-form').addEventListener('submit', async (e) => {
-            e.preventDefault();
-            const btn = document.getElementById('saveBtn');
-            btn.disabled = true;
-            btn.innerHTML = `<i class="fa-solid fa-spinner animate-spin"></i> กำลังบันทึก...`;
-
-            try {
-                const mainSelect = document.getElementById('prof-main');
-                await updateDoc(doc(db, "admin", currentUserAuth.uid), {
-                    name: document.getElementById('prof-name').value.trim(),
-                    phone: document.getElementById('prof-phone').value.trim(),
-                    Team: mainSelect.options[mainSelect.selectedIndex]?.text || "-",
-                    "Sub Team": document.getElementById('prof-sub').value || "-"
-                });
-
-                Swal.fire({
-                    icon: 'success',
-                    title: 'บันทึกสำเร็จ',
-                    showConfirmButton: false,
-                    timer: 1500,
-                    customClass: { popup: 'rounded-[2rem] font-kanit' }
-                }).then(() => location.reload());
-            } catch (err) {
-                Swal.fire({ icon: 'error', title: 'ล้มเหลว', text: err.message });
-                btn.disabled = false;
-                btn.innerHTML = `<span>บันทึกการเปลี่ยนแปลงทั้งหมด</span>`;
+            } else {
+                window.location.replace("login.html");
             }
         });
 
-        // 6. Global Logout Modal (SweetAlert2)
+        // --- 3. Dashboard Data Fetching ---
+        async function loadDashboardData(userEmail) {
+            try {
+                const q = query(collection(db, "tickets"), where("ownerEmail", "==", userEmail));
+                const snap = await getDocs(q);
+                
+                let total = 0, progress = 0, closed = 0;
+                let slaTasks = [];
+
+                snap.forEach(doc => {
+                    const d = doc.data();
+                    total++;
+                    if (["In Progress", "Pending"].includes(d.status)) {
+                        progress++;
+                        if(d.sla_due) slaTasks.push({id: doc.id, ...d});
+                    }
+                    if (["Success", "Success (SLA)", "Closed"].includes(d.status)) closed++;
+                });
+
+                document.getElementById('stat-total').innerText = total;
+                document.getElementById('stat-progress').innerText = progress;
+                document.getElementById('stat-closed').innerText = closed;
+
+                const rate = total > 0 ? Math.round((closed / total) * 100) : 0;
+                document.getElementById('eff-percent').innerText = rate + '%';
+                document.getElementById('progress-circle').setAttribute('stroke-dasharray', `${rate} 100`);
+
+                renderSLATasks(slaTasks);
+            } catch (err) {
+                console.error("Dashboard data error:", err);
+            }
+        }
+
+        function renderSLATasks(tasks) {
+            const container = document.getElementById('sla-container');
+            if (tasks.length === 0) {
+                container.innerHTML = `<div class="glass-card p-10 text-center text-slate-400 text-sm italic">ไม่มีงานที่ต้องเร่งดำเนินการในขณะนี้ ✨</div>`;
+                return;
+            }
+
+            tasks.sort((a, b) => (a.sla_due?.seconds || 0) - (b.sla_due?.seconds || 0));
+
+            container.innerHTML = tasks.slice(0, 3).map(t => {
+                const dueDate = t.sla_due ? t.sla_due.toDate() : new Date();
+                const isOverdue = dueDate < new Date();
+                return `
+                    <div class="glass-card p-6 flex items-center justify-between border-l-[6px] ${isOverdue ? 'border-red-500' : 'border-orange-400'}">
+                        <div>
+                            <h5 class="font-bold text-slate-800">${t.topic || 'ไม่มีหัวข้อ'}</h5>
+                            <p class="text-[10px] text-slate-400 font-black uppercase tracking-widest mt-1">ID: ${t.id_number || '-'}</p>
+                        </div>
+                        <div class="text-right">
+                            <p class="text-[10px] font-black ${isOverdue ? 'text-red-500 animate-pulse' : 'text-slate-400'} uppercase">
+                                ${isOverdue ? 'เกินกำหนด' : 'ครบกำหนดใน'}
+                            </p>
+                            <p class="text-sm font-bold text-slate-700">${dueDate.toLocaleTimeString('th-TH', {hour:'2-digit', minute:'2-digit'})} น.</p>
+                        </div>
+                    </div>
+                `;
+            }).join('');
+        }
+
+        // --- 4. Global UI Controls (Logout) ---
         window.openLogoutModal = () => {
-            Swal.fire({
-                title: 'ออกจากระบบ?',
-                text: "คุณต้องการออกจากระบบ Sale Support หรือไม่",
-                icon: 'warning',
-                showCancelButton: true,
-                confirmButtonColor: '#5c67f2',
-                cancelButtonColor: '#cbd5e1',
-                confirmButtonText: 'ยืนยัน',
-                cancelButtonText: 'ยกเลิก',
-                customClass: { popup: 'rounded-[2rem] font-kanit' }
-            }).then((res) => {
-                if (res.isConfirmed) signOut(auth).then(() => window.location.replace("login.html"));
-            });
+            const modal = document.getElementById('logout-modal');
+            modal.classList.remove('hidden');
+            document.body.classList.add('modal-active');
+            setTimeout(() => {
+                document.getElementById('logout-backdrop').classList.add('opacity-100');
+                document.getElementById('logout-content').classList.remove('scale-90', 'opacity-0');
+            }, 10);
         };
 
+
+        document.getElementById('close-logout').onclick = closeLogoutModal;
+        document.getElementById('confirm-logout').onclick = () => signOut(auth).then(() => window.location.replace("login.html"));
+
+        // Global Click Listener for Sidebar Buttons
         document.addEventListener('click', (e) => {
-            if (e.target.closest('#main-logout-btn') || e.target.closest('#logoutBtn')) {
-                e.preventDefault();
-                openLogoutModal();
-            }
+            if (e.target.closest('#main-logout-btn')) openLogoutModal();
         });
+
     </script>
+
+
+<script src="./js/layout.js"></script>
+<script type="module" src="./js/sidebar-role.js"></script>
+
 </body>
 </html>

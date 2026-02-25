@@ -14,6 +14,11 @@
         .custom-scroll::-webkit-scrollbar { width: 6px; }
         .custom-scroll::-webkit-scrollbar-track { background: #f1f1f1; }
         .custom-scroll::-webkit-scrollbar-thumb { background: #10b981; border-radius: 10px; }
+        
+        /* สไตล์เพิ่มเติมสำหรับ Custom Dropdown */
+        #dropdown-menu {
+            box-shadow: 0 20px 25px -5px rgb(0 0 0 / 0.1), 0 8px 10px -6px rgb(0 0 0 / 0.1);
+        }
     </style>
 </head>
 <body class="bg-slate-50 min-h-screen">
@@ -22,7 +27,6 @@
         <aside id="sidebar-container" class="w-64 shrink-0 bg-white border-r border-slate-200 hidden md:block sticky top-0 h-screen"></aside>
 
         <div class="flex-1 flex flex-col min-w-0">
-            
             <div id="topbar-container" class="sticky top-0 z-40 bg-white/80 backdrop-blur-md border-b border-slate-200"></div>
 
             <main class="p-4 md:p-10 max-w-5xl mx-auto w-full space-y-8 animate-in fade-in duration-700">
@@ -43,9 +47,7 @@
                 <div class="bg-white rounded-[2rem] shadow-xl shadow-slate-200/50 border border-slate-100 overflow-hidden mb-12">
                     
                     <div class="bg-slate-900 p-6 flex items-center gap-4 text-white">
-                        <div id="form-user-avatar" class="w-14 h-14 bg-emerald-500 rounded-2xl flex items-center justify-center text-2xl font-black shadow-lg shadow-emerald-500/20">
-                            ?
-                        </div>
+                        <div id="form-user-avatar" class="w-14 h-14 bg-emerald-500 rounded-2xl flex items-center justify-center text-2xl font-black shadow-lg shadow-emerald-500/20">?</div>
                         <div>
                             <p class="text-[10px] text-emerald-400 font-black uppercase tracking-[0.2em]">เจ้าหน้าที่ผู้แจ้งระบบ</p>
                             <p id="form-user-name" class="text-xl font-bold tracking-tight">กำลังโหลดข้อมูล...</p>
@@ -60,12 +62,24 @@
                                     <span class="w-6 h-6 bg-slate-100 rounded-lg flex items-center justify-center text-xs">1</span>
                                     หัวข้อปัญหาที่พบ
                                 </label>
-                                <div class="relative group">
-                                    <select id="topic" required class="w-full h-[60px] pl-12 pr-5 bg-slate-50 border-2 border-slate-50 rounded-2xl focus:bg-white focus:border-emerald-500 outline-none appearance-none font-bold text-slate-700 transition-all cursor-pointer">
-                                        <option value="">กรุณาเลือกหัวข้อ</option>
-                                    </select>
-                                    <i class="fa-solid fa-layer-group absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 group-focus-within:text-emerald-500 transition-colors"></i>
-                                    <i class="fa-solid fa-chevron-down absolute right-4 top-1/2 -translate-y-1/2 text-slate-300 pointer-events-none"></i>
+                                <div class="relative" id="custom-select-container">
+                                    <div id="selected-topic-display" class="w-full h-[60px] pl-12 pr-10 bg-slate-50 border-2 border-slate-50 rounded-2xl flex items-center font-bold text-slate-700 cursor-pointer hover:border-emerald-500 transition-all">
+                                        กรุณาเลือกหัวข้อ
+                                    </div>
+                                    <i class="fa-solid fa-layer-group absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none"></i>
+                                    <i class="fa-solid fa-chevron-down absolute right-4 top-1/2 -translate-y-1/2 text-slate-300 pointer-events-none transition-transform" id="dropdown-arrow"></i>
+
+                                    <div id="dropdown-menu" class="absolute left-0 right-0 mt-2 bg-white rounded-2xl border border-slate-100 z-[100] hidden overflow-hidden shadow-2xl">
+                                        <div class="p-3 border-b border-slate-50 bg-slate-50/50">
+                                            <div class="relative">
+                                                <input type="text" id="topic-search" placeholder="พิมพ์เพื่อค้นหาหัวข้อ..." class="w-full pl-9 pr-4 py-2 bg-white border border-slate-200 rounded-xl text-sm outline-none focus:border-emerald-500 transition-all font-medium">
+                                                <i class="fa-solid fa-magnifying-glass absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 text-xs"></i>
+                                            </div>
+                                        </div>
+                                        <div id="options-list" class="max-h-[380px] overflow-y-auto custom-scroll">
+                                            </div>
+                                    </div>
+                                    <input type="hidden" id="topic" required>
                                 </div>
                             </div>
 
@@ -131,8 +145,7 @@
 
     <script type="module">
         import { db, auth } from "./js/firebase.js";
-        import {     collection, addDoc, getDoc, doc, onSnapshot, serverTimestamp,  query, orderBy // <--- เพิ่ม 2 ตัวนี้  
-                } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+        import { collection, addDoc, getDoc, doc, onSnapshot, serverTimestamp, query, orderBy } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
         import { onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
 
         const CLOUDINARY_URL = "https://api.cloudinary.com/v1_1/diqcoq5rl/image/upload";
@@ -140,7 +153,9 @@
 
         let topicsData = {};
         let userDataGlobal = null;
+        let allTopicsSnapshot = []; // เก็บข้อมูลเพื่อใช้ Filter
 
+        // Auth Logic (คงเดิม)
         onAuthStateChanged(auth, async (user) => {
             if (user) {
                 try {
@@ -149,34 +164,84 @@
                     userDataGlobal = adminDoc.exists() ? adminDoc.data() : (userDoc.exists() ? userDoc.data() : {});
                     userDataGlobal.uid = user.uid;
                     userDataGlobal.email = user.email;
-
                     document.getElementById('form-user-name').innerText = userDataGlobal.name || user.email.split('@')[0];
                     document.getElementById('form-user-avatar').innerText = (userDataGlobal.name || user.email || "U")[0].toUpperCase();
                 } catch (e) { console.error(e); }
             } else { window.location.replace("login.html"); }
         });
-const q = query(collection(db, "topics"), orderBy("name", "asc"));  
-        onSnapshot(collection(db, "topics"), (snapshot) => {
-            const select = document.getElementById('topic');
-            select.innerHTML = '<option value="">กรุณาเลือกหัวข้อ</option>';
-            snapshot.forEach(doc => {
-                topicsData[doc.id] = doc.data();
-                const opt = document.createElement('option');
-                opt.value = doc.id;
-                opt.textContent = doc.data().name;
-                select.appendChild(opt);
+
+        // --- ระบบ Custom Dropdown (เพิ่มใหม่/แก้ไขจากของเดิม) ---
+        const selectContainer = document.getElementById('custom-select-container');
+        const selectedDisplay = document.getElementById('selected-topic-display');
+        const dropdownMenu = document.getElementById('dropdown-menu');
+        const optionsList = document.getElementById('options-list');
+        const topicInput = document.getElementById('topic');
+        const topicSearch = document.getElementById('topic-search');
+        const dropdownArrow = document.getElementById('dropdown-arrow');
+
+        // ฟังก์ชันวาดรายการ
+        function renderOptions(filterText = "") {
+            optionsList.innerHTML = "";
+            let count = 0;
+            allTopicsSnapshot.forEach(docSnap => {
+                const data = docSnap.data();
+                if (data.name.toLowerCase().includes(filterText.toLowerCase())) {
+                    const item = document.createElement('div');
+                    item.className = "px-5 py-4 hover:bg-emerald-50 hover:text-emerald-700 cursor-pointer font-bold text-slate-600 border-b border-slate-50 last:border-0 transition-colors flex items-center justify-between group";
+                    item.innerHTML = `<span>${data.name}</span> <i class="fa-solid fa-circle-check text-emerald-500 opacity-0 group-hover:opacity-100"></i>`;
+                    
+                    item.onclick = () => {
+                        topicInput.value = docSnap.id;
+                        selectedDisplay.innerText = data.name;
+                        selectedDisplay.classList.add('text-emerald-600');
+                        
+                        const detailInput = document.getElementById('detail-input');
+                        const originalLines = (data.checklist || "").split("\n").filter(l => l.trim() !== "");
+                        detailInput.value = originalLines.map(line => line + " ").join("\n");
+                        
+                        closeDropdown();
+                    };
+                    optionsList.appendChild(item);
+                    count++;
+                }
             });
+            if(count === 0) optionsList.innerHTML = `<div class="p-5 text-center text-slate-400 text-sm">ไม่พบหัวข้อที่ค้นหา</div>`;
+        }
+
+        // ดึงข้อมูลจาก Firestore แบบ Real-time
+        const qTopics = query(collection(db, "topics"), orderBy("name", "asc"));
+        onSnapshot(qTopics, (snapshot) => {
+            allTopicsSnapshot = snapshot.docs;
+            topicsData = {};
+            snapshot.forEach(d => topicsData[d.id] = d.data());
+            renderOptions();
         });
 
-        document.getElementById('topic').addEventListener('change', (e) => {
-            const topic = topicsData[e.target.value];
-            const detailInput = document.getElementById('detail-input');
-            if (topic) {
-                const originalLines = (topic.checklist || "").split("\n").filter(l => l.trim() !== "");
-                detailInput.value = originalLines.map(line => line + " ").join("\n");
-            } else { detailInput.value = ""; }
-        });
+        // Event Listeners สำหรับ Dropdown
+        selectedDisplay.onclick = (e) => {
+            e.stopPropagation();
+            const isHidden = dropdownMenu.classList.contains('hidden');
+            if (isHidden) openDropdown(); else closeDropdown();
+        };
 
+        function openDropdown() {
+            dropdownMenu.classList.remove('hidden');
+            dropdownArrow.classList.add('rotate-180');
+            topicSearch.focus();
+        }
+
+        function closeDropdown() {
+            dropdownMenu.classList.add('hidden');
+            dropdownArrow.classList.remove('rotate-180');
+            topicSearch.value = "";
+            renderOptions();
+        }
+
+        topicSearch.oninput = (e) => renderOptions(e.target.value);
+        window.onclick = () => closeDropdown();
+        // ---------------------------------------------------
+
+        // ฟังก์ชัน Upload และ Submit (คงเดิม)
         async function uploadImage(file) {
             if (!file) return "";
             if (file.size > 2 * 1024 * 1024) throw new Error("ขนาดรูปภาพห้ามเกิน 2MB");
@@ -193,6 +258,7 @@ const q = query(collection(db, "topics"), orderBy("name", "asc"));
             e.preventDefault();
             const btn = document.getElementById('submitBtn');
             if(!userDataGlobal) return alert("ไม่พบข้อมูลผู้ใช้");
+            if(!topicInput.value) return Swal.fire({ icon: 'warning', title: 'กรุณาเลือกหัวข้อปัญหา' });
 
             btn.disabled = true;
             btn.innerHTML = `<i class="fa-solid fa-spinner animate-spin"></i> กำลังส่งข้อมูล...`;
@@ -200,7 +266,7 @@ const q = query(collection(db, "topics"), orderBy("name", "asc"));
             try {
                 const file = document.getElementById('ticket-image').files[0];
                 const imageUrl = await uploadImage(file);
-                const topicId = document.getElementById('topic').value;
+                const topicId = topicInput.value;
                 const selectedTopic = topicsData[topicId];
                 const slaHours = parseInt(selectedTopic.sla) || 0;
                 const dDate = new Date();

@@ -198,3 +198,51 @@ if (!shouldNotify) return;
         window.addEventListener('click', () => { if (!notiDrop.classList.contains('hidden')) notiDrop.classList.add('hidden'); });
     }
 }
+// ==========================================================
+// 4. LOGOUT SYSTEM (เพิ่มใหม่)
+// ==========================================================
+document.addEventListener("click", async (e) => {
+    // ตรวจสอบว่าคลิกที่ปุ่ม logoutBtn หรือ element ข้างในปุ่ม
+    const logoutBtn = e.target.closest('#logoutBtn');
+    
+    if (logoutBtn) {
+        e.preventDefault();
+
+        // ใช้ SweetAlert2 แสดงการยืนยัน (นายโหลดไว้ในหน้า HTML แล้ว)
+        const result = await Swal.fire({
+            title: 'ยืนยันการออกจากระบบ?',
+            text: "คุณต้องการออกจากเซสชันปัจจุบันหรือไม่",
+            icon: 'question',
+            showCancelButton: true,
+            confirmButtonColor: '#10b981', // สี emerald-600
+            cancelButtonColor: '#64748b', // สี slate-500
+            confirmButtonText: 'ใช่, ออกจากระบบ',
+            cancelButtonText: 'ยกเลิก',
+            reverseButtons: true,
+            customClass: {
+                popup: 'rounded-[2.5rem]',
+                confirmButton: 'rounded-xl px-6 py-3',
+                cancelButton: 'rounded-xl px-6 py-3'
+            }
+        });
+
+        if (result.isConfirmed) {
+            try {
+                // บันทึก Log ก่อนออก
+                const user = auth.currentUser;
+                if (user) {
+                    await createLog(user.displayName || user.email, user.email, 'LOGOUT', 'ผู้ใช้งานออกจากระบบ');
+                }
+
+                // สั่ง Firebase Sign Out
+                await auth.signOut();
+                
+                // เด้งไปหน้า Login
+                window.location.replace("login.html");
+            } catch (err) {
+                console.error("Logout Error:", err);
+                Swal.fire('เกิดข้อผิดพลาด', 'ไม่สามารถออกจากระบบได้', 'error');
+            }
+        }
+    }
+});

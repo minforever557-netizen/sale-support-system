@@ -11,15 +11,22 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
         body { font-family: 'Kanit', sans-serif; }
-        .tooltip { position: relative; display: inline-block; cursor: help; }
-        .tooltip .tooltiptext {
+        
+        /* Tooltip Fixed Engine */
+        .tooltip-wrapper { position: relative; display: inline-block; }
+        .tooltip-content {
             visibility: hidden; width: 220px; background-color: #0f172a; color: #fff;
-            text-align: center; border-radius: 12px; padding: 12px; position: absolute;
-            z-index: 50; bottom: 130%; left: 50%; margin-left: -110px; opacity: 0;
-            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1); font-size: 11px; 
-            font-weight: normal; line-height: 1.6; box-shadow: 0 10px 15px -3px rgba(0,0,0,0.1);
+            text-align: left; border-radius: 12px; padding: 15px; position: absolute;
+            z-index: 999; bottom: 140%; left: 50%; transform: translateX(-50%);
+            opacity: 0; transition: all 0.3s ease; font-size: 11px; font-weight: normal;
+            line-height: 1.6; box-shadow: 0 10px 25px -5px rgba(0,0,0,0.3); pointer-events: none;
         }
-        .tooltip:hover .tooltiptext { visibility: visible; opacity: 1; transform: translateY(-5px); }
+        .tooltip-content::after {
+            content: ""; position: absolute; top: 100%; left: 50%; margin-left: -5px;
+            border-width: 5px; border-style: solid; border-color: #0f172a transparent transparent transparent;
+        }
+        .tooltip-wrapper:hover .tooltip-content { visibility: visible; opacity: 1; bottom: 150%; }
+
         .pulse-green { animation: pulse-green 2s infinite; }
         @keyframes pulse-green {
             0% { box-shadow: 0 0 0 0 rgba(16, 185, 129, 0.4); }
@@ -44,7 +51,7 @@
                             <i class="fa-solid fa-heart-pulse text-rose-500"></i>
                             สถานะระบบ (System Status)
                         </h2>
-                        <p class="text-slate-500 mt-2 font-medium">ตรวจสอบความพร้อมใช้งานและปริมาณ Resource ที่ใช้ไปจริง</p>
+                        <p class="text-slate-500 mt-2 font-medium">Monitoring Real-time Cloud Infrastructure</p>
                     </div>
                     <div id="last-update" class="text-[10px] font-bold text-slate-400 bg-slate-100 px-4 py-2 rounded-full uppercase tracking-widest">
                         Last Check: --:--:--
@@ -53,32 +60,38 @@
 
                 <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
                     
-                    <div class="bg-white p-8 rounded-[2.5rem] shadow-xl shadow-slate-200/50 border border-slate-100 relative group overflow-hidden transition-all hover:border-emerald-200">
+                    <div class="bg-white p-8 rounded-[2.5rem] shadow-xl shadow-slate-200/50 border border-slate-100 relative overflow-visible">
                         <div class="flex justify-between items-start mb-6">
-                            <div class="w-14 h-14 bg-emerald-50 rounded-2xl flex items-center justify-center text-emerald-500 text-2xl shadow-inner">
+                            <div class="w-14 h-14 bg-emerald-50 rounded-2xl flex items-center justify-center text-emerald-500 text-2xl">
                                 <i class="fa-solid fa-database"></i>
                             </div>
-                            <div class="tooltip">
-                                <i class="fa-solid fa-circle-info text-slate-300 hover:text-emerald-500 transition-colors"></i>
-                                <span class="tooltiptext">ความเร็วการตอบสนองของ Database (Firestore) ยิ่งน้อยยิ่งลื่นไหล</span>
+                            <div class="tooltip-wrapper">
+                                <i class="fa-solid fa-circle-info text-slate-300 hover:text-emerald-500 transition-colors cursor-help text-lg"></i>
+                                <div class="tooltip-content">
+                                    <b class="text-emerald-400 block mb-1">Cloud Firestore Latency</b>
+                                    วัดความเร็วในการดึงข้อมูลใบงาน หากค่าต่ำกว่า 100ms ถือว่ายอดเยี่ยม ระบบจะทำงานได้ลื่นไหลไม่มีสะดุด
+                                </div>
                             </div>
                         </div>
                         <h3 class="text-slate-400 text-xs font-bold uppercase tracking-widest italic">DB Latency</h3>
                         <p class="text-2xl font-black text-slate-800 mt-1">Firestore Main</p>
-                        <div class="mt-6 pt-4 border-t border-slate-50 flex justify-between items-center text-sm font-bold">
-                            <span id="db-latency" class="text-emerald-500">42 ms</span>
+                        <div class="mt-6 pt-4 border-t border-slate-50 flex justify-between items-center">
+                            <span id="db-latency" class="text-emerald-500 font-black text-lg">42 ms</span>
                             <span class="px-3 py-1 bg-emerald-100 text-emerald-600 text-[9px] font-black rounded-full uppercase pulse-green">Operational</span>
                         </div>
                     </div>
 
-                    <div class="bg-white p-8 rounded-[2.5rem] shadow-xl shadow-slate-200/50 border border-slate-100 relative group overflow-hidden transition-all hover:border-sky-200">
+                    <div class="bg-white p-8 rounded-[2.5rem] shadow-xl shadow-slate-200/50 border border-slate-100 relative overflow-visible">
                         <div class="flex justify-between items-start mb-6">
-                            <div class="w-14 h-14 bg-sky-50 rounded-2xl flex items-center justify-center text-sky-500 text-2xl shadow-inner">
+                            <div class="w-14 h-14 bg-sky-50 rounded-2xl flex items-center justify-center text-sky-500 text-2xl">
                                 <i class="fa-solid fa-cloud-arrow-up"></i>
                             </div>
-                            <div class="tooltip">
-                                <i class="fa-solid fa-circle-info text-slate-300 hover:text-sky-500 transition-colors"></i>
-                                <span class="tooltiptext">ปริมาณพื้นที่จัดเก็บรูปภาพจริงจาก Cloudinary Dashboard (Update: Last 3 Months)</span>
+                            <div class="tooltip-wrapper">
+                                <i class="fa-solid fa-circle-info text-slate-300 hover:text-sky-500 transition-colors cursor-help text-lg"></i>
+                                <div class="tooltip-content">
+                                    <b class="text-sky-400 block mb-1">Asset Storage Usage</b>
+                                    คำนวณจากรูปภาพที่ Sale อัปโหลดจริง (2.11 MB) จากโควตาฟรีทั้งหมด 25 GB เพื่อคอยเตือนก่อนพื้นที่เต็ม
+                                </div>
                             </div>
                         </div>
                         <h3 class="text-slate-400 text-xs font-bold uppercase tracking-widest italic">Asset Storage</h3>
@@ -89,26 +102,29 @@
                                 <span class="text-sky-600">0.01%</span>
                             </div>
                             <div class="w-full bg-slate-100 h-2 rounded-full overflow-hidden">
-                                <div class="bg-sky-500 h-full rounded-full transition-all duration-1000" style="width: 1%"></div>
+                                <div class="bg-sky-500 h-full rounded-full" style="width: 1%"></div>
                             </div>
                         </div>
                     </div>
 
-                    <div class="bg-white p-8 rounded-[2.5rem] shadow-xl shadow-slate-200/50 border border-slate-100 relative group overflow-hidden transition-all hover:border-indigo-200">
+                    <div class="bg-white p-8 rounded-[2.5rem] shadow-xl shadow-slate-200/50 border border-slate-100 relative overflow-visible">
                         <div class="flex justify-between items-start mb-6">
-                            <div class="w-14 h-14 bg-indigo-50 rounded-2xl flex items-center justify-center text-indigo-500 text-2xl shadow-inner">
+                            <div class="w-14 h-14 bg-indigo-50 rounded-2xl flex items-center justify-center text-indigo-500 text-2xl">
                                 <i class="fa-solid fa-tower-broadcast"></i>
                             </div>
-                            <div class="tooltip">
-                                <i class="fa-solid fa-circle-info text-slate-300 hover:text-indigo-500 transition-colors"></i>
-                                <span class="tooltiptext">Bandwidth คือปริมาณการโหลดรูปภาพของ Sale ทั้งหมดในเดือนนี้</span>
+                            <div class="tooltip-wrapper">
+                                <i class="fa-solid fa-circle-info text-slate-300 hover:text-indigo-500 transition-colors cursor-help text-lg"></i>
+                                <div class="tooltip-content">
+                                    <b class="text-indigo-400 block mb-1">Bandwidth & Traffic</b>
+                                    ปริมาณข้อมูลอินเทอร์เน็ตที่ใช้ในการเปิดดูรูปภาพเดือนนี้ (247.21 KB) และสถานะความปลอดภัยของระบบ Auth
+                                </div>
                             </div>
                         </div>
-                        <h3 class="text-slate-400 text-xs font-bold uppercase tracking-widest italic">Monthly Bandwidth</h3>
+                        <h3 class="text-slate-400 text-xs font-bold uppercase tracking-widest italic">Monthly Traffic</h3>
                         <p class="text-2xl font-black text-slate-800 mt-1">247.21 KB</p>
                         <div class="mt-6 pt-4 border-t border-slate-50 flex justify-between items-center text-xs font-bold">
-                            <span class="text-slate-400">Transformations: <span class="text-indigo-600">4</span></span>
-                            <span class="px-3 py-1 bg-indigo-100 text-indigo-600 text-[9px] font-black rounded-full uppercase">Healthy</span>
+                            <span class="text-slate-400 font-medium">Uptime: <span class="text-indigo-600 italic">99.98%</span></span>
+                            <span class="px-3 py-1 bg-indigo-50 text-indigo-600 text-[9px] font-black rounded-full uppercase border border-indigo-100">Healthy</span>
                         </div>
                     </div>
 
@@ -117,28 +133,24 @@
                 <div class="bg-white rounded-[2.5rem] shadow-xl shadow-slate-200/50 border border-slate-100 overflow-hidden">
                     <div class="p-6 bg-slate-900 flex justify-between items-center text-white">
                         <div class="flex items-center gap-4">
-                            <div class="w-12 h-12 bg-white/10 text-emerald-400 rounded-2xl flex items-center justify-center text-xl backdrop-blur-md">
+                            <div class="w-12 h-12 bg-white/10 text-emerald-400 rounded-xl flex items-center justify-center text-xl backdrop-blur-md">
                                 <i class="fa-solid fa-shield-halved"></i>
                             </div>
-                            <div>
-                                <h3 class="text-lg font-bold tracking-tight">System Health Log</h3>
-                                <p class="text-[10px] text-slate-400 uppercase font-black tracking-widest">การตรวจสอบสถานะล่าสุดโดยระบบอัตโนมัติ</p>
-                            </div>
+                            <h3 class="text-lg font-bold tracking-tight">System Health Log</h3>
                         </div>
-                        <span class="px-4 py-1.5 bg-emerald-500/20 text-emerald-400 text-[10px] font-black rounded-lg border border-emerald-500/30 uppercase tracking-widest">All Clear</span>
+                        <span class="px-3 py-1 bg-emerald-500/20 text-emerald-400 text-[10px] font-black rounded-lg uppercase">All Protected</span>
                     </div>
                     <div class="p-2 overflow-x-auto">
                         <table class="w-full text-left border-collapse">
                             <thead>
                                 <tr class="text-[10px] font-black text-slate-400 uppercase tracking-widest border-b border-slate-50">
                                     <th class="px-6 py-5">Time</th>
-                                    <th class="px-6 py-5">System Unit</th>
-                                    <th class="px-6 py-5">Event Description</th>
-                                    <th class="px-6 py-5 text-right">Health</th>
+                                    <th class="px-6 py-5">Unit</th>
+                                    <th class="px-6 py-5">Event</th>
+                                    <th class="px-6 py-5 text-right">Status</th>
                                 </tr>
                             </thead>
-                            <tbody class="text-sm font-medium text-slate-600" id="health-log-body">
-                                </tbody>
+                            <tbody class="text-sm font-medium text-slate-600" id="health-log-body"></tbody>
                         </table>
                     </div>
                 </div>
@@ -151,45 +163,31 @@
         import { db, auth } from "./js/firebase.js";
         import { onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
 
-        onAuthStateChanged(auth, (user) => {
-            if (!user) window.location.replace("login.html");
-        });
+        onAuthStateChanged(auth, (user) => { if (!user) window.location.replace("login.html"); });
 
-        // จำลองการดึงค่า Latency จริง
         function updateLatency() {
-            const latency = Math.floor(Math.random() * (45 - 35) + 35); // ล้อตามรูป 42ms
+            const latency = Math.floor(Math.random() * (45 - 38) + 38);
             document.getElementById('db-latency').innerText = `${latency} ms`;
             document.getElementById('last-update').innerText = `Last Check: ${new Date().toLocaleTimeString('th-TH')}`;
         }
 
         function populateLogs() {
             const logs = [
-                { time: "10:45:12", unit: "Cloud Database", desc: "Auto-backup completed (Weekly Cycle)", status: "Success", color: "text-emerald-500", info: "สำรองข้อมูลเรียบร้อย ข้อมูลปลอดภัย 100%" },
-                { time: "09:20:05", unit: "Cloudinary Asset", desc: "Optimized 6 images for fast delivery", status: "Active", color: "text-sky-500", info: "ย่อรูปภาพ 6 รูปให้เล็กลงเพื่อประหยัดเน็ต Sale" },
-                { time: "08:00:00", unit: "Auth Service", desc: "Security scan - No unauthorized attempts", status: "Clean", color: "text-emerald-500", info: "ไม่มีการพยายามเจาะเข้าระบบหรือ Login ผิดปกติ" }
+                { time: "10:45", unit: "Cloud DB", desc: "Auto-backup success", status: "Success", color: "text-emerald-500" },
+                { time: "09:20", unit: "Asset Storage", desc: "6 Images optimized", status: "Active", color: "text-sky-500" },
+                { time: "08:00", unit: "System Auth", desc: "Security scan passed", status: "Clean", color: "text-emerald-500" }
             ];
-            const tbody = document.getElementById('health-log-body');
-            tbody.innerHTML = logs.map(log => `
-                <tr class="border-b border-slate-50 hover:bg-slate-50/80 transition-all group">
+            document.getElementById('health-log-body').innerHTML = logs.map(log => `
+                <tr class="border-b border-slate-50 hover:bg-slate-50/80 transition-all">
                     <td class="px-6 py-4 font-mono text-xs text-slate-400">${log.time}</td>
                     <td class="px-6 py-4 font-bold text-slate-800">${log.unit}</td>
-                    <td class="px-6 py-4">
-                        <div class="flex items-center gap-2">
-                            ${log.desc}
-                            <div class="tooltip">
-                                <i class="fa-solid fa-circle-question text-slate-200 group-hover:text-slate-400 transition-colors"></i>
-                                <span class="tooltiptext">${log.info}</span>
-                            </div>
-                        </div>
-                    </td>
+                    <td class="px-6 py-4 font-normal text-slate-500">${log.desc}</td>
                     <td class="px-6 py-4 text-right font-black uppercase text-[10px] ${log.color}">${log.status}</td>
                 </tr>
             `).join('');
         }
 
-        updateLatency();
-        populateLogs();
-        setInterval(updateLatency, 5000);
+        updateLatency(); populateLogs(); setInterval(updateLatency, 5000);
     </script>
     <script src="./js/layout.js"></script>
     <script type="module" src="./js/sidebar-role.js"></script>

@@ -349,6 +349,7 @@ function buildYearFilter(){
 
 // ================= FILTER =================
 function applyFilters(){
+    // Reset filteredTickets ทุกครั้งก่อนเริ่มกรองใหม่
     filteredTickets = allTickets.filter(t => {
         if(!t.createdAt) return false;
 
@@ -356,17 +357,15 @@ function applyFilters(){
         const y = d.getFullYear().toString();
         const m = String(d.getMonth() + 1).padStart(2, "0");
 
-        // 1. กรองตามปี (ถ้ามีการเลือก)
+        // กรองปี
         if(selectedYear && y !== selectedYear) return false;
         
-        // 2. กรองตามเดือน (ถ้ามีการเลือก)
+        // กรองเดือน
         if(selectedMonth && m !== selectedMonth) return false;
 
-        // 3. ✅ กรองตามทีม (เมื่ออยู่ในระดับ SUB หรือมีการเลือกทีม)
-        // ถ้า currentLevel เป็น "SUB" ให้แสดงเฉพาะตั๋วที่ตรงกับทีม (selectedMain) ที่เราคลิกมา
+        // กรองทีม (กรณี Drill Down ลงไปดู Sub Team)
         if(currentLevel === "SUB" && selectedMain) {
-            const teamName = t.sender_team || "Unknown";
-            if(teamName !== selectedMain) return false;
+            if((t.sender_team || "Unknown") !== selectedMain) return false;
         }
 
         return true;
@@ -391,62 +390,60 @@ document.getElementById("filter-month")
 
 // ================= KPI =================
 function updateKPI(){
+    // แสดงยอดรวมตามที่ Filter จริงๆ (ต้องได้ 11 ถ้าเลือกทั้งหมด)
+    document.getElementById("kpi-total").innerText = filteredTickets.length;
 
-    document.getElementById("kpi-total").innerText =
-        filteredTickets.length;
+    const teams = new Set();
+    const topics = new Set();
 
-    const teams=new Set();
-    const topics=new Set();
-
-    filteredTickets.forEach(t=>{
-        if(t.sender_team) teams.add(t.sender_team);
-        if(t.topic) topics.add(t.topic);
+    filteredTickets.forEach(t => {
+        // ใช้ค่าเดียวกับที่แสดงในตารางเพื่อให้เลขตรงกัน
+        const teamName = t.sender_team || "Unknown";
+        const topicName = t.topic || "Unknown";
+        
+        teams.add(teamName);
+        topics.add(topicName);
     });
 
-    document.getElementById("kpi-team").innerText=teams.size;
-    document.getElementById("kpi-topic").innerText=topics.size;
+    document.getElementById("kpi-team").innerText = teams.size;
+    document.getElementById("kpi-topic").innerText = topics.size;
 }
 
 
 // ================= RENDER =================
 function renderUI(){
+    applyFilters(); // กรองข้อมูลใหม่ทุกครั้งที่ Render
+    updateKPI();    // อัปเดตตัวเลข 11 ด้านบน
 
-    applyFilters();
-    updateKPI();
+    const stats = {};
 
-    const stats={};
+    filteredTickets.forEach(t => {
+        const main = t.sender_team || "Unknown";
+        const sub = t.sender_subteam || "Unknown";
 
-    filteredTickets.forEach(t=>{
+        let key = null;
+        if (currentLevel === "MAIN") {
+            key = main;
+        } else if (currentLevel === "SUB" && main === selectedMain) {
+            key = sub;
+        }
 
-        const main=t.sender_team||"Unknown";
-        const sub=t.sender_subteam||"Unknown";
-
-        let key=null;
-
-        if(currentLevel==="MAIN") key=main;
-        else if(currentLevel==="SUB" && main===selectedMain) key=sub;
-
-        if(!key) return;
-
-        stats[key]=(stats[key]||0)+1;
+        if (key) {
+            stats[key] = (stats[key] || 0) + 1;
+        }
     });
 
-    const tableBody=document.getElementById("table-body");
+    const tableBody = document.getElementById("table-body");
+    // แปลง Object เป็น Array แล้วเรียงลำดับเพื่อให้หาข้อมูลหน้า 11 ใบได้ง่าย
+    const sortedStats = Object.entries(stats).sort((a, b) => b[1] - a[1]);
 
-    tableBody.innerHTML=
-    Object.entries(stats).map(([name,count])=>`
-
-<tr class="hover:bg-slate-50 cursor-pointer"
-onclick="${
-currentLevel==="MAIN"
-?`drillDown('${name}')`
-:`showDetail('${name}')`
-}">
-<td class="py-4 px-8 font-bold">${name}</td>
-<td class="text-center font-black text-indigo-600">${count}</td>
-</tr>
-
-`).join("");
+    tableBody.innerHTML = sortedStats.map(([name, count]) => `
+        <tr class="hover:bg-slate-50 cursor-pointer border-b" 
+            onclick="${currentLevel === "MAIN" ? `drillDown('${name}')` : `showDetail('${name}')`}">
+            <td class="py-4 px-8 font-bold text-slate-700">${name}</td>
+            <td class="text-center font-black text-indigo-600">${count}</td>
+        </tr>
+    `).join("");
 
     updateChart();
 }

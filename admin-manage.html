@@ -120,6 +120,52 @@
 
         let currentTickets = [];
         let unsubscribe = null;
+        // --- ส่วนที่เพิ่มเข้าไปใน <script type="module"> ท้ายๆ ก่อนจบ ---
+
+async function autoCleanupOldData() {
+    console.log("System: กำลังเริ่มกระบวนการทำความสะอาดข้อมูลเก่า (180 วัน)...");
+    
+    // 1. คำนวณวันที่ย้อนหลัง 6 เดือน (180 วัน)
+    const sixMonthsAgo = new Date();
+    sixMonthsAgo.setDate(sixMonthsAgo.getDate() - 180);
+
+    // 2. Query หา Ticket ที่เก่ากว่า 6 เดือน (ใช้ createdAt)
+    // หมายเหตุ: ต้องใช้ getDocs แบบลบทีละตัวเพราะ Firestore Client SDK ไม่รองรับการลบแบบ Bulk Query โดยตรง
+    const q = query(collection(db, "tickets"), where("createdAt", "<", sixMonthsAgo));
+    
+    try {
+        const querySnapshot = await getDocs(q);
+        const totalToDelete = querySnapshot.size;
+
+        if (totalToDelete === 0) {
+            console.log("System: ไม่พบข้อมูลที่เก่ากว่า 6 เดือน");
+            return;
+        }
+
+        let deletedCount = 0;
+        for (const docSnap of querySnapshot.docs) {
+            await deleteDoc(doc(db, "tickets", docSnap.id));
+            deletedCount++;
+        }
+
+        console.log(`System: ทำความสะอาดสำเร็จ! ลบไปทั้งหมด ${deletedCount} รายการ`);
+        
+        // ถ้านายอยากให้ Admin รู้ว่ามีการลบเกิดขึ้น ให้เปิดใช้บรรทัดล่างนี้ครับ
+        // Toast.fire({ icon: 'info', title: `ระบบลบใบงานเก่าเกิน 6 เดือนทิ้งแล้ว ${deletedCount} รายการ` });
+
+    } catch (error) {
+        console.error("System Error (Auto-Cleanup):", error);
+    }
+}
+
+// เรียกใช้งานเมื่อ Admin Logged In เรียบร้อย
+onAuthStateChanged(auth, (user) => {
+    if (user) { 
+        initTicketsListener(); 
+        autoCleanupOldData(); // <--- สั่งให้ทำงานทันทีที่ Admin เข้าหน้าเว็บ
+    } 
+    else { window.location.replace("login.html"); }
+});
 
         // --- ฟังก์ชันใหม่: แสดงวันที่แบบไทย พ.ศ. ---
         function formatThaiDate(date) {

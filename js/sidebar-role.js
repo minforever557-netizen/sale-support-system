@@ -12,7 +12,9 @@ import {
   limit,
   doc,
   updateDoc,
-  arrayUnion
+  arrayUnion,
+  addDoc,
+  serverTimestamp
 } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
 
 import {
@@ -20,7 +22,20 @@ import {
 } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
 
 console.log("ROLE CHECK & NOTIFICATION SYSTEM START");
-
+// ฟังก์ชันบันทึก Log กิจกรรม
+const createLog = async (userName, userEmail, actionType, details) => {
+    try {
+        await addDoc(collection(db, "logs"), {
+            userName: userName || 'System',
+            userEmail: userEmail || 'system@system.com',
+            actionType: actionType,
+            details: details,
+            path: window.location.pathname.split('/').pop() || 'index.html',
+            timestamp: serverTimestamp(),
+            isError: actionType.includes('ERROR')
+        });
+    } catch (e) { console.error("Log error:", e); }
+};
 // ==========================================================
 // 2. MAIN CONTROL (จัดการเรื่อง Role และการเรียก Notification)
 // ==========================================================
@@ -48,6 +63,8 @@ document.addEventListener("layoutLoaded", () => {
         const role = (userData.role || "").toLowerCase();
 
         console.log("USER ROLE =", role);
+const pageTitle = document.title;
+createLog(userData.name || user.email, user.email, 'PAGE_VIEW', `เข้าใช้งานหน้า ${pageTitle}`);
 
         // SHOW / HIDE ADMIN MENU
         const adminMenu = document.getElementById("admin-menu-section");

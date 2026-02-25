@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Dashboard - Sale Support System</title>
+
+<script src="https://cdn.tailwindcss.com"></script>
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+
+<link href="https://fonts.googleapis.com/css2?family=Kanit:wght@300;400;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="./css/style.css">
+ <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+</head>
+
+<body class="flex h-screen overflow-hidden bg-slate-50">
+
+<!-- SIDEBAR -->
+<aside id="sidebar-container"
+class="w-64 shrink-0 h-full bg-white border-r border-slate-200"></aside>
+
+<!-- RIGHT AREA -->
+<div class="flex-1 flex flex-col min-w-0">
+
+        <!-- TOPBAR -->
+        <div id="topbar-container"></div>
+
+<main class="h-full overflow-y-auto p-6 md:p-10 max-w-4xl mx-auto w-full space-y-8">
+    <h1 class="text-3xl font-bold text-slate-800">เกี่ยวกับระบบ</h1>
+
+    <div class="bg-white p-8 rounded-[2.5rem] shadow-sm border border-slate-100">
+        <h3 class="text-lg font-bold text-emerald-600 mb-4 italic">Vision & Purpose</h3>
+        <p class="text-slate-600 leading-relaxed">
+            ระบบ Sale Support System พัฒนาขึ้นเพื่อเพิ่มประสิทธิภาพในการประสานงาน...
+        </p>
+    </div>
+
+    <div class="bg-amber-50 p-8 rounded-[2.5rem] border border-amber-100">
+        <h3 class="text-lg font-bold text-amber-900 mb-4">นโยบายการจัดเก็บข้อมูล</h3>
+        <ul class="list-disc list-inside text-amber-800 space-y-2 text-sm">
+            <li>ข้อมูลใบงานจะถูกจัดเก็บในระบบเป็นเวลา 180 วันนับจากวันที่สร้าง</li>
+            <li>ไฟล์แนบและรูปภาพจะถูกล้างตามรอบการบำรุงรักษาทุกสิ้นเดือน</li>
+        </ul>
+    </div>
+
+    <div class="text-center text-slate-400 text-xs">
+        <p>Developed by [ชื่อของนายหรือทีม]</p>
+        <p>Version 1.2.4 (2026-02-25)</p>
+    </div>
+</main>

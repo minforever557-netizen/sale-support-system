@@ -1,0 +1,200 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>จัดการประกาศ - Sale Support System</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Kanit:wght@300;400;600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="./css/style.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>body { font-family: 'Kanit', sans-serif; }</style>
+</head>
+<body class="bg-slate-50 min-h-screen">
+
+    <div class="flex min-h-screen">
+        <aside id="sidebar-container" class="w-64 shrink-0 bg-white border-r border-slate-200 hidden md:block sticky top-0 h-screen"></aside>
+
+        <div class="flex-1 flex flex-col min-w-0">
+            <div id="topbar-container" class="sticky top-0 z-40 bg-white/80 backdrop-blur-md border-b border-slate-200"></div>
+
+            <main class="p-4 md:p-10 max-w-6xl mx-auto w-full space-y-8 animate-in fade-in duration-500">
+                
+                <div class="flex flex-col md:flex-row md:items-center justify-between gap-4">
+                    <div>
+                        <h2 class="text-3xl font-black text-slate-800 tracking-tight flex items-center gap-3">
+                            <i class="fa-solid fa-bullhorn text-indigo-600"></i>
+                            Broadcast Management
+                        </h2>
+                        <p class="text-slate-500 font-medium">จัดการประกาศและข่าวสารสำหรับพนักงานในระบบ</p>
+                    </div>
+                    <button onclick="openBroadcastForm()" class="bg-indigo-600 hover:bg-indigo-700 text-white px-6 py-3 rounded-2xl font-bold transition-all shadow-lg shadow-indigo-200 flex items-center gap-2 active:scale-95">
+                        <i class="fa-solid fa-plus"></i> เพิ่มประกาศใหม่
+                    </button>
+                </div>
+
+                <div class="bg-white rounded-[2.5rem] shadow-xl shadow-slate-200/50 border border-slate-100 overflow-hidden">
+                    <div class="p-2 overflow-x-auto">
+                        <table class="w-full text-left border-collapse">
+                            <thead>
+                                <tr class="text-[10px] font-black text-slate-400 uppercase tracking-widest border-b border-slate-50">
+                                    <th class="px-6 py-5">วันเวลา / ผู้แก้ไข</th>
+                                    <th class="px-6 py-5">หัวข้อ (Subject)</th>
+                                    <th class="px-6 py-5">รายละเอียดโดยย่อ</th>
+                                    <th class="px-6 py-5 text-right">จัดการ</th>
+                                </tr>
+                            </thead>
+                            <tbody class="text-sm font-medium text-slate-600" id="broadcast-list">
+                                </tbody>
+                        </table>
+                    </div>
+                </div>
+            </main>
+        </div>
+    </div>
+
+    <script type="module">
+        import { db, auth } from "./js/firebase.js";
+        import { 
+            collection, getDocs, addDoc, updateDoc, deleteDoc, doc, 
+            serverTimestamp, orderBy, query, getDoc 
+        } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+        import { onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
+
+        let currentUserData = null;
+
+        // 1. ตรวจสอบสิทธิ์และดึงข้อมูล User
+        onAuthStateChanged(auth, async (user) => {
+            if (!user) window.location.replace("login.html");
+            const adminDoc = await getDoc(doc(db, "admin", user.uid));
+            if (adminDoc.exists()) {
+                currentUserData = adminDoc.data();
+                loadBroadcasts();
+            }
+        });
+
+        // 2. ฟังก์ชันโหลดรายการ Broadcast
+        async function loadBroadcasts() {
+            const listEl = document.getElementById('broadcast-list');
+            listEl.innerHTML = '<tr><td colspan="4" class="p-10 text-center text-slate-400">กำลังโหลดข้อมูล...</td></tr>';
+            
+            try {
+                const q = query(collection(db, "broadcasts"), orderBy("createdAt", "desc"));
+                const snap = await getDocs(q);
+                
+                if(snap.empty) {
+                    listEl.innerHTML = '<tr><td colspan="4" class="p-10 text-center text-slate-400 italic">ยังไม่มีข้อมูลประกาศ</td></tr>';
+                    return;
+                }
+
+                let html = '';
+                snap.forEach(docSnap => {
+                    const data = docSnap.data();
+                    const date = data.createdAt ? data.createdAt.toDate().toLocaleString('th-TH') : 'กำลังบันทึก...';
+                    const editor = data.updatedBy || 'System';
+
+                    html += `
+                        <tr class="border-b border-slate-50 hover:bg-slate-50 transition-all">
+                            <td class="px-6 py-4 whitespace-nowrap">
+                                <div class="text-[11px] font-bold text-slate-800">${date}</div>
+                                <div class="text-[10px] text-indigo-500 uppercase tracking-tighter">By: ${editor}</div>
+                            </td>
+                            <td class="px-6 py-4 font-bold text-slate-800">${data.subject}</td>
+                            <td class="px-6 py-4 text-slate-500 max-w-xs truncate">${data.detail}</td>
+                            <td class="px-6 py-4 text-right">
+                                <div class="flex justify-end gap-2">
+                                    <button onclick="openBroadcastForm('${docSnap.id}', '${data.subject}', '${data.detail.replace(/'/g, "\\'")}')" class="w-8 h-8 rounded-lg bg-amber-50 text-amber-600 flex items-center justify-center hover:bg-amber-100 transition-colors">
+                                        <i class="fa-solid fa-pen-to-square text-xs"></i>
+                                    </button>
+                                    <button onclick="deleteBroadcast('${docSnap.id}')" class="w-8 h-8 rounded-lg bg-rose-50 text-rose-600 flex items-center justify-center hover:bg-rose-100 transition-colors">
+                                        <i class="fa-solid fa-trash text-xs"></i>
+                                    </button>
+                                </div>
+                            </td>
+                        </tr>
+                    `;
+                });
+                listEl.innerHTML = html;
+            } catch (err) { console.error(err); }
+        }
+
+        // 3. ฟังก์ชัน เพิ่ม/แก้ไข (Modal Form)
+        window.openBroadcastForm = async (id = null, oldSubject = '', oldDetail = '') => {
+            const { value: formValues } = await Swal.fire({
+                title: `<h3 class="font-black text-slate-800">${id ? 'แก้ไขประกาศ' : 'เพิ่มประกาศใหม่'}</h3>`,
+                html: `
+                    <div class="text-left space-y-4 px-2">
+                        <div>
+                            <label class="text-[10px] font-black uppercase text-slate-400 tracking-widest">หัวข้อประกาศ</label>
+                            <input id="swal-subject" class="w-full p-3 mt-1 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-indigo-500 outline-none font-kanit" value="${oldSubject}" placeholder="ใส่หัวข้อข่าวสาร...">
+                        </div>
+                        <div>
+                            <label class="text-[10px] font-black uppercase text-slate-400 tracking-widest">รายละเอียด</label>
+                            <textarea id="swal-detail" class="w-full p-3 mt-1 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-indigo-500 outline-none font-kanit h-40" placeholder="พิมพ์ข้อความที่ต้องการแจ้งเตือน...">${oldDetail}</textarea>
+                        </div>
+                    </div>
+                `,
+                focusConfirm: false,
+                showCancelButton: true,
+                confirmButtonText: id ? 'อัปเดตข้อมูล' : 'ลงประกาศ',
+                confirmButtonColor: '#4f46e5',
+                cancelButtonText: 'ยกเลิก',
+                preConfirm: () => {
+                    const subject = document.getElementById('swal-subject').value;
+                    const detail = document.getElementById('swal-detail').value;
+                    if (!subject || !detail) {
+                        Swal.showValidationMessage('กรุณากรอกข้อมูลให้ครบถ้วน');
+                    }
+                    return { subject, detail };
+                },
+                customClass: { popup: 'rounded-[2rem]' }
+            });
+
+            if (formValues) {
+                try {
+                    const payload = {
+                        subject: formValues.subject,
+                        detail: formValues.detail,
+                        updatedBy: currentUserData.name || auth.currentUser.email,
+                        createdAt: serverTimestamp() // ใช้ timestamp ล่าสุดเสมอเพื่อดันขึ้นข้างบน
+                    };
+
+                    if (id) {
+                        await updateDoc(doc(db, "broadcasts", id), payload);
+                    } else {
+                        await addDoc(collection(db, "broadcasts"), payload);
+                    }
+
+                    Swal.fire({ icon: 'success', title: 'สำเร็จ!', toast: true, position: 'top-end', showConfirmButton: false, timer: 2000 });
+                    loadBroadcasts();
+                } catch (err) {
+                    Swal.fire('Error', 'เกิดข้อผิดพลาดในการบันทึก', 'error');
+                }
+            }
+        };
+
+        // 4. ฟังก์ชัน ลบประกาศ
+        window.deleteBroadcast = async (id) => {
+            const res = await Swal.fire({
+                title: 'ยืนยันการลบ?',
+                text: "ข้อมูลนี้จะหายไปจากหน้า Dashboard ของทุกคน",
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonColor: '#f43f5e',
+                confirmButtonText: 'ลบทิ้ง',
+                cancelButtonText: 'ยกเลิก',
+                customClass: { popup: 'rounded-[2rem]' }
+            });
+
+            if (res.isConfirmed) {
+                await deleteDoc(doc(db, "broadcasts", id));
+                loadBroadcasts();
+            }
+        };
+
+    </script>
+    <script src="./js/layout.js"></script>
+    <script type="module" src="./js/sidebar-role.js"></script>
+</body>
+</html>

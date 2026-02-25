@@ -1,93 +1,179 @@
-<div class="p-6 md:p-10 fade-in-up">
-    <div class="mb-8">
-        <h2 class="text-3xl font-black text-slate-700 tracking-tighter">สถานะระบบ</h2>
-        <p class="text-emerald-500 font-bold tracking-[0.1em] text-xs uppercase">System Health & Performance Monitoring</p>
-    </div>
-
-    <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-10">
+<!DOCTYPE html>
+<html lang="th">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>สถานะระบบ - Sale Support System</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Kanit:wght@300;400;600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="./css/style.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        body { font-family: 'Kanit', sans-serif; }
+        .custom-scroll::-webkit-scrollbar { width: 6px; }
+        .custom-scroll::-webkit-scrollbar-track { background: #f1f1f1; }
+        .custom-scroll::-webkit-scrollbar-thumb { background: #10b981; border-radius: 10px; }
         
-        <div class="bg-white p-8 rounded-[2.5rem] shadow-xl border-b-[8px] border-emerald-500 relative overflow-hidden group">
-            <div class="absolute -top-6 -right-6 w-24 h-24 bg-emerald-50 rounded-full transition-transform group-hover:scale-150 duration-500"></div>
-            <div class="relative">
-                <div class="flex justify-between items-center mb-6">
-                    <div class="w-12 h-12 bg-emerald-100 rounded-2xl flex items-center justify-center text-emerald-600 text-xl">
-                        <i class="fas fa-database"></i>
-                    </div>
-                    <span class="flex items-center space-x-2 px-3 py-1 bg-emerald-50 text-emerald-600 rounded-full text-[10px] font-black uppercase">
-                        <span class="w-2 h-2 bg-emerald-500 rounded-full animate-pulse"></span>
-                        <span>Normal</span>
-                    </span>
-                </div>
-                <h3 class="text-gray-400 text-xs font-bold uppercase tracking-widest">Database (Firebase)</h3>
-                <p class="text-2xl font-black text-slate-700 mt-1">Operational</p>
-                <div class="mt-4 pt-4 border-t border-slate-50 flex justify-between items-center">
-                    <span class="text-xs text-gray-400">Response Time</span>
-                    <span class="text-xs font-bold text-emerald-500">42ms</span>
-                </div>
-            </div>
-        </div>
+        .pulse-green { animation: pulse-green 2s infinite; }
+        @keyframes pulse-green {
+            0% { box-shadow: 0 0 0 0 rgba(16, 185, 129, 0.4); }
+            70% { box-shadow: 0 0 0 10px rgba(16, 185, 129, 0); }
+            100% { box-shadow: 0 0 0 0 rgba(16, 185, 129, 0); }
+        }
+    </style>
+</head>
+<body class="bg-slate-50 min-h-screen">
 
-        <div class="bg-white p-8 rounded-[2.5rem] shadow-xl border-b-[8px] border-blue-500 relative overflow-hidden group">
-            <div class="absolute -top-6 -right-6 w-24 h-24 bg-blue-50 rounded-full transition-transform group-hover:scale-150 duration-500"></div>
-            <div class="relative">
-                <div class="flex justify-between items-center mb-6">
-                    <div class="w-12 h-12 bg-blue-100 rounded-2xl flex items-center justify-center text-blue-600 text-xl">
-                        <i class="fas fa-user-shield"></i>
-                    </div>
-                    <span class="flex items-center space-x-2 px-3 py-1 bg-blue-50 text-blue-600 rounded-full text-[10px] font-black uppercase">
-                        <span class="w-2 h-2 bg-blue-500 rounded-full animate-pulse"></span>
-                        <span>Active</span>
-                    </span>
-                </div>
-                <h3 class="text-gray-400 text-xs font-bold uppercase tracking-widest">Auth Service</h3>
-                <p class="text-2xl font-black text-slate-700 mt-1">Secure</p>
-                <div class="mt-4 pt-4 border-t border-slate-50 flex justify-between items-center">
-                    <span class="text-xs text-gray-400">Uptime</span>
-                    <span class="text-xs font-bold text-blue-500">99.9%</span>
-                </div>
-            </div>
-        </div>
+    <div class="flex min-h-screen">
+        <aside id="sidebar-container" class="w-64 shrink-0 bg-white border-r border-slate-200 hidden md:block sticky top-0 h-screen"></aside>
 
-        <div class="bg-white p-8 rounded-[2.5rem] shadow-xl border-b-[8px] border-orange-500 relative overflow-hidden group">
-            <div class="absolute -top-6 -right-6 w-24 h-24 bg-orange-50 rounded-full transition-transform group-hover:scale-150 duration-500"></div>
-            <div class="relative">
-                <div class="flex justify-between items-center mb-6">
-                    <div class="w-12 h-12 bg-orange-100 rounded-2xl flex items-center justify-center text-orange-600 text-xl">
-                        <i class="fas fa-folder-open"></i>
+        <div class="flex-1 flex flex-col min-w-0">
+            <div id="topbar-container" class="sticky top-0 z-40 bg-white/80 backdrop-blur-md border-b border-slate-200"></div>
+
+            <main class="p-4 md:p-10 max-w-6xl mx-auto w-full space-y-8 animate-in fade-in duration-700">
+                
+                <div class="flex flex-col md:flex-row md:items-end justify-between gap-4 border-b border-slate-200 pb-6">
+                    <div>
+                        <h2 class="text-3xl font-black text-slate-800 tracking-tight flex items-center gap-3">
+                            <i class="fa-solid fa-heart-pulse text-rose-500"></i>
+                            สถานะระบบ (System Status)
+                        </h2>
+                        <p class="text-slate-500 mt-2 font-medium">ตรวจสอบความพร้อมใช้งานของบริการและฐานข้อมูล Cloud Service</p>
                     </div>
-                    <span class="flex items-center space-x-2 px-3 py-1 bg-orange-50 text-orange-600 rounded-full text-[10px] font-black uppercase">
-                        <span>Healthy</span>
-                    </span>
+                    <div id="last-update" class="text-[10px] font-bold text-slate-400 bg-slate-100 px-4 py-2 rounded-full uppercase tracking-widest">
+                        Last Check: Just now
+                    </div>
                 </div>
-                <h3 class="text-gray-400 text-xs font-bold uppercase tracking-widest">File Storage</h3>
-                <p class="text-2xl font-black text-slate-700 mt-1">82.5 GB <span class="text-sm font-medium text-gray-400">/ 100GB</span></p>
-                <div class="mt-4 w-full bg-slate-100 h-2 rounded-full overflow-hidden">
-                    <div class="bg-orange-500 h-full" style="width: 82%"></div>
+
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                    
+                    <div class="bg-white p-8 rounded-[2.5rem] shadow-xl shadow-slate-200/50 border border-slate-100 relative group overflow-hidden">
+                        <div class="flex justify-between items-start mb-6">
+                            <div class="w-14 h-14 bg-emerald-50 rounded-2xl flex items-center justify-center text-emerald-500 text-2xl shadow-inner">
+                                <i class="fa-solid fa-database"></i>
+                            </div>
+                            <span class="px-3 py-1 bg-emerald-100 text-emerald-600 text-[10px] font-black rounded-full uppercase tracking-tighter pulse-green">Operational</span>
+                        </div>
+                        <h3 class="text-slate-400 text-xs font-bold uppercase tracking-widest">Cloud Firestore</h3>
+                        <p class="text-2xl font-black text-slate-800 mt-1">ฐานข้อมูลหลัก</p>
+                        <div class="mt-6 pt-4 border-t border-slate-50 flex justify-between items-center text-xs">
+                            <span class="text-slate-400 font-medium text-sm italic">Response: <span id="db-latency" class="text-emerald-500 font-bold">-- ms</span></span>
+                        </div>
+                    </div>
+
+                    <div class="bg-white p-8 rounded-[2.5rem] shadow-xl shadow-slate-200/50 border border-slate-100 relative group overflow-hidden">
+                        <div class="flex justify-between items-start mb-6">
+                            <div class="w-14 h-14 bg-sky-50 rounded-2xl flex items-center justify-center text-sky-500 text-2xl shadow-inner">
+                                <i class="fa-solid fa-cloud-arrow-up"></i>
+                            </div>
+                            <span class="px-3 py-1 bg-sky-100 text-sky-600 text-[10px] font-black rounded-full uppercase tracking-tighter">Connected</span>
+                        </div>
+                        <h3 class="text-slate-400 text-xs font-bold uppercase tracking-widest">Cloudinary Storage</h3>
+                        <p class="text-2xl font-black text-slate-800 mt-1">คลังเก็บรูปภาพ</p>
+                        <div class="mt-6 pt-4 border-t border-slate-50">
+                            <div class="flex justify-between text-[10px] font-bold mb-2 uppercase">
+                                <span class="text-slate-400">Monthly Usage</span>
+                                <span class="text-sky-600">82%</span>
+                            </div>
+                            <div class="w-full bg-slate-100 h-2 rounded-full overflow-hidden">
+                                <div class="bg-sky-500 h-full rounded-full transition-all duration-1000" style="width: 82%"></div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="bg-white p-8 rounded-[2.5rem] shadow-xl shadow-slate-200/50 border border-slate-100 relative group overflow-hidden">
+                        <div class="flex justify-between items-start mb-6">
+                            <div class="w-14 h-14 bg-indigo-50 rounded-2xl flex items-center justify-center text-indigo-500 text-2xl shadow-inner">
+                                <i class="fa-solid fa-user-shield"></i>
+                            </div>
+                            <span class="px-3 py-1 bg-indigo-100 text-indigo-600 text-[10px] font-black rounded-full uppercase tracking-tighter">Encrypted</span>
+                        </div>
+                        <h3 class="text-slate-400 text-xs font-bold uppercase tracking-widest">Firebase Auth</h3>
+                        <p class="text-2xl font-black text-slate-800 mt-1">ระบบยืนยันตัวตน</p>
+                        <div class="mt-6 pt-4 border-t border-slate-50 flex justify-between items-center text-xs">
+                            <span class="text-slate-400 font-medium text-sm italic">Uptime: <span class="text-indigo-500 font-bold">99.98%</span></span>
+                        </div>
+                    </div>
+
                 </div>
-            </div>
+
+                <div class="bg-white rounded-[2.5rem] shadow-xl shadow-slate-200/50 border border-slate-100 overflow-hidden">
+                    <div class="p-6 bg-slate-900 flex justify-between items-center text-white">
+                        <div class="flex items-center gap-4">
+                            <div class="w-12 h-12 bg-emerald-500/20 text-emerald-400 rounded-xl flex items-center justify-center text-xl">
+                                <i class="fa-solid fa-list-check"></i>
+                            </div>
+                            <div>
+                                <h3 class="text-lg font-bold tracking-tight">System Health Log</h3>
+                                <p class="text-[10px] text-slate-400 uppercase font-black tracking-widest">บันทึกเหตุการณ์ความปลอดภัยล่าสุด</p>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="p-4 overflow-x-auto">
+                        <table class="w-full text-left border-collapse">
+                            <thead>
+                                <tr class="text-[10px] font-black text-slate-400 uppercase tracking-widest border-b border-slate-50">
+                                    <th class="px-6 py-4 italic">Timestamp</th>
+                                    <th class="px-6 py-4 italic">Component</th>
+                                    <th class="px-6 py-4 italic">Event</th>
+                                    <th class="px-6 py-4 italic text-right">Status</th>
+                                </tr>
+                            </thead>
+                            <tbody class="text-sm font-medium text-slate-600" id="health-log-body">
+                                </tbody>
+                        </table>
+                    </div>
+                </div>
+
+            </main>
         </div>
     </div>
 
-    <div class="bg-white rounded-[3rem] shadow-2xl p-8 border-t-4 border-slate-100">
-        <div class="flex justify-between items-center mb-6">
-            <h3 class="text-lg font-black text-slate-700">ประวัติเหตุการณ์ล่าสุด</h3>
-            <button class="text-emerald-600 font-bold text-xs uppercase hover:underline">View All Logs</button>
-        </div>
-        <div class="space-y-4">
-            <div class="flex items-center justify-between p-4 bg-slate-50 rounded-2xl border border-slate-100">
-                <div class="flex items-center space-x-4">
-                    <div class="w-2 h-2 bg-emerald-500 rounded-full"></div>
-                    <span class="text-sm font-bold text-slate-600">Database backup completed</span>
-                </div>
-                <span class="text-[10px] font-bold text-slate-400 uppercase">10:45 AM</span>
-            </div>
-            <div class="flex items-center justify-between p-4 bg-slate-50 rounded-2xl border border-slate-100">
-                <div class="flex items-center space-x-4">
-                    <div class="w-2 h-2 bg-blue-500 rounded-full"></div>
-                    <span class="text-sm font-bold text-slate-600">Admin login from unauthorized IP blocked</span>
-                </div>
-                <span class="text-[10px] font-bold text-slate-400 uppercase">09:12 AM</span>
-            </div>
-        </div>
-    </div>
-</div>
+    <script type="module">
+        import { db, auth } from "./js/firebase.js";
+        import { getDoc, doc } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+        import { onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
+
+        // Auth Protection (คงเดิมตามโค้ดอ้างอิง)
+        onAuthStateChanged(auth, async (user) => {
+            if (!user) window.location.replace("login.html");
+        });
+
+        // ฟังก์ชันจำลองการเช็ค Latency และ Log
+        function updateLatency() {
+            const start = Date.now();
+            // จำลองการเรียก DB
+            setTimeout(() => {
+                const latency = Math.floor(Math.random() * (65 - 30) + 30);
+                document.getElementById('db-latency').innerText = `${latency} ms`;
+                document.getElementById('last-update').innerText = `Last Check: ${new Array(new Date().toLocaleTimeString())}`;
+            }, 500);
+        }
+
+        function populateLogs() {
+            const logs = [
+                { time: "10:45:12", comp: "Database", event: "Auto-backup completed successfully", status: "Success", color: "text-emerald-500" },
+                { time: "09:20:05", comp: "Storage", event: "Optimized image delivery for tickets", status: "Active", color: "text-sky-500" },
+                { time: "08:00:00", comp: "System", event: "Security scan performed - No threats found", status: "Clean", color: "text-emerald-500" }
+            ];
+            const tbody = document.getElementById('health-log-body');
+            tbody.innerHTML = logs.map(log => `
+                <tr class="border-b border-slate-50 hover:bg-slate-50/50 transition-colors">
+                    <td class="px-6 py-4 font-mono text-xs text-slate-400">${log.time}</td>
+                    <td class="px-6 py-4 font-bold text-slate-800">${log.comp}</td>
+                    <td class="px-6 py-4">${log.event}</td>
+                    <td class="px-6 py-4 text-right font-black ${log.color}">${log.status}</td>
+                </tr>
+            `).join('');
+        }
+
+        // Run
+        updateLatency();
+        populateLogs();
+        setInterval(updateLatency, 5000); // อัปเดตทุก 5 วินาที
+    </script>
+    <script src="./js/layout.js"></script>
+    <script type="module" src="./js/sidebar-role.js"></script>
+</body>
+</html>

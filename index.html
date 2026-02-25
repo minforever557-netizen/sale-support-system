@@ -68,7 +68,6 @@
     import { getAuth, signInWithEmailAndPassword } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
     import { getFirestore, collection, query, where, getDocs, limit } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
 
-    // Firebase Configuration
     const firebaseConfig = {
         apiKey: "AIzaSyAa2uSD_tjNqYE2eXnZcn75h_jAVscDG-c",
         authDomain: "salesupportsystemapp.firebaseapp.com",
@@ -78,12 +77,10 @@
         appId: "1:840890441207:web:f3a5076d46e963a90de2f2"
     };
 
-    // Initialize Firebase
     const app = initializeApp(firebaseConfig);
     const auth = getAuth(app);
     const db = getFirestore(app);
 
-    // DOM Elements
     const loginForm = document.getElementById('loginForm');
     const loginBtn = document.getElementById('loginBtn');
     const btnText = document.getElementById('btnText');
@@ -94,97 +91,77 @@
         const userVal = document.getElementById('username').value.trim();
         const passVal = document.getElementById('password').value;
 
-        // --- 1. UI Feedback: Start Loading ---
+        // UI Start Loading
         loginBtn.disabled = true;
         btnText.innerText = "กำลังตรวจสอบ...";
         btnLoader.classList.remove('hidden');
-        loginBtn.classList.add('opacity-90', 'cursor-not-allowed');
 
         try {
-            // --- 2. ดึงข้อมูล Email จาก Username (Firestore) ---
-            // หมายเหตุ: ต้องตั้ง Security Rules ให้ allow read ใน collection admin ก่อน
-            const q = query(
-                collection(db, "admin"), 
-                where("username", "==", userVal), 
-                limit(1)
-            );
-            
+            // [STEP 1] ค้นหา Email จาก Username
+            // ขั้นตอนนี้จะผ่านได้เพราะ Rule 'allow read: if true' ใน collection admin
+            const adminRef = collection(db, "admin");
+            const q = query(adminRef, where("username", "==", userVal), limit(1));
             const querySnapshot = await getDocs(q);
 
             if (querySnapshot.empty) {
-                showError("ไม่พบชื่อผู้ใช้งานนี้ในระบบ");
+                alert("ไม่พบชื่อผู้ใช้งานนี้ในระบบ");
                 resetButton();
                 return;
             }
 
             let emailFound = "";
             let userData = null;
-            
             querySnapshot.forEach((doc) => {
                 emailFound = doc.data().email;
                 userData = doc.data();
             });
 
-            // --- 3. ทำการ Authentication ด้วย Firebase Auth ---
-            const userCredential = await signInWithEmailAndPassword(auth, emailFound, passVal);
-            const user = userCredential.user;
+            // [STEP 2] ทำการ Login ด้วย Email ที่เจอ
+            await signInWithEmailAndPassword(auth, emailFound, passVal);
 
-            // --- 4. เก็บข้อมูลลง LocalStorage เพื่อใช้ในหน้า Dashboard ---
+            // [STEP 3] เก็บข้อมูลลง LocalStorage
             localStorage.setItem("user", JSON.stringify({
-                uid: user.uid,
                 email: emailFound,
                 username: userVal,
-                name: userData.name || "User",
-                role: userData.role || "Admin"
+                role: userData.role || "Admin",
+                name: userData.name || "User"
             }));
 
-            // --- 5. Success Animation ---
+            // [STEP 4] Success Animation & Redirect
             btnText.innerText = "สำเร็จแล้ว!";
             btnLoader.classList.add('hidden');
             loginBtn.classList.replace('bg-orange-500', 'bg-green-600'); 
             
             const card = document.querySelector('.fade-in-up');
-            
             setTimeout(() => {
                 if (card) {
-                    card.style.transition = "all 0.6s cubic-bezier(0.4, 0, 0.2, 1)";
+                    card.style.transition = "all 0.6s ease";
                     card.style.opacity = "0";
                     card.style.transform = "translateY(-40px)";
                 }
-
                 setTimeout(() => {
                     window.location.href = "dashboard.html";
                 }, 600);
             }, 400);
 
         } catch (error) {
-            console.error("Login Error:", error);
-            
-            // แยกประเภท Error เพื่อแจ้งเตือนให้ตรงจุด
+            console.error("Login Error Details:", error);
             if (error.code === 'auth/wrong-password' || error.code === 'auth/invalid-credential') {
-                showError("รหัสผ่านไม่ถูกต้อง");
+                alert("รหัสผ่านไม่ถูกต้อง");
             } else if (error.code === 'permission-denied') {
-                showError("สิทธิ์การเข้าถึงถูกปฏิเสธ (ตรวจสอบ Firestore Rules)");
+                alert("ถูกปฏิเสธการเข้าถึง: กรุณาตรวจสอบการตั้งค่า Firebase Rules");
             } else {
-                showError("เกิดข้อผิดพลาด: " + error.message);
+                alert("เกิดข้อผิดพลาด: " + error.message);
             }
-            
             resetButton();
         }
     });
-
-    function showError(msg) {
-        // หากนายมี SweetAlert2 สามารถเปลี่ยนใช้ Swal.fire ได้
-        alert(msg);
-    }
 
     function resetButton() {
         loginBtn.disabled = false;
         btnText.innerText = "LOG IN SYSTEM";
         btnLoader.classList.add('hidden');
-        loginBtn.classList.remove('opacity-90', 'cursor-not-allowed');
-        
-        // คืนค่าสีปุ่มหากเคยเปลี่ยนเป็นสีเขียว
+        loginBtn.classList.remove('opacity-90');
         if (loginBtn.classList.contains('bg-green-600')) {
             loginBtn.classList.replace('bg-green-600', 'bg-orange-500');
         }

@@ -279,17 +279,45 @@
         } catch (e) { console.error(e); }
     };
 
-    window.closeAdminModal = () => document.getElementById('adminActionModal').classList.add('hidden');
-
-    window.updateSelectedStatus = (st) => {
-        window.selectedStatus = st;
+    window.closeAdminModal = () => {
+        // 1. ปิดหน้าต่าง Modal
+        const modal = document.getElementById('adminActionModal');
+        if (modal) modal.classList.add('hidden');
+        
+        // 2. รีเซ็ตตัวแปรส่วนกลาง (หัวใจสำคัญที่ทำให้ไม่ต้อง Refresh)
+        window.currentId = null;
+        window.selectedStatus = null;
+        window.oldAdminNote = "";
+        
+        // 3. รีเซ็ตสีปุ่มสถานะ (ลบเส้นไฮไลท์ออก)
         document.querySelectorAll('.status-btn').forEach(btn => {
             btn.classList.remove('ring-4', 'ring-indigo-200', 'border-indigo-500', 'bg-indigo-50');
         });
+
+        // 4. ล้างข้อความในช่อง Note ให้ว่างเปล่า
+        const noteInput = document.getElementById('admin-note-input');
+        if (noteInput) noteInput.value = "";
+        
+        // 5. คืนค่าปุ่มบันทึกให้กลับมาเป็นสีเดิมและกดได้อีกครั้ง
+        const btn = document.getElementById('save-btn');
+        if (btn) {
+            btn.disabled = false;
+            btn.innerHTML = "บันทึกข้อมูล";
+            btn.classList.remove('bg-green-500');
+            btn.classList.add('bg-[#5c56f1]');
+        }
+    };
+
+    window.updateSelectedStatus = (st) => {
+        window.selectedStatus = st;
+        // ล้างสถานะปุ่มทั้งหมดก่อน
+        document.querySelectorAll('.status-btn').forEach(btn => {
+            btn.classList.remove('ring-4', 'ring-indigo-200', 'border-indigo-500', 'bg-indigo-50');
+        });
+        // ไฮไลท์เฉพาะปุ่มที่ถูกเลือก
         const activeBtn = document.getElementById(`btn-status-${st}`);
         if (activeBtn) activeBtn.classList.add('ring-4', 'ring-indigo-200', 'border-indigo-500', 'bg-indigo-50');
     };
-
     window.saveAdminAction = async () => {
     const noteInput = document.getElementById('admin-note-input');
     const btn = document.getElementById('save-btn');

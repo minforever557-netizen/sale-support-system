@@ -125,7 +125,7 @@
         </div>
     </div>
 
-   <script type="module">
+  <script type="module">
     import { db, auth } from "./js/firebase.js";
     import { 
         collection, query, orderBy, onSnapshot, getDoc, doc 
@@ -135,7 +135,7 @@
     let currentTickets = [];
     let unsubscribe = null;
 
-    // --- [1. 2. 4. ส่วน Formatting และ Render ตาราง ใช้ของเดิมของนายได้เลยครับ] ---
+    // --- [1. 2. 4. ส่วน Formatting และ Render ตาราง ใช้ของเดิมได้เลยครับ] ---
 
     // --- 3. View Detail Logic (ReadOnly) ---
     window.viewDetail = async (id) => {
@@ -144,7 +144,6 @@
             if (!docSnap.exists()) return;
             const t = docSnap.data();
             
-            // แสดงข้อมูลใน Modal (ไม่มีปุ่ม Save หรือ Input ที่แก้ไขได้)
             document.getElementById('det-user').innerText = t.owner || '-';
             document.getElementById('det-topic').innerText = t.topic || '-';
             document.getElementById('det-id-number').innerText = t.id_number || t.internetNo || '-';
@@ -163,55 +162,39 @@
             document.body.style.overflow = 'hidden';
         } catch (e) { 
             console.error("View Error:", e);
-            Swal.fire("เข้าถึงข้อมูลไม่ได้", "คุณไม่มีสิทธิ์ดูรายละเอียดงานนี้", "error");
         }
     };
 
-    // --- 5. Firebase Listener (Read Only ดึงข้อมูลมาโชว์อย่างเดียว) ---
+    // --- 5. Firebase Listener (ดึงข้อมูลให้ทุกคนเห็น) ---
     function initTicketListener() {
         if (unsubscribe) unsubscribe();
         const sortVal = document.getElementById('sortOrder')?.value || 'createdAt-desc';
         const [field, direction] = sortVal.split('-');
 
-        // ดึงข้อมูลทั้งหมดมาดู (ReadOnly ผ่าน Query)
         const q = query(collection(db, "tickets"), orderBy(field, direction));
 
         unsubscribe = onSnapshot(q, (snapshot) => {
             currentTickets = snapshot.docs.map(d => ({ id: d.id, ...d.data() }));
             renderTickets(currentTickets);
         }, (error) => {
-            console.error("Firestore Permission Error:", error);
+            console.error("Firestore Error:", error);
             if (error.code === 'permission-denied') {
                 document.getElementById('ticket-list').innerHTML = `
-                    <tr><td colspan="9" class="p-20 text-center">
-                        <div class="text-slate-400 font-bold">
-                            <i class="fa-solid fa-lock mb-2 text-2xl"></i><br>
-                            สิทธิ์การเข้าถึงแบบ Admin เท่านั้น
-                        </div>
+                    <tr><td colspan="9" class="p-20 text-center text-slate-400 font-bold">
+                        <i class="fa-solid fa-circle-exclamation mb-2 text-2xl"></i><br>
+                        ไม่สามารถดึงข้อมูลได้ (โปรดเช็ค Security Rules)
                     </td></tr>`;
             }
         });
     }
 
-    // --- 6. Start System & Role Check (เช็คว่าเป็น Admin หรือไม่ก่อนให้ View) ---
-    onAuthStateChanged(auth, async (user) => {
-        if (!user) return window.location.replace("login.html");
-
-        try {
-            // ดึงสิทธิ์จากคอลเลกชัน admin ตามที่ตั้งค่าใน Rules
-            const adminDoc = await getDoc(doc(db, "admin", user.uid));
-            
-            if (adminDoc.exists() && adminDoc.data().role === 'admin') {
-                console.log("View Mode: Admin Access Granted");
-                initTicketListener();
-            } else {
-                // ถ้าไม่ใช่ Admin จะถูกบล็อกโดย Security Rules ทันทีเมื่อเรียก Listener
-                console.warn("Unauthorized: View Only for Admins");
-                initTicketListener(); 
-            }
-        } catch (err) {
-            console.error("Auth Check Error:", err);
+    // --- 6. Start System (ใคร Login ก็เข้าดูได้เลย) ---
+    onAuthStateChanged(auth, (user) => {
+        if (user) {
+            console.log("Access Granted: All User Mode");
             initTicketListener();
+        } else {
+            window.location.replace("login.html");
         }
     });
 

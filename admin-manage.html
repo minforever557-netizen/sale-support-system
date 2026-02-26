@@ -114,270 +114,227 @@
 </div>
 
     <script type="module">
-        import { db, auth } from "./js/firebase.js"; 
-        import { collection, query, orderBy, onSnapshot, getDoc, doc, updateDoc, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
-        import { onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
+    // 1. นำเข้าข้อมูลที่จำเป็น (คลีนแล้ว ไม่มีตัวเกิน)
+    import { db, auth } from "./js/firebase.js"; 
+    import { 
+        collection, query, orderBy, onSnapshot, getDoc, doc, 
+        updateDoc, serverTimestamp, where, getDocs, deleteDoc 
+    } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+    import { onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
 
-        let currentTickets = [];
-        let unsubscribe = null;
-        // --- ส่วนที่เพิ่มเข้าไปใน <script type="module"> ท้ายๆ ก่อนจบ ---
+    let currentTickets = [];
+    let unsubscribe = null;
 
-async function autoCleanupOldData() {
-    console.log("System: กำลังเริ่มกระบวนการทำความสะอาดข้อมูลเก่า (180 วัน)...");
-    
-    // 1. คำนวณวันที่ย้อนหลัง 6 เดือน (180 วัน)
-    const sixMonthsAgo = new Date();
-    sixMonthsAgo.setDate(sixMonthsAgo.getDate() - 180);
+    // --- ฟังก์ชันทำความสะอาดข้อมูลเก่า (ลบข้อมูลที่เกิน 180 วัน) ---
+    async function autoCleanupOldData() {
+        console.log("System: กำลังเริ่มกระบวนการทำความสะอาดข้อมูลเก่า (180 วัน)...");
+        const sixMonthsAgo = new Date();
+        sixMonthsAgo.setDate(sixMonthsAgo.getDate() - 180);
 
-    // 2. Query หา Ticket ที่เก่ากว่า 6 เดือน (ใช้ createdAt)
-    // หมายเหตุ: ต้องใช้ getDocs แบบลบทีละตัวเพราะ Firestore Client SDK ไม่รองรับการลบแบบ Bulk Query โดยตรง
-    const q = query(collection(db, "tickets"), where("createdAt", "<", sixMonthsAgo));
-    
-    try {
-        const querySnapshot = await getDocs(q);
-        const totalToDelete = querySnapshot.size;
+        const q = query(collection(db, "tickets"), where("createdAt", "<", sixMonthsAgo));
+        
+        try {
+            const querySnapshot = await getDocs(q);
+            if (querySnapshot.empty) {
+                console.log("System: ไม่พบข้อมูลที่เก่ากว่า 6 เดือน");
+                return;
+            }
 
-        if (totalToDelete === 0) {
-            console.log("System: ไม่พบข้อมูลที่เก่ากว่า 6 เดือน");
+            let deletedCount = 0;
+            for (const docSnap of querySnapshot.docs) {
+                await deleteDoc(doc(db, "tickets", docSnap.id));
+                deletedCount++;
+            }
+            console.log(`System: ทำความสะอาดสำเร็จ! ลบไปทั้งหมด ${deletedCount} รายการ`);
+        } catch (error) {
+            console.error("System Error (Auto-Cleanup):", error);
+        }
+    }
+
+    // --- ฟังก์ชันแสดงวันที่แบบไทย ---
+    function formatThaiDate(date) {
+        if (!date) return '-';
+        const d = new Date(date);
+        return d.toLocaleString('th-TH', {
+            year: 'numeric', month: 'short', day: 'numeric',
+            hour: '2-digit', minute: '2-digit', hour12: false,
+            timeZone: 'Asia/Bangkok'
+        }).replace('u.', 'น.');
+    }
+
+    // --- ฟังก์ชันดูรูปใหญ่ ---
+    window.viewImage = (url) => {
+        const modal = document.getElementById('imageModal');
+        document.getElementById('fullImage').src = url;
+        modal.classList.remove('hidden');
+    };
+
+    // --- คำนวณ SLA เฉพาะเวลาทำการ ---
+    function getBusinessDueDate(startDate, hoursToAdd) {
+        let date = new Date(startDate);
+        let remainingHours = hoursToAdd;
+        while (remainingHours > 0) {
+            date.setHours(date.getHours() + 1);
+            const day = date.getDay();
+            const hour = date.getHours();
+            const min = date.getMinutes();
+            const isWorkingDay = (day !== 0 && day !== 6);
+            const currentTimeInMin = (hour * 60) + min;
+            const workStartInMin = (8 * 60) + 30; // 08:30
+            const workEndInMin = (17 * 60) + 30;  // 17:30
+            if (isWorkingDay && currentTimeInMin > workStartInMin && currentTimeInMin <= workEndInMin) {
+                remainingHours--;
+            }
+        }
+        return date;
+    }
+
+    // --- โหลดข้อมูลแบบ Real-time ---
+    function initTicketsListener() {
+        if (unsubscribe) unsubscribe();
+        const q = query(collection(db, "tickets"), orderBy("createdAt", "asc"));
+        unsubscribe = onSnapshot(q, (snapshot) => {
+            currentTickets = snapshot.docs.map(d => ({ id: d.id, ...d.data() }));
+            renderAdminTickets(currentTickets);
+        });
+    }
+
+    // --- แสดงผลตารางใบงาน ---
+    function renderAdminTickets(tickets) {
+        const list = document.getElementById('admin-ticket-list');
+        if (!list) return;
+        
+        const filtered = tickets.filter(t => 
+            ["Pending", "Open", "On Progress"].includes(t.status)
+        );
+
+        if (filtered.length === 0) {
+            list.innerHTML = '<tr><td colspan="7" class="p-10 text-center text-slate-400">ไม่พบข้อมูลใบงานที่ต้องจัดการ</td></tr>';
             return;
         }
 
-        let deletedCount = 0;
-        for (const docSnap of querySnapshot.docs) {
-            await deleteDoc(doc(db, "tickets", docSnap.id));
-            deletedCount++;
-        }
-
-        console.log(`System: ทำความสะอาดสำเร็จ! ลบไปทั้งหมด ${deletedCount} รายการ`);
-        
-        // ถ้านายอยากให้ Admin รู้ว่ามีการลบเกิดขึ้น ให้เปิดใช้บรรทัดล่างนี้ครับ
-        // Toast.fire({ icon: 'info', title: `ระบบลบใบงานเก่าเกิน 6 เดือนทิ้งแล้ว ${deletedCount} รายการ` });
-
-    } catch (error) {
-        console.error("System Error (Auto-Cleanup):", error);
-    }
-}
-
-// เรียกใช้งานเมื่อ Admin Logged In เรียบร้อย
-onAuthStateChanged(auth, (user) => {
-    if (user) { 
-        initTicketsListener(); 
-        autoCleanupOldData(); // <--- สั่งให้ทำงานทันทีที่ Admin เข้าหน้าเว็บ
-    } 
-    else { window.location.replace("login.html"); }
-});
-
-        // --- ฟังก์ชันใหม่: แสดงวันที่แบบไทย พ.ศ. ---
-        function formatThaiDate(date) {
-    if (!date) return '-';
-    const d = new Date(date);
-    return d.toLocaleString('th-TH', {
-        year: 'numeric',
-        month: 'short',
-        day: 'numeric',
-        hour: '2-digit',
-        minute: '2-digit',
-        hour12: false,
-        timeZone: 'Asia/Bangkok'
-    }).replace('u.', 'น.').replace('น.น.', 'น.'); // กันพลาดเรื่อง format ซ้ำ
-}
-
-        // --- ฟังก์ชันใหม่: ดูรูปใหญ่ ---
-        window.viewImage = (url) => {
-            const modal = document.getElementById('imageModal');
-            document.getElementById('fullImage').src = url;
-            modal.classList.remove('hidden');
-        };
-
-        // --- แก้ไข: คำนวณ SLA เฉพาะเวลาทำการ (จ-ศ 08:30 - 17:30) ---
-function getBusinessDueDate(startDate, hoursToAdd) {
-    let date = new Date(startDate);
-    let remainingHours = hoursToAdd;
-
-    while (remainingHours > 0) {
-        // เพิ่มทีละ 1 ชั่วโมง
-        date.setHours(date.getHours() + 1);
-        
-        const day = date.getDay(); // 0 = อาทิตย์, 6 = เสาร์
-        const hour = date.getHours();
-        const min = date.getMinutes();
-        
-        // ตรวจสอบว่าเป็นวันทำการ (จันทร์-ศุกร์) 
-        // และอยู่ในช่วงเวลา 08:30 - 17:30
-        const isWorkingDay = (day !== 0 && day !== 6);
-        const currentTimeInMin = (hour * 60) + min;
-        const workStartInMin = (8 * 60) + 30; // 08:30
-        const workEndInMin = (17 * 60) + 30;  // 17:30
-
-        if (isWorkingDay && currentTimeInMin > workStartInMin && currentTimeInMin <= workEndInMin) {
-            remainingHours--;
-        }
-    }
-    return date;
-}
-
-        function initTicketsListener() {
-            if (unsubscribe) unsubscribe();
-            const q = query(collection(db, "tickets"), orderBy("createdAt", "asc"));
-            unsubscribe = onSnapshot(q, (snapshot) => {
-                currentTickets = snapshot.docs.map(d => ({ id: d.id, ...d.data() }));
-                renderAdminTickets(currentTickets);
-            });
-        }
-
-        function renderAdminTickets(tickets) {
-    const list = document.getElementById('admin-ticket-list');
-    if (!list) return;
-    const searchTerm = document.getElementById('adminSearchInput')?.value.toLowerCase() || "";
-    
-    const filtered = tickets.filter(t => 
-        ["Pending", "Open", "On Progress"].includes(t.status) &&
-        ((t.owner?.toLowerCase().includes(searchTerm)) || 
-         (t.id_number?.toLowerCase().includes(searchTerm)))
-    );
-
-    if (filtered.length === 0) {
-        list.innerHTML = '<tr><td colspan="7" class="p-10 text-center text-slate-400">ไม่พบข้อมูลใบงาน</td></tr>';
-        return;
-    }
-
-    list.innerHTML = filtered.map(t => {
-        const start = t.createdAt ? t.createdAt.toDate() : new Date();
-        const due = getBusinessDueDate(start, t.sla_hours || 0);
-        
-        // --- ส่วนที่แก้: รองรับ PDF และ Icon ---
-        const fileUrl = t.attachmentUrl || "";
-        const isPDF = fileUrl.toLowerCase().endsWith('.pdf');
-        const imgPreview = fileUrl 
-            ? (isPDF 
-                ? `<div class="w-10 h-10 bg-red-50 rounded-lg flex items-center justify-center text-red-500 border border-red-100 cursor-pointer" onclick="window.open('${fileUrl}', '_blank')"><i class="fa-solid fa-file-pdf"></i></div>`
-                : `<img src="${fileUrl}" class="img-preview" onclick="viewImage('${fileUrl}')">`)
-            : `<div class="w-10 h-10 bg-slate-100 rounded-lg flex items-center justify-center text-slate-300"><i class="fa-solid fa-image text-xs"></i></div>`;
-
-        // --- ส่วนที่แก้: ดึงเฉพาะข้อความล่าสุดมาโชว์ในตาราง (ไม่เอาวันที่มาด้วย) ---
-        const notes = t.adminNote ? t.adminNote.split(/\[.*?\]/g).filter(x => x.trim()) : [];
-        const lastNote = notes.length > 0 ? notes[notes.length - 1].trim() : 'ยังไม่มีโน้ต';
-        
-        let statusColor = t.status === 'On Progress' ? 'bg-orange-100 text-orange-600' : 'bg-indigo-100 text-indigo-600';
-        if(t.status === 'Pending') statusColor = 'bg-blue-100 text-blue-600 animate-pulse';
-
-        return `
-            <tr class="hover:bg-slate-50/50 transition-all border-b border-slate-50 last:border-0">
-                <td class="p-6">${imgPreview}</td>
-                <td class="p-6 font-bold text-slate-800">${t.owner || '-'}</td>
-                <td class="p-6 font-bold text-slate-600">${t.id_number || t.internetNo || '-'}</td>
-                <td class="p-6">
-                    <p class="font-bold text-slate-700">${t.topic || 'No Topic'}</p>
-                    <p class="text-[10px] text-indigo-500 mt-1 italic line-clamp-1">${lastNote}</p>
-                </td>
-                <td class="p-6 text-center">
-                    <span class="px-3 py-1 rounded-full text-[9px] font-black uppercase tracking-widest ${statusColor}">${t.status}</span>
-                </td>
-                <td class="p-6 text-[13px] font-bold text-slate-600">${formatThaiDate(due)}</td>
-                <td class="p-6 text-right">
-                    <button onclick="openManageModal('${t.id}', '${t.status}')" 
-                            class="bg-[#5c56f1] text-white px-6 py-2.5 rounded-xl text-xs font-bold shadow-lg hover:bg-indigo-700 transition active:scale-95">
-                        จัดการ
-                    </button>
-                </td>
-            </tr>
-        `;
-    }).join('');
-}
-
-        // --- ระบบ Modal (Logic เดิมของนาย) ---
-        window.openManageModal = async (id, status) => {
-    const modal = document.getElementById('adminActionModal');
-    try {
-        const docSnap = await getDoc(doc(db, "tickets", id));
-        if (docSnap.exists()) {
-            const ticketData = docSnap.data(); // เก็บข้อมูลไว้ในตัวแปรเพื่อนำไปใช้ต่อ
-
-            // 1. ส่งข้อมูลไปแสดงใน Modal (ตาม ID ที่เราเพิ่มใน HTML)
-            document.getElementById('modal-display-id').innerText = ticketData.id_number || 'N/A';
-            document.getElementById('modal-display-topic').innerText = ticketData.topic || 'N/A';
-            document.getElementById('modal-display-detail').innerText = ticketData.detail || 'ไม่มีรายละเอียด';
+        list.innerHTML = filtered.map(t => {
+            const start = t.createdAt ? t.createdAt.toDate() : new Date();
+            const due = getBusinessDueDate(start, t.sla_hours || 0);
+            const fileUrl = t.attachmentUrl || "";
+            const isPDF = fileUrl.toLowerCase().endsWith('.pdf');
             
-            // จัดการวันที่ Create Date
-            if (ticketData.createdAt) {
-                const date = ticketData.createdAt.toDate ? ticketData.createdAt.toDate() : new Date(ticketData.createdAt);
-                document.getElementById('modal-display-date').innerText = date.toLocaleString('th-TH');
-            } else {
-                document.getElementById('modal-display-date').innerText = '-';
+            const imgPreview = fileUrl 
+                ? (isPDF 
+                    ? `<div class="w-10 h-10 bg-red-50 rounded-lg flex items-center justify-center text-red-500 border border-red-100 cursor-pointer" onclick="window.open('${fileUrl}', '_blank')"><i class="fa-solid fa-file-pdf"></i></div>`
+                    : `<img src="${fileUrl}" class="img-preview" onclick="viewImage('${fileUrl}')">`)
+                : `<div class="w-10 h-10 bg-slate-100 rounded-lg flex items-center justify-center text-slate-300"><i class="fa-solid fa-image text-xs"></i></div>`;
+
+            const notes = t.adminNote ? t.adminNote.split(/\[.*?\]/g).filter(x => x.trim()) : [];
+            const lastNote = notes.length > 0 ? notes[notes.length - 1].trim() : 'ยังไม่มีโน้ต';
+            
+            let statusColor = t.status === 'On Progress' ? 'bg-orange-100 text-orange-600' : 'bg-indigo-100 text-indigo-600';
+            if(t.status === 'Pending') statusColor = 'bg-blue-100 text-blue-600 animate-pulse';
+
+            return `
+                <tr class="hover:bg-slate-50/50 transition-all border-b border-slate-50 last:border-0">
+                    <td class="p-6">${imgPreview}</td>
+                    <td class="p-6 font-bold text-slate-800">${t.owner || '-'}</td>
+                    <td class="p-6 font-bold text-slate-600">${t.id_number || t.internetNo || '-'}</td>
+                    <td class="p-6">
+                        <p class="font-bold text-slate-700">${t.topic || 'No Topic'}</p>
+                        <p class="text-[10px] text-indigo-500 mt-1 italic line-clamp-1">${lastNote}</p>
+                    </td>
+                    <td class="p-6 text-center">
+                        <span class="px-3 py-1 rounded-full text-[9px] font-black uppercase tracking-widest ${statusColor}">${t.status}</span>
+                    </td>
+                    <td class="p-6 text-[13px] font-bold text-slate-600">${formatThaiDate(due)}</td>
+                    <td class="p-6 text-right">
+                        <button onclick="openManageModal('${t.id}', '${t.status}')" 
+                                class="bg-[#5c56f1] text-white px-6 py-2.5 rounded-xl text-xs font-bold shadow-lg hover:bg-indigo-700 transition active:scale-95">
+                            จัดการ
+                        </button>
+                    </td>
+                </tr>`;
+        }).join('');
+    }
+
+    // --- จัดการปุ่มบันทึกและอัปเดตสถานะ ---
+    window.openManageModal = async (id, status) => {
+        const modal = document.getElementById('adminActionModal');
+        try {
+            const docSnap = await getDoc(doc(db, "tickets", id));
+            if (docSnap.exists()) {
+                const ticketData = docSnap.data();
+                document.getElementById('modal-display-id').innerText = ticketData.id_number || 'N/A';
+                document.getElementById('modal-display-topic').innerText = ticketData.topic || 'N/A';
+                document.getElementById('modal-display-detail').innerText = ticketData.detail || 'ไม่มีรายละเอียด';
+                
+                if (ticketData.createdAt) {
+                    const date = ticketData.createdAt.toDate ? ticketData.createdAt.toDate() : new Date(ticketData.createdAt);
+                    document.getElementById('modal-display-date').innerText = date.toLocaleString('th-TH');
+                }
+
+                window.oldAdminNote = ticketData.adminNote || "";
+                window.currentId = id;
+                modal.classList.remove('hidden');
+                document.getElementById('admin-note-input').value = ""; 
+                window.updateSelectedStatus((status === 'Pending' || status === 'Open') ? 'On Progress' : status);
             }
+        } catch (e) { console.error(e); }
+    };
 
-            // 2. จัดการส่วนเดิมของนาย
-            window.oldAdminNote = ticketData.adminNote || "";
-            window.currentId = id;
-            modal.classList.remove('hidden');
-            document.getElementById('admin-note-input').value = ""; 
-            
-            // อัปเดตสถานะเริ่มต้นใน Modal
-            window.updateSelectedStatus((status === 'Pending' || status === 'Open') ? 'On Progress' : status);
-        }
-    } catch (e) { 
-        console.error(e); 
-        Swal.fire({ icon: 'error', title: 'ดึงข้อมูลล้มเหลว', text: e.message });
-    }
-};
+    window.closeAdminModal = () => document.getElementById('adminActionModal').classList.add('hidden');
 
-        window.closeAdminModal = () => document.getElementById('adminActionModal').classList.add('hidden');
+    window.updateSelectedStatus = (st) => {
+        window.selectedStatus = st;
+        document.querySelectorAll('.status-btn').forEach(btn => {
+            btn.classList.remove('ring-4', 'ring-indigo-200', 'border-indigo-500', 'bg-indigo-50');
+        });
+        const activeBtn = document.getElementById(`btn-status-${st}`);
+        if (activeBtn) activeBtn.classList.add('ring-4', 'ring-indigo-200', 'border-indigo-500', 'bg-indigo-50');
+    };
 
-        window.updateSelectedStatus = (st) => {
-            window.selectedStatus = st;
-            document.querySelectorAll('.status-btn').forEach(btn => {
-                btn.classList.remove('ring-4', 'ring-indigo-200', 'border-indigo-500', 'bg-indigo-50');
-            });
-            const activeBtn = document.getElementById(`btn-status-${st}`);
-            if (activeBtn) activeBtn.classList.add('ring-4', 'ring-indigo-200', 'border-indigo-500', 'bg-indigo-50');
-        };
+    window.saveAdminAction = async () => {
+        const noteInput = document.getElementById('admin-note-input');
+        const btn = document.getElementById('save-btn');
+        const newText = noteInput.value.trim();
+        if (!newText) return alert("กรุณาระบุรายละเอียดการอัปเดต");
 
-        window.saveAdminAction = async () => {
-            const noteInput = document.getElementById('admin-note-input');
-            const btn = document.getElementById('save-btn');
-            const newText = noteInput.value.trim();
-            if (!newText) return alert("กรุณาระบุรายละเอียดการอัปเดต");
+        btn.disabled = true;
+        btn.innerHTML = `<i class="fas fa-spinner fa-spin mr-2"></i> กำลังบันทึก...`;
 
-            btn.disabled = true;
-            btn.innerHTML = `<i class="fas fa-spinner fa-spin mr-2"></i> กำลังบันทึก...`;
+        try {
+            let currentAdminName = "Admin";
+            const adminDoc = await getDoc(doc(db, "admin", auth.currentUser.uid));
+            if (adminDoc.exists()) currentAdminName = adminDoc.data().name || "Admin";
 
-            let currentAdminName = "Unknown Admin";
-            try {
-                const adminDoc = await getDoc(doc(db, "admin", auth.currentUser.uid));
-                if (adminDoc.exists()) currentAdminName = adminDoc.data().name || "Admin";
-            } catch (e) { console.error(e); }
-
-            // ใช้ Format วันที่ไทยใน Note ด้วย
             const timeHeader = `[${formatThaiDate(new Date())}]`;
             const updatedNote = window.oldAdminNote ? `${window.oldAdminNote}\n${timeHeader} ${newText}` : `${timeHeader} ${newText}`;
 
-            try {
-                await updateDoc(doc(db, "tickets", window.currentId), {
-                    status: window.selectedStatus,
-                    adminNote: updatedNote,
-                    adminName: currentAdminName,
-                    updatedAt: serverTimestamp(),
-                    ...( ['Success', 'Reject'].includes(window.selectedStatus) ? { closedAt: serverTimestamp() } : {} )
-                });
-                btn.classList.replace('bg-[#5c56f1]', 'bg-green-500');
-                btn.innerHTML = `สำเร็จ!`;
-                setTimeout(() => { closeAdminModal(); }, 800);
-            } catch (error) {
-                alert("Error: " + error.message);
-                btn.disabled = false;
-                btn.innerHTML = "บันทึกข้อมูล";
-            }
-        };
+            await updateDoc(doc(db, "tickets", window.currentId), {
+                status: window.selectedStatus,
+                adminNote: updatedNote,
+                adminName: currentAdminName,
+                updatedAt: serverTimestamp(),
+                ...( ['Success', 'Reject'].includes(window.selectedStatus) ? { closedAt: serverTimestamp() } : {} )
+            });
 
-        onAuthStateChanged(auth, (user) => {
-            if (user) { initTicketsListener(); } 
-            else { window.location.replace("login.html"); }
-        });
+            btn.classList.replace('bg-[#5c56f1]', 'bg-green-500');
+            btn.innerHTML = `สำเร็จ!`;
+            setTimeout(() => { closeAdminModal(); }, 800);
+        } catch (error) {
+            alert("Error: " + error.message);
+            btn.disabled = false;
+            btn.innerHTML = "บันทึกข้อมูล";
+        }
+    };
 
-        document.getElementById('adminSearchInput')?.addEventListener('input', () => renderAdminTickets(currentTickets));
-    </script>
-    <script src="./js/layout.js"></script>
-    <script type="module" src="./js/sidebar-role.js"></script>
-    <script type="module" src="firebase.js"></script>
+    // --- ตรวจสอบสถานะการ Login ---
+    onAuthStateChanged(auth, (user) => {
+        if (user) { 
+            initTicketsListener(); 
+            autoCleanupOldData();
+        } else { 
+            window.location.replace("login.html"); 
+        }
+    });
+
+</script>
 </body>
 </html>

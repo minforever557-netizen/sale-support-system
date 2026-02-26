@@ -143,11 +143,9 @@
         </div>
     </div>
 
-   <script type="module">
+  <script type="module">
         import { db, auth } from "./js/firebase.js";
-        // แก้ไข: เพิ่ม where เข้าไปในบรรทัด import
-        // บรรทัดที่ 3 แก้เป็นแบบนี้ครับ
-import { collection, addDoc, getDoc, doc, onSnapshot, serverTimestamp, query, orderBy, where } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+        import { collection, addDoc, getDoc, doc, onSnapshot, serverTimestamp, query, orderBy, where } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
         import { onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
 
         const CLOUDINARY_URL = "https://api.cloudinary.com/v1_1/diqcoq5rl/image/upload";
@@ -157,7 +155,7 @@ import { collection, addDoc, getDoc, doc, onSnapshot, serverTimestamp, query, or
         let userDataGlobal = null;
         let allTopicsSnapshot = []; 
 
-        // Auth Logic (คงเดิม)
+        // 1. ตรวจสอบสถานะการเข้าสู่ระบบ
         onAuthStateChanged(auth, async (user) => {
             if (user) {
                 try {
@@ -166,13 +164,16 @@ import { collection, addDoc, getDoc, doc, onSnapshot, serverTimestamp, query, or
                     userDataGlobal = adminDoc.exists() ? adminDoc.data() : (userDoc.exists() ? userDoc.data() : {});
                     userDataGlobal.uid = user.uid;
                     userDataGlobal.email = user.email;
+                    
                     document.getElementById('form-user-name').innerText = userDataGlobal.name || user.email.split('@')[0];
                     document.getElementById('form-user-avatar').innerText = (userDataGlobal.name || user.email || "U")[0].toUpperCase();
-                } catch (e) { console.error(e); }
-            } else { window.location.replace("login.html"); }
+                } catch (e) { console.error("Auth Error:", e); }
+            } else { 
+                window.location.replace("login.html"); 
+            }
         });
 
-        // --- ระบบ Custom Dropdown (แก้ไขจุดที่อาจเกิด Error) ---
+        // 2. ระบบ Custom Dropdown
         const selectedDisplay = document.getElementById('selected-topic-display');
         const dropdownMenu = document.getElementById('dropdown-menu');
         const optionsList = document.getElementById('options-list');
@@ -191,12 +192,12 @@ import { collection, addDoc, getDoc, doc, onSnapshot, serverTimestamp, query, or
                     item.innerHTML = `<span>${data.name}</span> <i class="fa-solid fa-circle-check text-emerald-500 opacity-0 group-hover:opacity-100"></i>`;
                     
                     item.onclick = (e) => {
-                        e.stopPropagation(); // กัน Error การปิดทับซ้อน
+                        e.stopPropagation();
                         topicInput.value = docSnap.id;
                         selectedDisplay.innerText = data.name;
                         selectedDisplay.classList.add('text-emerald-600');
                         
-                        // ปรับปรุง: ใส่ Checklist ลงใน TextArea ให้เป็นระเบียบ
+                        // ใส่ Checklist ลงใน TextArea
                         const detailInput = document.getElementById('detail-input');
                         const originalLines = (data.checklist || "").split("\n").filter(l => l.trim() !== "");
                         detailInput.value = originalLines.map(line => `• ${line.trim()}`).join("\n");
@@ -210,6 +211,7 @@ import { collection, addDoc, getDoc, doc, onSnapshot, serverTimestamp, query, or
             if(count === 0) optionsList.innerHTML = `<div class="p-5 text-center text-slate-400 text-sm">ไม่พบหัวข้อที่ค้นหา</div>`;
         }
 
+        // ดึงข้อมูลหัวข้อปัญหาแบบ Real-time
         const qTopics = query(collection(db, "topics"), orderBy("name", "asc"));
         onSnapshot(qTopics, (snapshot) => {
             allTopicsSnapshot = snapshot.docs;
@@ -233,16 +235,18 @@ import { collection, addDoc, getDoc, doc, onSnapshot, serverTimestamp, query, or
             dropdownMenu.classList.add('hidden');
             dropdownArrow.classList.remove('rotate-180');
             topicSearch.value = "";
-            renderOptions(""); // รีเซ็ตรายการเมื่อปิด
+            renderOptions("");
         }
 
         topicSearch.oninput = (e) => renderOptions(e.target.value);
         
-        // แก้ไข: ใช้ EventListener แทน window.onclick เพื่อความเสถียร
-        window.addEventListener('click', () => closeDropdown());
+        // ปิด dropdown เมื่อคลิกที่อื่น
+        window.addEventListener('click', (e) => {
+            if (!dropdownMenu.contains(e.target)) closeDropdown();
+        });
         dropdownMenu.onclick = (e) => e.stopPropagation();
 
-        // ฟังก์ชัน Upload และ Submit (คงเดิม)
+        // 3. ฟังก์ชัน Upload รูปภาพ
         async function uploadImage(file) {
             if (!file) return "";
             if (file.size > 2 * 1024 * 1024) throw new Error("ขนาดรูปภาพห้ามเกิน 2MB");
@@ -255,14 +259,15 @@ import { collection, addDoc, getDoc, doc, onSnapshot, serverTimestamp, query, or
             throw new Error("การอัปโหลดรูปภาพล้มเหลว");
         }
 
+        // 4. ส่งข้อมูลใบงาน
         document.getElementById('ticketForm').addEventListener('submit', async (e) => {
             e.preventDefault();
             const btn = document.getElementById('submitBtn');
-            if(!userDataGlobal) return alert("ไม่พบข้อมูลผู้ใช้");
+            if(!userDataGlobal) return Swal.fire({ icon: 'error', title: 'ไม่พบข้อมูลผู้ใช้', text: 'กรุณาลองเข้าสู่ระบบใหม่อีกครั้ง' });
             if(!topicInput.value) return Swal.fire({ icon: 'warning', title: 'กรุณาเลือกหัวข้อปัญหา' });
 
             btn.disabled = true;
-            btn.innerHTML = `<i class="fa-solid fa-spinner animate-spin"></i> กำลังส่งข้อมูล...`;
+            btn.innerHTML = `<i class="fa-solid fa-spinner animate-spin mr-2"></i> กำลังส่งข้อมูล...`;
 
             try {
                 const file = document.getElementById('ticket-image').files[0];
@@ -273,15 +278,16 @@ import { collection, addDoc, getDoc, doc, onSnapshot, serverTimestamp, query, or
                 const dDate = new Date();
                 dDate.setHours(dDate.getHours() + slaHours);
 
+                // บันทึกลง Firestore (ข้อมูลตรงตาม Security Rules ที่อัปเกรด)
                 await addDoc(collection(db, "tickets"), {
                     topic: selectedTopic.name,
                     topicId: topicId,
                     id_number: document.getElementById('id_number').value.trim(),
                     detail: document.getElementById('detail-input').value,
-                    status: "Pending",
+                    status: "Pending", // บังคับตาม Rules
                     owner: userDataGlobal.name || "Unknown",
                     ownerEmail: userDataGlobal.email || "",
-                    sender_uid: userDataGlobal.uid,
+                    sender_uid: userDataGlobal.uid, // บังคับตาม Rules
                     sender_team: userDataGlobal.Team || "N/A",
                     sender_subteam: userDataGlobal["Sub Team"] || "N/A",
                     createdAt: serverTimestamp(),
@@ -295,29 +301,33 @@ import { collection, addDoc, getDoc, doc, onSnapshot, serverTimestamp, query, or
 
                 const overlay = document.getElementById('success-overlay');
                 const content = document.getElementById('success-content');
-                overlay.classList.remove('hidden');
+                overlay.classList.remove('hidden', 'flex'); 
                 overlay.classList.add('flex');
+                
                 setTimeout(() => {
                     content.classList.replace('opacity-0', 'opacity-100');
                     content.classList.replace('scale-95', 'scale-100');
                 }, 50);
+                
                 setTimeout(() => { window.location.href = "my-ticket.html"; }, 2200);
 
             } catch (error) {
                 console.error(error);
                 Swal.fire({ icon: 'error', title: 'เกิดข้อผิดพลาด', text: error.message });
                 btn.disabled = false;
-                btn.innerHTML = `<span>ยืนยันและส่งใบงาน</span> <i class="fa-solid fa-paper-plane"></i>`;
+                btn.innerHTML = `<span>ยืนยันและส่งใบงาน</span> <i class="fa-solid fa-paper-plane ml-2"></i>`;
             }
         });
 
+        // 5. Logout
         window.handleLogout = async () => {
             const result = await Swal.fire({
                 title: 'ยืนยันออกจากระบบ?',
                 icon: 'warning',
                 showCancelButton: true,
                 confirmButtonColor: '#10b981',
-                confirmButtonText: 'ออกจากระบบ'
+                confirmButtonText: 'ออกจากระบบ',
+                cancelButtonText: 'ยกเลิก'
             });
             if (result.isConfirmed) { await signOut(auth); window.location.href = "login.html"; }
         };

@@ -1,99 +1,11 @@
-<!DOCTYPE html>
-<html lang="th">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>โครงสร้างทีม - Sale Support System</title>
- <script src="https://cdn.tailwindcss.com"></script>
-<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
-
-<link href="https://fonts.googleapis.com/css2?family=Kanit:wght@300;400;600&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="./css/style.css">
-
-</head>
-<body class="flex h-screen overflow-hidden bg-slate-50">
-
-    <!-- SIDEBAR -->
-<aside id="sidebar-container"
-class="w-64 shrink-0 h-full bg-white border-r border-slate-200">
-</aside>
-
-
-
-     <!-- RIGHT AREA -->
-   <div class="flex-1 flex flex-col min-w-0 h-full overflow-hidden">
-
-        <!-- TOPBAR -->
-        <div id="topbar-container"></div>
-
-        <!-- MAIN CONTENT -->
-       <main class="flex-1 overflow-y-auto custom-scroll p-6 md:p-10">
-            <div class="max-w-7xl mx-auto w-full space-y-8">
-                <div class="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-10">
-                    <div>
-                        <h2 class="text-3xl font-bold text-slate-800 tracking-tight">โครงสร้างทีม (Team Structure)</h2>
-                        <p class="text-slate-500 mt-1">จัดการทีมหลักและทีมย่อยเพื่อใช้ในการแบ่งกลุ่มพนักงานในระบบ</p>
-                    </div>
-                    <button onclick="openTeamModal()" class="bg-[#5d58f0] text-white px-8 py-4 rounded-2xl font-bold hover:bg-indigo-700 transition shadow-xl shadow-indigo-100 flex items-center gap-3 active:scale-95">
-                        <i class="fa-solid fa-plus text-sm"></i> 
-                        <span>เพิ่มทีมใหม่</span>
-                    </button>
-                </div>
-
-                <div id="team-display-container" class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-8">
-                    <div class="p-20 text-center text-slate-400 col-span-full italic flex flex-col items-center gap-4">
-                        <i class="fa-solid fa-circle-notch animate-spin text-2xl text-indigo-500"></i>
-                        กำลังโหลดข้อมูลโครงสร้างทีม...
-                    </div>
-                </div>
-            </div>
-        </main>
-    </div>
-
-    <div id="teamModal" class="hidden fixed inset-0 z-[60] flex items-center justify-center p-4">
-        <div class="absolute inset-0 bg-slate-900/60 backdrop-blur-sm" onclick="closeTeamModal()"></div>
-        <div class="relative bg-white w-full max-w-md rounded-[3rem] shadow-2xl overflow-hidden modal-animate border border-white/20">
-            <div class="bg-[#5d58f0] p-10 text-white text-center">
-                <div class="w-16 h-16 bg-white/20 rounded-2xl flex items-center justify-center mx-auto mb-4 text-2xl">
-                    <i class="fa-solid fa-sitemap"></i>
-                </div>
-                <h3 class="text-2xl font-bold">ตั้งค่าข้อมูลทีม</h3>
-                <p class="text-indigo-100 text-sm mt-1">กำหนดประเภทและสังกัดให้ถูกต้อง</p>
-            </div>
-            <div class="p-10 space-y-6">
-                <div>
-                    <label class="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2 ml-2">ประเภททีม</label>
-                    <select id="team-type" onchange="toggleParentSelect()" class="w-full p-4 bg-slate-50 border-2 border-slate-100 rounded-2xl outline-none focus:border-indigo-500 focus:bg-white transition-all appearance-none cursor-pointer">
-                        <option value="main">ทีมหลัก (Main Team)</option>
-                        <option value="sub">ทีมย่อย (Sub Team)</option>
-                    </select>
-                </div>
-                
-                <div id="parent-selection-div" class="hidden animate-fadeIn">
-                    <label class="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2 ml-2">สังกัดทีมหลัก</label>
-                    <select id="parent-team-select" class="w-full p-4 bg-slate-50 border-2 border-slate-100 rounded-2xl outline-none focus:border-indigo-500 focus:bg-white appearance-none cursor-pointer"></select>
-                </div>
-
-                <div>
-                    <label class="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2 ml-2">ชื่อทีม</label>
-                    <input type="text" id="team-name" placeholder="เช่น ภาคกลาง, Telesale..." class="w-full p-4 bg-slate-50 border-2 border-slate-100 rounded-2xl outline-none focus:border-indigo-500 focus:bg-white transition-all">
-                </div>
-            </div>
-            <div class="p-8 bg-slate-50 flex gap-4 border-t border-slate-100">
-                <button onclick="closeTeamModal()" class="flex-1 py-4 font-bold text-slate-500 hover:bg-slate-200 rounded-2xl transition">ยกเลิก</button>
-                <button onclick="saveTeam()" id="save-team-btn" class="flex-[2] py-4 bg-[#5d58f0] text-white rounded-2xl font-bold hover:bg-indigo-700 shadow-xl shadow-indigo-100 transition-all active:scale-95">บันทึกข้อมูล</button>
-            </div>
-        </div>
-    </div>
-
-  <script type="module">
+<script type="module">
     import { db, auth } from "./js/firebase.js";
     import { signOut } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
     import { 
         collection, query, orderBy, onSnapshot, doc, addDoc, deleteDoc, serverTimestamp 
     } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
 
-    // --- 1. Logout Handling (คุมโทนเดียวกับหน้าอื่น) ---
+    // --- 1. Logout Handling ---
     window.handleLogout = () => {
         const logModal = document.getElementById('logout-modal');
         if(!logModal) return;
@@ -114,7 +26,6 @@ class="w-64 shrink-0 h-full bg-white border-r border-slate-200">
         }, 300);
     };
 
-    // Bind Logout Buttons
     const confirmLogout = document.getElementById('confirm-logout');
     if(confirmLogout) {
         confirmLogout.onclick = async () => {
@@ -123,7 +34,7 @@ class="w-64 shrink-0 h-full bg-white border-r border-slate-200">
         };
     }
 
-    // --- 2. Team Core Logic (Real-time) ---
+    // --- 2. Team Core Logic (ปรับปรุงปุ่มลบให้ชัดเจนและตัดส่วนซ้ำ) ---
     function listenTeams() {
         const q = query(collection(db, "teams"), orderBy("createdAt", "asc"));
         onSnapshot(q, (snapshot) => {
@@ -134,6 +45,7 @@ class="w-64 shrink-0 h-full bg-white border-r border-slate-200">
 
             if(!container || !parentSelect) return;
 
+            // Update Select Option
             parentSelect.innerHTML = '<option value="">-- เลือกทีมหลัก --</option>' + 
                 mainTeams.map(t => `<option value="${t.id}">${t.name}</option>`).join('');
 
@@ -145,6 +57,7 @@ class="w-64 shrink-0 h-full bg-white border-r border-slate-200">
                 return;
             }
 
+            // Render Team Cards (ใช้เวอร์ชันที่ปุ่มลบชัดเจน)
             container.innerHTML = mainTeams.map(main => {
                 const subs = allTeams.filter(t => t.parentId === main.id);
                 return `
@@ -154,7 +67,7 @@ class="w-64 shrink-0 h-full bg-white border-r border-slate-200">
                                 <i class="fa-solid fa-users-rays"></i>
                             </div>
                             <button onclick="deleteTeam('${main.id}')" 
-                                    class="group flex items-center gap-2 px-3 py-2 bg-red-50 text-red-400 hover:bg-red-500 hover:text-white rounded-xl transition-all duration-200 shadow-sm"
+                                    class="group flex items-center gap-2 px-3 py-2 bg-red-50 text-red-500 hover:bg-red-500 hover:text-white rounded-xl transition-all duration-200 shadow-sm"
                                     title="ลบทีมหลัก">
                                 <i class="fa-solid fa-trash-can text-sm"></i>
                                 <span class="text-[10px] font-bold uppercase hidden group-hover:block">ลบทีมหลัก</span>
@@ -175,7 +88,7 @@ class="w-64 shrink-0 h-full bg-white border-r border-slate-200">
                                         <span class="text-sm font-semibold text-slate-600">${sub.name}</span>
                                     </div>
                                     <button onclick="deleteTeam('${sub.id}')" 
-                                            class="opacity-0 group-hover/item:opacity-100 text-red-300 hover:text-red-600 transition-all w-8 h-8 flex items-center justify-center rounded-lg hover:bg-red-50"
+                                            class="opacity-0 group-hover/item:opacity-100 text-red-400 hover:text-red-600 transition-all w-8 h-8 flex items-center justify-center rounded-lg hover:bg-red-50"
                                             title="ลบทีมย่อย">
                                         <i class="fa-solid fa-trash-can text-[10px]"></i>
                                     </button>
@@ -189,43 +102,7 @@ class="w-64 shrink-0 h-full bg-white border-r border-slate-200">
         });
     }
 
-            // Render Team Cards
-            container.innerHTML = mainTeams.map(main => {
-                const subs = allTeams.filter(t => t.parentId === main.id);
-                return `
-                    <div class="team-card bg-white rounded-[2.5rem] p-8 shadow-sm border border-slate-100 flex flex-col hover:shadow-md transition-all">
-                        <div class="flex justify-between items-start mb-6">
-                            <div class="w-14 h-14 bg-indigo-50 rounded-2xl flex items-center justify-center text-indigo-600 text-xl shadow-inner">
-                                <i class="fa-solid fa-users-rays"></i>
-                            </div>
-                            <button onclick="deleteTeam('${main.id}')" class="text-slate-300 hover:text-red-500 transition-all p-2 hover:bg-red-50 rounded-xl">
-                                <i class="fa-solid fa-trash-can"></i>
-                            </button>
-                        </div>
-                        <h3 class="text-2xl font-bold text-slate-800 mb-1">${main.name}</h3>
-                        <div class="flex items-center gap-2 mb-6">
-                            <span class="px-2.5 py-0.5 bg-slate-100 text-slate-500 rounded text-[9px] font-black uppercase tracking-widest">Main Unit</span>
-                            <span class="text-xs text-slate-400 font-medium">${subs.length} Sub-teams</span>
-                        </div>
-                        
-                        <div class="space-y-2 mt-auto">
-                            ${subs.map(sub => `
-                                <div class="flex justify-between items-center p-3.5 bg-slate-50/50 rounded-2xl border border-transparent hover:border-indigo-100 hover:bg-white transition-all">
-                                    <span class="text-sm font-semibold text-slate-600">${sub.name}</span>
-                                    <button onclick="deleteTeam('${sub.id}')" class="text-slate-300 hover:text-red-500 transition-all w-8 h-8 flex items-center justify-center rounded-lg hover:bg-red-50">
-                                        <i class="fa-solid fa-xmark text-xs"></i>
-                                    </button>
-                                </div>
-                            `).join('')}
-                            ${subs.length === 0 ? '<div class="text-[11px] text-slate-300 text-center py-4 border-2 border-dashed border-slate-50 rounded-2xl italic">ไม่มีทีมย่อยในสังกัด</div>' : ''}
-                        </div>
-                    </div>
-                `;
-            }).join('');
-        });
-    }
-
-    // --- 3. Window Globals (เพื่อให้ HTML เรียกใช้ได้) ---
+    // --- 3. Window Globals ---
     window.toggleParentSelect = () => {
         const type = document.getElementById('team-type').value;
         const parentDiv = document.getElementById('parent-selection-div');
@@ -245,8 +122,8 @@ class="w-64 shrink-0 h-full bg-white border-r border-slate-200">
         const type = document.getElementById('team-type').value;
         const parentId = document.getElementById('parent-team-select').value;
         
-        if (!name) return Swal.fire({ icon: 'warning', title: 'กรุณาระบุชื่อทีม' });
-        if (type === 'sub' && !parentId) return Swal.fire({ icon: 'warning', title: 'กรุณาเลือกทีมหลัก' });
+        if (!name) return Swal.fire({ icon: 'warning', title: 'กรุณาระบุชื่อทีม', customClass: { popup: 'rounded-[2rem]' } });
+        if (type === 'sub' && !parentId) return Swal.fire({ icon: 'warning', title: 'กรุณาเลือกทีมหลัก', customClass: { popup: 'rounded-[2rem]' } });
         
         const btn = document.getElementById('save-team-btn');
         btn.disabled = true;
@@ -257,9 +134,9 @@ class="w-64 shrink-0 h-full bg-white border-r border-slate-200">
                 name, type, parentId: type === 'sub' ? parentId : null, createdAt: serverTimestamp()
             });
             window.closeTeamModal();
-            Swal.fire({ icon: 'success', title: 'บันทึกสำเร็จ', timer: 1500, showConfirmButton: false });
+            Swal.fire({ icon: 'success', title: 'บันทึกสำเร็จ', timer: 1500, showConfirmButton: false, customClass: { popup: 'rounded-[2rem]' } });
         } catch(e) { 
-            Swal.fire({ icon: 'error', title: 'เกิดข้อผิดพลาด', text: e.message }); 
+            Swal.fire({ icon: 'error', title: 'เกิดข้อผิดพลาด', text: e.message, customClass: { popup: 'rounded-[2rem]' } }); 
         } finally {
             btn.disabled = false;
             btn.innerText = "บันทึกข้อมูล";
@@ -269,7 +146,7 @@ class="w-64 shrink-0 h-full bg-white border-r border-slate-200">
     window.deleteTeam = async (id) => {
         const result = await Swal.fire({
             title: 'ยืนยันการลบทีม?',
-            text: "หากลบทีมหลัก ทีมย่อยจะได้รับผลกระทบด้วย",
+            text: "ข้อมูลนี้จะถูกลบออกจากระบบถาวร",
             icon: 'warning',
             showCancelButton: true,
             confirmButtonColor: '#ef4444',
@@ -279,15 +156,18 @@ class="w-64 shrink-0 h-full bg-white border-r border-slate-200">
         });
 
         if (result.isConfirmed) {
-            await deleteDoc(doc(db, "teams", id));
-            Swal.fire({ icon: 'success', title: 'ลบสำเร็จ', timer: 1000, showConfirmButton: false });
+            try {
+                await deleteDoc(doc(db, "teams", id));
+                Swal.fire({ icon: 'success', title: 'ลบสำเร็จ', timer: 1000, showConfirmButton: false, customClass: { popup: 'rounded-[2rem]' } });
+            } catch (e) {
+                Swal.fire({ icon: 'error', title: 'ลบไม่สำเร็จ', text: e.message });
+            }
         }
     };
 
     // เริ่มทำงาน
     listenTeams();
 
-    // Event Listener สำหรับ Logout Link ทั่วไป
     document.addEventListener('click', (e) => {
         if (e.target.closest('#logout-btn') || e.target.closest('.logout-link')) {
             e.preventDefault();
@@ -295,8 +175,3 @@ class="w-64 shrink-0 h-full bg-white border-r border-slate-200">
         }
     });
 </script>
-<script src="./js/layout.js"></script>
-<script type="module" src="./js/sidebar-role.js"></script>
-    <script type="module" src="firebase.js"></script>
-</body>
-</html>

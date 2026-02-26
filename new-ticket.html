@@ -143,9 +143,10 @@
         </div>
     </div>
 
-    <script type="module">
+   <script type="module">
         import { db, auth } from "./js/firebase.js";
-        import { collection, addDoc, getDoc, doc, onSnapshot, serverTimestamp, query, orderBy } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+        // แก้ไข: เพิ่ม where เข้าไปในบรรทัด import
+        import { collection, addDoc, getDoc, doc, onSnapshot, serverTimestamp, query, orderBy, where } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
         import { onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
 
         const CLOUDINARY_URL = "https://api.cloudinary.com/v1_1/diqcoq5rl/image/upload";
@@ -153,7 +154,7 @@
 
         let topicsData = {};
         let userDataGlobal = null;
-        let allTopicsSnapshot = []; // เก็บข้อมูลเพื่อใช้ Filter
+        let allTopicsSnapshot = []; 
 
         // Auth Logic (คงเดิม)
         onAuthStateChanged(auth, async (user) => {
@@ -170,8 +171,7 @@
             } else { window.location.replace("login.html"); }
         });
 
-        // --- ระบบ Custom Dropdown (เพิ่มใหม่/แก้ไขจากของเดิม) ---
-        const selectContainer = document.getElementById('custom-select-container');
+        // --- ระบบ Custom Dropdown (แก้ไขจุดที่อาจเกิด Error) ---
         const selectedDisplay = document.getElementById('selected-topic-display');
         const dropdownMenu = document.getElementById('dropdown-menu');
         const optionsList = document.getElementById('options-list');
@@ -179,7 +179,6 @@
         const topicSearch = document.getElementById('topic-search');
         const dropdownArrow = document.getElementById('dropdown-arrow');
 
-        // ฟังก์ชันวาดรายการ
         function renderOptions(filterText = "") {
             optionsList.innerHTML = "";
             let count = 0;
@@ -190,14 +189,16 @@
                     item.className = "px-5 py-4 hover:bg-emerald-50 hover:text-emerald-700 cursor-pointer font-bold text-slate-600 border-b border-slate-50 last:border-0 transition-colors flex items-center justify-between group";
                     item.innerHTML = `<span>${data.name}</span> <i class="fa-solid fa-circle-check text-emerald-500 opacity-0 group-hover:opacity-100"></i>`;
                     
-                    item.onclick = () => {
+                    item.onclick = (e) => {
+                        e.stopPropagation(); // กัน Error การปิดทับซ้อน
                         topicInput.value = docSnap.id;
                         selectedDisplay.innerText = data.name;
                         selectedDisplay.classList.add('text-emerald-600');
                         
+                        // ปรับปรุง: ใส่ Checklist ลงใน TextArea ให้เป็นระเบียบ
                         const detailInput = document.getElementById('detail-input');
                         const originalLines = (data.checklist || "").split("\n").filter(l => l.trim() !== "");
-                        detailInput.value = originalLines.map(line => line + " ").join("\n");
+                        detailInput.value = originalLines.map(line => `• ${line.trim()}`).join("\n");
                         
                         closeDropdown();
                     };
@@ -208,7 +209,6 @@
             if(count === 0) optionsList.innerHTML = `<div class="p-5 text-center text-slate-400 text-sm">ไม่พบหัวข้อที่ค้นหา</div>`;
         }
 
-        // ดึงข้อมูลจาก Firestore แบบ Real-time
         const qTopics = query(collection(db, "topics"), orderBy("name", "asc"));
         onSnapshot(qTopics, (snapshot) => {
             allTopicsSnapshot = snapshot.docs;
@@ -217,11 +217,9 @@
             renderOptions();
         });
 
-        // Event Listeners สำหรับ Dropdown
         selectedDisplay.onclick = (e) => {
             e.stopPropagation();
-            const isHidden = dropdownMenu.classList.contains('hidden');
-            if (isHidden) openDropdown(); else closeDropdown();
+            if (dropdownMenu.classList.contains('hidden')) openDropdown(); else closeDropdown();
         };
 
         function openDropdown() {
@@ -234,12 +232,14 @@
             dropdownMenu.classList.add('hidden');
             dropdownArrow.classList.remove('rotate-180');
             topicSearch.value = "";
-            renderOptions();
+            renderOptions(""); // รีเซ็ตรายการเมื่อปิด
         }
 
         topicSearch.oninput = (e) => renderOptions(e.target.value);
-        window.onclick = () => closeDropdown();
-        // ---------------------------------------------------
+        
+        // แก้ไข: ใช้ EventListener แทน window.onclick เพื่อความเสถียร
+        window.addEventListener('click', () => closeDropdown());
+        dropdownMenu.onclick = (e) => e.stopPropagation();
 
         // ฟังก์ชัน Upload และ Submit (คงเดิม)
         async function uploadImage(file) {
